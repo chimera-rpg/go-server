@@ -9,11 +9,11 @@ import (
 
 type GameWorld struct {
   gameData          *GameData.Manager
-  activeMaps        []*gameMap
+  activeMaps        []*GameMap
   activeMapsMutex   sync.Mutex
-  inactiveMaps      []*gameMap
+  inactiveMaps      []*GameMap
   inactiveMapsMutex sync.Mutex
-  players           []*Player
+  players           []*OwnerPlayer
 }
 
 func (world *GameWorld) Setup(data *GameData.Manager) error {
@@ -78,7 +78,7 @@ func New() *GameWorld {
   }
 }
 
-func (world *GameWorld) LoadMap(name string) (*gameMap, error) {
+func (world *GameWorld) LoadMap(name string) (*GameMap, error) {
   log.Printf("Attempting to load map '%s'\n", name)
   mapIndex, isActive := world.isMapLoaded(name)
   if mapIndex >= 0 {
@@ -97,14 +97,14 @@ func (world *GameWorld) LoadMap(name string) (*gameMap, error) {
   return gmap, nil
 }
 
-func (world *GameWorld) addMap(gm *gameMap) {
+func (world *GameWorld) addMap(gm *GameMap) {
   log.Printf("Added map '%s' to active maps\n", gm.name)
   world.activeMapsMutex.Lock()
   defer world.activeMapsMutex.Unlock()
   world.activeMaps = append(world.activeMaps, gm)
 }
 
-func (world *GameWorld) activateMap(inactiveIndex int) *gameMap {
+func (world *GameWorld) activateMap(inactiveIndex int) *GameMap {
   world.inactiveMapsMutex.Lock()
   world.activeMapsMutex.Lock()
   defer world.activeMapsMutex.Unlock()
@@ -119,7 +119,7 @@ func (world *GameWorld) activateMap(inactiveIndex int) *gameMap {
   return world.activeMaps[len(world.activeMaps)-1]
 }
 
-func (world *GameWorld) inactivateMap(activeIndex int) *gameMap {
+func (world *GameWorld) inactivateMap(activeIndex int) *GameMap {
   world.activeMapsMutex.Lock()
   world.inactiveMapsMutex.Lock()
   defer world.inactiveMapsMutex.Unlock()
@@ -132,10 +132,6 @@ func (world *GameWorld) inactivateMap(activeIndex int) *gameMap {
   world.inactiveMaps = append(world.inactiveMaps, world.activeMaps[activeIndex])
   world.activeMaps = append(world.activeMaps[:activeIndex], world.activeMaps[activeIndex+1:]...)
   return world.inactiveMaps[len(world.inactiveMaps)-1]
-}
-
-func (world *GameWorld) GenerateObject(arch *GameData.Archetype) GameObject {
-  return GameObject{}
 }
 
 func (world *GameWorld) isMapLoaded(name string) (mapIndex int, isActive bool) {

@@ -136,7 +136,7 @@ func (m *Manager) parseMapFiles() error {
   return nil
 }
 
-func (m *Manager) GetMap(name string) (gameMap *Map, err error) {
+func (m *Manager) GetMap(name string) (GameMap *Map, err error) {
   if _, ok := m.maps[name]; ok {
     return m.maps[name], nil
   }

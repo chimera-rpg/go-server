@@ -5,6 +5,7 @@ import (
   "common/Net"
   "fmt"
   "log"
+  "server/GameWorld"
 )
 
 // Type ClientConnection provides an object for storing and accessing a
@@ -120,4 +121,10 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
     }
   }
 
+}
+
+func (c *ClientConnection) HandleTravel(s *GameServer, m *GameWorld.GameMap) {
+  //var cmd Net.Command
+  // Get list of unique archetype images in the map
+  // Send <CRC32>->PNG data for each
 }

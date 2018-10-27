@@ -12,8 +12,11 @@ const (
   ArchetypePC
   ArchetypeNPC
   ArchetypeTile
+  ArchetypeFloor
+  ArchetypeWall
   ArchetypeItem
   ArchetypeBullet
+  ArchetypeGeneric
 )
 
 type Archetype struct {
@@ -45,10 +48,16 @@ func (arch* Archetype) setType(value string) error {
     arch.Type = ArchetypeNPC
   case "Tile":
     arch.Type = ArchetypeTile
+  case "Floor":
+    arch.Type = ArchetypeFloor
+  case "Wall":
+    arch.Type = ArchetypeWall
   case "Item":
     arch.Type = ArchetypeItem
   case "Bullet":
     arch.Type = ArchetypeBullet
+  case "Generic":
+    arch.Type = ArchetypeGeneric
   default:
     arch.Type = ArchetypeUnknown
     return fmt.Errorf("Unknown Type '%s' for arch %s", value, arch.Name)
