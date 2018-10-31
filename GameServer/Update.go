@@ -6,16 +6,6 @@ import (
 )
 
 func (server *GameServer) Update(delta int64) error {
-  go func() {
-    for {
-      conn, err := server.listener.Accept()
-      if err != nil {
-        log.Print("Error accepting: ", err.Error())
-      } else {
-        server.clientConnections <- *NewClientConnection(conn, server.acquireClientId())
-      }
-    }
-  }()
   server.world.Update(delta)
   /*clients := make(chan ClientConnection)
   go generateResponses(clients)
@@ -44,6 +34,17 @@ func (server *GameServer) Update(delta int64) error {
   return nil
 }
 
+
+func (server *GameServer) handleClientAcceptions() {
+  for {
+    conn, err := server.listener.Accept()
+    if err != nil {
+      log.Print("Error accepting: ", err.Error())
+    } else {
+      server.clientConnections <- *NewClientConnection(conn, server.acquireClientId())
+    }
+  }
+}
 
 func (server *GameServer) handleClientConnections() {
   for {

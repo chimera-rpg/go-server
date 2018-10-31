@@ -9,8 +9,6 @@ func (server *GameServer) Start() error {
   server.connectedClients = make(map[int]ClientConnection)
   server.clientConnections = make(chan ClientConnection)
 
-  go server.handleClientConnections()
-
   server.dataManager.Setup()
   server.world.Setup(&server.dataManager)
 
@@ -19,6 +17,8 @@ func (server *GameServer) Start() error {
   if err != nil {
     return err
   }
+  go server.handleClientConnections()
+  go server.handleClientAcceptions()
   log.Printf("Listening on %s\n", server.Addr)
   return nil
 }
