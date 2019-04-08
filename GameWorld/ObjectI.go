@@ -1,6 +1,6 @@
 package GameWorld
 
-import "server/GameData"
+import "github.com/chimera-rpg/go-server/GameData"
 
 type ObjectI interface {
   getOwner() OwnerI

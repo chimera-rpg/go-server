@@ -178,7 +178,7 @@ func tComment(r rune) bool {
 }
 
 func tNewline(r rune) bool {
-  return r == '\n'
+  return r == '\n' || r == '\r'
 }
 func tQuote(r rune) bool {
   return r == '"'

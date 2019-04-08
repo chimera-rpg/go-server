@@ -2,8 +2,8 @@ package GameServer
 
 import (
   "net"
-  "server/GameWorld"
-  "server/GameData"
+  "github.com/chimera-rpg/go-server/GameWorld"
+  "github.com/chimera-rpg/go-server/GameData"
   "fmt"
 )
 

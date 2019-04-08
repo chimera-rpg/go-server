@@ -2,7 +2,7 @@ package GameWorld
 
 import (
   "errors"
-  "server/GameData"
+  "github.com/chimera-rpg/go-server/GameData"
   "log"
   "fmt"
 )

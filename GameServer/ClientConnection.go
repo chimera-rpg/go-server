@@ -2,10 +2,10 @@ package GameServer
 
 import (
   "net"
-  "common/Net"
+  "github.com/chimera-rpg/go-common/Net"
   "fmt"
   "log"
-  "server/GameWorld"
+  "github.com/chimera-rpg/go-server/GameWorld"
 )
 
 // Type ClientConnection provides an object for storing and accessing a

@@ -4,7 +4,7 @@ import (
   "log"
   "time"
   "sync"
-  "server/GameData"
+  "github.com/chimera-rpg/go-server/GameData"
 )
 
 type GameWorld struct {

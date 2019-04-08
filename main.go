@@ -6,7 +6,7 @@ import (
   "strings"*/
   "time"
   //
-  "server/GameServer"
+  "github.com/chimera-rpg/go-server/GameServer"
 )
 
 func main() {

@@ -1,7 +1,7 @@
 package GameWorld
 
 import (
-  "server/GameData"
+  "github.com/chimera-rpg/go-server/GameData"
 )
 
 type ObjectNPC struct {
