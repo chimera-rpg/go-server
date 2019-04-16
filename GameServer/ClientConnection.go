@@ -63,7 +63,6 @@ func (c *ClientConnection) HandleHandshake(s *GameServer) {
     Type: Net.OK,
     String: "HAY",
   }))
-
   c.HandleLogin(s)
 }
 
@@ -81,7 +80,30 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
       if t.Type == Net.QUERY {
         // TODO: Query if user exists
       } else if t.Type == Net.LOGIN {
-        // TODO: Get User, then check Password against it
+        // TODO: Check Database for entry
+        if t.User == "nommak" {
+          // TODO: Check Database for pass
+          if t.Pass == "nommak" {
+            c.Send(Net.Command(Net.CommandBasic{
+              Type: Net.OK,
+              String: "Welcome :)",
+            }))
+            // Load the Database? Set the player to point to it? dunno
+            // Probably Player should be <conn,playerstruct,databaseentry>
+            //c.Player = GameWorld.NewOwnerPlayer(c)
+            isWaiting = false
+          } else {
+            c.Send(Net.Command(Net.CommandBasic{
+              Type: Net.REJECT,
+              String: "Password is wrong",
+            }))
+          }
+        } else {
+          c.Send(Net.Command(Net.CommandBasic{
+            Type: Net.REJECT,
+            String: "Account does not exist",
+          }))
+        }
       } else if t.Type == Net.REGISTER {
         // TODO: See if User does not exist, send a password confirm to client, then create.
       }
@@ -92,18 +114,38 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
         log.Printf("Client %s(%d) left faithfully.\n", c.GetSocket().RemoteAddr().String(), c.GetID())
         return
       }
+    default: // Boot the client if it sends anything else.
+      s.RemoveClientByID(c.GetID())
+      c.GetSocket().Close()
+      log.Printf("Client %s(%d) send bad data, kicking.\n", c.GetSocket().RemoteAddr().String(), c.GetID())
     }
   }
   // If we get to here, then the user has successfully logged in.
+  c.HandleCharacterCreation(s)
+}
+
+func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
+  var cmd Net.Command
+  for {
+    err := c.Receive(&cmd)
+    if err != nil {
+      panic(fmt.Errorf("Client %s(%d) exploded, removing.\n", c.GetSocket().RemoteAddr().String(), c.GetID()))
+    }
+    switch t := cmd.(type) {
+    case Net.CommandBasic:
+      if t.Type == Net.CYA {
+        s.RemoveClientByID(c.GetID())
+        c.GetSocket().Close()
+        log.Printf("Client %s(%d) left faithfully.\n", c.GetSocket().RemoteAddr().String(), c.GetID())
+        return
+      }
+    }
+  }
   c.HandleGame(s)
 }
 
 func (c *ClientConnection) HandleGame(s *GameServer) {
   var cmd Net.Command
-
-  // FIXME: This will be populated in HandleLogin or a subset like HandleRegister
-  //c.Player = GameWorld.Player.New(cc)
-  //c.Player = s.GetPlayer(
 
   for {
     err := c.Receive(&cmd)
