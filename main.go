@@ -1,35 +1,35 @@
 package main
 
 import (
-  "log"
-/*  "bufio"
-  "strings"*/
-  "time"
-  //
-  "github.com/chimera-rpg/go-server/GameServer"
+	"log"
+	/*  "bufio"
+	    "strings"*/
+	"time"
+	//
+	"github.com/chimera-rpg/go-server/server"
 )
 
 func main() {
-  log.Print("Starting Chimera (golang)")
+	log.Print("Starting Chimera (golang)")
 
-  // Begin listening on all interfaces.
-  server := GameServer.New(":1337")
-  server.Start()
+	// Begin listening on all interfaces.
+	s := server.New(":1337")
+	s.Start()
 
-  // Main co-processing looperino
-  ticker := time.NewTicker(time.Millisecond * 100)
-  go func() {
-    last_time := time.Now()
-    for current_time := range ticker.C {
-      time_since_last_frame := current_time.Sub(last_time)
+	// Main co-processing looperino
+	ticker := time.NewTicker(time.Millisecond * 100)
+	go func() {
+		lastTime := time.Now()
+		for currentTime := range ticker.C {
+			timeSinceLastFrame := currentTime.Sub(lastTime)
 
-      server.Update(int64(time_since_last_frame)/100000)
+			s.Update(int64(timeSinceLastFrame) / 100000)
 
-      current_end := time.Now()
-      //current_elapsed := current_end.Sub(current_time)
+			currentEnd := time.Now()
+			//current_elapsed := currentEnd.Sub(currentTime)
 
-      last_time = current_end
-    }
-  }()
-  <-server.End
+			lastTime = currentEnd
+		}
+	}()
+	<-s.End
 }
