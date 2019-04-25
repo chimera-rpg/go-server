@@ -1,11 +1,6 @@
 package data
 
-// MapArchetype represents an Archetype that, when Map creation is desired, will be merged with the Archetype it references in "Arch" and output an Object based upon this combination.
-/*type MapArchetype struct {
-  Arch string
-  archetype Archetype
-}*/
-
+// Map is the source containing structure used to build a world.Map.
 type Map struct {
 	DataName    string
 	Name        string

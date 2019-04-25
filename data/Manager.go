@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 )
 
+// Manager is the controlling type for accessing archetypes, maps, player
+// files and any other data.
 type Manager struct {
 	dataPath       string
 	archetypesPath string
@@ -76,15 +78,16 @@ func (m *Manager) parseArchetypeFiles() error {
 }
 
 func (m *Manager) buildPCArchetypes() int {
-	old_count := len(m.pcArchetypes)
+	oldCount := len(m.pcArchetypes)
 	for _, v := range m.archetypes {
 		if v.Type == ArchetypePC {
 			m.pcArchetypes = append(m.pcArchetypes, v)
 		}
 	}
-	return len(m.pcArchetypes) - old_count
+	return len(m.pcArchetypes) - oldCount
 }
 
+// GetArchetype gets the given archetype by string if it exists.
 func (m *Manager) GetArchetype(name string) (archetype *Archetype, err error) {
 	if _, ok := m.archetypes[name]; ok {
 		return m.archetypes[name], nil
@@ -133,6 +136,7 @@ func (m *Manager) parseMapFiles() error {
 	return nil
 }
 
+// GetMap gets the given map by name if it exists.
 func (m *Manager) GetMap(name string) (Map *Map, err error) {
 	if _, ok := m.maps[name]; ok {
 		return m.maps[name], nil
@@ -140,6 +144,7 @@ func (m *Manager) GetMap(name string) (Map *Map, err error) {
 	return nil, errors.New("Map does not exist")
 }
 
+// Setup sets up the data Manager for use by the server.
 func (m *Manager) Setup() error {
 	m.archetypes = make(map[string]*Archetype)
 	m.maps = make(map[string]*Map)
@@ -148,29 +153,29 @@ func (m *Manager) Setup() error {
 		log.Fatal(err)
 		return nil
 	}
-	data_path := path.Join(dir, "share", "chimera")
-	if _, err := os.Stat(data_path); os.IsNotExist(err) {
+	dataPath := path.Join(dir, "share", "chimera")
+	if _, err := os.Stat(dataPath); os.IsNotExist(err) {
 		log.Fatal(err)
 		return err
 	}
-	m.dataPath = data_path
-	m.archetypesPath = path.Join(data_path, "archetypes")
+	m.dataPath = dataPath
+	m.archetypesPath = path.Join(dataPath, "archetypes")
 	if _, err := os.Stat(m.archetypesPath); os.IsNotExist(err) {
 		log.Fatal(err)
 		return err
 	}
-	m.mapsPath = path.Join(data_path, "maps")
+	m.mapsPath = path.Join(dataPath, "maps")
 	if _, err := os.Stat(m.mapsPath); os.IsNotExist(err) {
 		log.Fatal(err)
 		return err
 	}
 	/*
-	  m.musicPath = path.Join(data_path, "music")
+	  m.musicPath = path.Join(dataPath, "music")
 	  if _, err := os.Stat(m.musicPath); os.IsNotExist(err) {
 	    log.Fatal(err)
 	    return err
 	  }
-	  m.soundPath = path.Join(data_path, "sounds")
+	  m.soundPath = path.Join(dataPath, "sounds")
 	  if _, err := os.Stat(m.soundPath); os.IsNotExist(err) {
 	    log.Fatal(err)
 	    return err

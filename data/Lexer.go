@@ -6,6 +6,7 @@ import (
 	"github.com/eczarny/lexer"
 )
 
+// Tokens used by the lexer.
 const (
 	TokenVariable lexer.TokenType = iota
 	TokenValue
@@ -39,6 +40,7 @@ func getTokenName(token lexer.Token) string {
 	return "Err"
 }
 
+// NewObjectLexer returns a lexer using the given input string.
 func NewObjectLexer(input string) *lexer.Lexer {
 	return lexer.NewLexer(input, initialState)
 }

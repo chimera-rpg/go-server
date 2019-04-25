@@ -5,8 +5,10 @@ import (
 	//"strconv"
 )
 
+// ArchetypeType is our identifier for the different... archetype types.
 type ArchetypeType int
 
+// These are the our Archetype types.
 const (
 	ArchetypeUnknown ArchetypeType = iota
 	ArchetypePC
@@ -19,6 +21,8 @@ const (
 	ArchetypeGeneric
 )
 
+// Archetype represents a collection of data that should be used for the
+// creation of Objects.
 type Archetype struct {
 	Arch string // This value should always map to its place in game data's templates
 	Name Variable
@@ -33,6 +37,7 @@ type Archetype struct {
 	Inventory  map[string]Archetype
 }
 
+// NewArchetype creates a new, blank archetype.
 func NewArchetype() Archetype {
 	return Archetype{
 		Properties: make(map[string]Variable),
