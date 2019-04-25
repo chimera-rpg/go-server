@@ -17,14 +17,17 @@ type ClientConnection struct {
 	//Player *world.Player
 }
 
-func (client *ClientConnection) GetSocket() net.Conn {
-	return client.Conn
+// GetSocket returns the connection's socket.
+func (c *ClientConnection) GetSocket() net.Conn {
+	return c.Conn
 }
 
-func (client *ClientConnection) GetID() int {
-	return client.id
+// GetID returns the client's id.
+func (c *ClientConnection) GetID() int {
+	return c.id
 }
 
+// NewClientConnection sets up a new ClientConnection.
 func NewClientConnection(conn net.Conn, id int) *ClientConnection {
 	Net.RegisterCommands()
 	cc := ClientConnection{
@@ -34,15 +37,17 @@ func NewClientConnection(conn net.Conn, id int) *ClientConnection {
 	return &cc
 }
 
+// OnExplode handles when the client explodes.
 func (c *ClientConnection) OnExplode(s *GameServer) {
 	if r := recover(); r != nil {
 		s.RemoveClientByID(c.GetID())
 		c.GetSocket().Close()
 		log.Print(r.(error))
-		log.Print(fmt.Errorf("Client %s(%d) exploded, removing.\n", c.GetSocket().RemoteAddr().String(), c.GetID()))
+		log.Print(fmt.Errorf("client %s(%d) exploded, removing", c.GetSocket().RemoteAddr().String(), c.GetID()))
 	}
 }
 
+// HandleHandshake handles the client's handshake state.
 func (c *ClientConnection) HandleHandshake(s *GameServer) {
 	c.Send(Net.Command(Net.CommandHandshake{
 		Version: Net.VERSION,
@@ -66,6 +71,7 @@ func (c *ClientConnection) HandleHandshake(s *GameServer) {
 	c.HandleLogin(s)
 }
 
+// HandleLogin handles the client's login state.
 func (c *ClientConnection) HandleLogin(s *GameServer) {
 	isWaiting := true
 	var cmd Net.Command
@@ -73,7 +79,7 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 	for isWaiting {
 		err := c.Receive(&cmd)
 		if err != nil {
-			panic(fmt.Errorf("Client %s(%d) exploded, removing.\n", c.GetSocket().RemoteAddr().String(), c.GetID()))
+			panic(fmt.Errorf("client %s(%d) exploded, removing", c.GetSocket().RemoteAddr().String(), c.GetID()))
 		}
 		switch t := cmd.(type) {
 		case Net.CommandLogin:
@@ -124,12 +130,14 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 	c.HandleCharacterCreation(s)
 }
 
+// HandleCharacterCreation handles the character creation/selection of a
+// connection and, potentially, sends it over to HandleGame.
 func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 	var cmd Net.Command
 	for {
 		err := c.Receive(&cmd)
 		if err != nil {
-			panic(fmt.Errorf("Client %s(%d) exploded, removing.\n", c.GetSocket().RemoteAddr().String(), c.GetID()))
+			panic(fmt.Errorf("client %s(%d) exploded, removing", c.GetSocket().RemoteAddr().String(), c.GetID()))
 		}
 		switch t := cmd.(type) {
 		case Net.CommandBasic:
@@ -141,16 +149,17 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 			}
 		}
 	}
-	c.HandleGame(s)
+	//c.HandleGame(s)
 }
 
+// HandleGame handles the loop for the client when in the game state.
 func (c *ClientConnection) HandleGame(s *GameServer) {
 	var cmd Net.Command
 
 	for {
 		err := c.Receive(&cmd)
 		if err != nil {
-			panic(fmt.Errorf("Client %s(%d) exploded, removing.\n", c.GetSocket().RemoteAddr().String(), c.GetID()))
+			panic(fmt.Errorf("client %s(%d) exploded, removing", c.GetSocket().RemoteAddr().String(), c.GetID()))
 		}
 		switch t := cmd.(type) {
 		case Net.CommandBasic:
@@ -165,6 +174,7 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 
 }
 
+// HandleTravel handles the state of a client traveling into a map.
 func (c *ClientConnection) HandleTravel(s *GameServer, m *world.Map) {
 	//var cmd Net.Command
 	// Get list of unique archetype images in the map
