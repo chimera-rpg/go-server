@@ -5,14 +5,14 @@ import (
 	"log"
 	"net"
 
-	"github.com/chimera-rpg/go-common/Net"
+	"github.com/chimera-rpg/go-common/network"
 	"github.com/chimera-rpg/go-server/world"
 )
 
 // ClientConnection provides an object for storing and accessing a
 // network connection.
 type ClientConnection struct {
-	Net.Connection
+	network.Connection
 	id    int
 	Owner world.OwnerI
 }
@@ -29,7 +29,7 @@ func (c *ClientConnection) GetID() int {
 
 // NewClientConnection sets up a new ClientConnection.
 func NewClientConnection(conn net.Conn, id int) *ClientConnection {
-	Net.RegisterCommands()
+	network.RegisterCommands()
 	cc := ClientConnection{
 		id: id,
 	}
@@ -40,7 +40,7 @@ func NewClientConnection(conn net.Conn, id int) *ClientConnection {
 // Receive handles receiving a network command from the connection.
 // It also handles error state and lower-level communications, such as
 // a disconnect statement.
-func (c *ClientConnection) Receive(s *GameServer, cmd *Net.Command) (isHandled bool, shouldReturn bool) {
+func (c *ClientConnection) Receive(s *GameServer, cmd *network.Command) (isHandled bool, shouldReturn bool) {
 	err := c.Connection.Receive(cmd)
 
 	if err != nil {
@@ -49,8 +49,8 @@ func (c *ClientConnection) Receive(s *GameServer, cmd *Net.Command) (isHandled b
 
 	switch t := (*cmd).(type) {
 	// Here is where we'd also handle GFX requests and otherwise
-	case Net.CommandBasic:
-		if t.Type == Net.CYA {
+	case network.CommandBasic:
+		if t.Type == network.CYA {
 			s.RemoveClientByID(c.GetID())
 			c.GetSocket().Close()
 			log.Printf("Client %s(%d) left faithfully.\n", c.GetSocket().RemoteAddr().String(), c.GetID())
@@ -74,23 +74,23 @@ func (c *ClientConnection) OnExplode(s *GameServer) {
 
 // HandleHandshake handles the client's handshake state.
 func (c *ClientConnection) HandleHandshake(s *GameServer) {
-	c.Send(Net.Command(Net.CommandHandshake{
-		Version: Net.VERSION,
+	c.Send(network.Command(network.CommandHandshake{
+		Version: network.VERSION,
 		Program: "Chimera Golang Server",
 	}))
 
 	hs := c.ReceiveCommandHandshake()
 
-	if hs.Version != Net.VERSION {
-		c.Send(Net.Command(Net.CommandBasic{
-			Type:   Net.NOK,
-			String: fmt.Sprintf("Version mismatch, expected %d, got %d", Net.VERSION, hs.Version),
+	if hs.Version != network.VERSION {
+		c.Send(network.Command(network.CommandBasic{
+			Type:   network.NOK,
+			String: fmt.Sprintf("Version mismatch, expected %d, got %d", network.VERSION, hs.Version),
 		}))
-		panic(fmt.Errorf("Client version mismatch, expected %d, got %d", Net.VERSION, hs.Version))
+		panic(fmt.Errorf("Client version mismatch, expected %d, got %d", network.VERSION, hs.Version))
 	}
 
-	c.Send(Net.Command(Net.CommandBasic{
-		Type:   Net.OK,
+	c.Send(network.Command(network.CommandBasic{
+		Type:   network.OK,
 		String: "HAY",
 	}))
 	c.HandleLogin(s)
@@ -99,7 +99,7 @@ func (c *ClientConnection) HandleHandshake(s *GameServer) {
 // HandleLogin handles the client's login state.
 func (c *ClientConnection) HandleLogin(s *GameServer) {
 	isWaiting := true
-	var cmd Net.Command
+	var cmd network.Command
 
 	for isWaiting {
 		isHandled, shouldReturn := c.Receive(s, &cmd)
@@ -110,16 +110,16 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 			return
 		}
 		switch t := cmd.(type) {
-		case Net.CommandLogin:
-			if t.Type == Net.QUERY {
+		case network.CommandLogin:
+			if t.Type == network.QUERY {
 				// TODO: Query if user exists
-			} else if t.Type == Net.LOGIN {
+			} else if t.Type == network.LOGIN {
 				// TODO: Check Database for entry
 				if t.User == "nommak" {
 					// TODO: Check Database for pass
 					if t.Pass == "nommak" {
-						c.Send(Net.Command(Net.CommandBasic{
-							Type:   Net.OK,
+						c.Send(network.Command(network.CommandBasic{
+							Type:   network.OK,
 							String: "Welcome :)",
 						}))
 						// Load the Database? Set the player to point to it? dunno
@@ -127,18 +127,18 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 						//c.Player = world.NewOwnerPlayer(c)
 						isWaiting = false
 					} else {
-						c.Send(Net.Command(Net.CommandBasic{
-							Type:   Net.REJECT,
+						c.Send(network.Command(network.CommandBasic{
+							Type:   network.REJECT,
 							String: "Password is wrong",
 						}))
 					}
 				} else {
-					c.Send(Net.Command(Net.CommandBasic{
-						Type:   Net.REJECT,
+					c.Send(network.Command(network.CommandBasic{
+						Type:   network.REJECT,
 						String: "Account does not exist",
 					}))
 				}
-			} else if t.Type == Net.REGISTER {
+			} else if t.Type == network.REGISTER {
 				// TODO: See if User does not exist, send a password confirm to client, then create.
 			}
 		default: // Boot the client if it sends anything else.
@@ -156,7 +156,7 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 	isWaiting := true
 
-	var cmd Net.Command
+	var cmd network.Command
 	for isWaiting {
 		isHandled, shouldReturn := c.Receive(s, &cmd)
 		if shouldReturn {
@@ -165,15 +165,31 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 		if isHandled {
 			continue
 		}
-		/*switch t := cmd.(type) {
-		}*/
+		switch t := cmd.(type) {
+		case network.CommandCharacter:
+			if t.Type == network.QUERY_RACE {
+				// Return results for given race by name.
+			} else if t.Type == network.QUERY_CLASS {
+				// Return results for given class by name.
+			} else if t.Type == network.QUERY_CHARACTER {
+				// Return full description of existing character.
+			} else if t.Type == network.CREATE_CHARACTER {
+				// Create a character according to race,class,name
+			} else if t.Type == network.LOAD_CHARACTER {
+				// Load a given character by name and spawn the character.
+			} else if t.Type == network.DELETE_CHARACTER {
+				// Delete a given character by name.
+			} else if t.Type == network.ROLL_ABILITY_SCORES {
+				// Request rolling ability scores for an in-creation character.
+			}
+		}
 	}
 	//c.HandleGame(s)
 }
 
 // HandleGame handles the loop for the client when in the game state.
 func (c *ClientConnection) HandleGame(s *GameServer) {
-	var cmd Net.Command
+	var cmd network.Command
 
 	for {
 		isHandled, shouldReturn := c.Receive(s, &cmd)
@@ -191,7 +207,7 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 
 // HandleTravel handles the state of a client traveling into a map.
 func (c *ClientConnection) HandleTravel(s *GameServer, m *world.Map) {
-	//var cmd Net.Command
+	//var cmd network.Command
 	// Get list of unique archetype images in the map
 	// Send <CRC32>->PNG data for each
 }

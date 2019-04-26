@@ -1,36 +1,12 @@
 package server
 
 import (
-	//"net"
 	"log"
 )
 
+// Update runs update for the server world.
 func (server *GameServer) Update(delta int64) error {
 	server.world.Update(delta)
-	/*clients := make(chan ClientConnection)
-	  go generateResponses(clients)
-
-	  for {
-	    conn, err := net.Accept()
-	    if (err != nil) {
-	      panic(err)
-	    }
-	    Log.Print("Accepted connection.")
-
-	    go func() {
-	      buf := bufio.NewReader(conn)
-
-	      for {
-	        name, err := buf.ReadString('\n')
-	        if (err != nil) {
-	          Log.Print("Client disconnected.")
-	          break
-	        }
-	        clients <- ClientConnection{name, conn}
-	      }
-	    }()
-
-	  }*/
 	return nil
 }
 

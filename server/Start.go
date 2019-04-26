@@ -5,6 +5,7 @@ import (
 	"net"
 )
 
+// Start sets up and starts handling client connections and acceptions.
 func (server *GameServer) Start() error {
 	server.connectedClients = make(map[int]ClientConnection)
 	server.clientConnections = make(chan ClientConnection)
