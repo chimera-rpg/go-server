@@ -13,8 +13,8 @@ import (
 // network connection.
 type ClientConnection struct {
 	Net.Connection
-	id int
-	//Player *world.Player
+	id    int
+	Owner world.OwnerI
 }
 
 // GetSocket returns the connection's socket.
@@ -35,6 +35,31 @@ func NewClientConnection(conn net.Conn, id int) *ClientConnection {
 	}
 	cc.SetConn(conn)
 	return &cc
+}
+
+// Receive handles receiving a network command from the connection.
+// It also handles error state and lower-level communications, such as
+// a disconnect statement.
+func (c *ClientConnection) Receive(s *GameServer, cmd *Net.Command) (isHandled bool, shouldReturn bool) {
+	err := c.Connection.Receive(cmd)
+
+	if err != nil {
+		panic(fmt.Errorf("client %s(%d) exploded, removing", c.GetSocket().RemoteAddr().String(), c.GetID()))
+	}
+
+	switch t := (*cmd).(type) {
+	// Here is where we'd also handle GFX requests and otherwise
+	case Net.CommandBasic:
+		if t.Type == Net.CYA {
+			s.RemoveClientByID(c.GetID())
+			c.GetSocket().Close()
+			log.Printf("Client %s(%d) left faithfully.\n", c.GetSocket().RemoteAddr().String(), c.GetID())
+			isHandled = true
+			shouldReturn = true
+		}
+		isHandled = false
+	}
+	return
 }
 
 // OnExplode handles when the client explodes.
@@ -77,9 +102,12 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 	var cmd Net.Command
 
 	for isWaiting {
-		err := c.Receive(&cmd)
-		if err != nil {
-			panic(fmt.Errorf("client %s(%d) exploded, removing", c.GetSocket().RemoteAddr().String(), c.GetID()))
+		isHandled, shouldReturn := c.Receive(s, &cmd)
+		if isHandled {
+			continue
+		}
+		if shouldReturn {
+			return
 		}
 		switch t := cmd.(type) {
 		case Net.CommandLogin:
@@ -113,13 +141,6 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 			} else if t.Type == Net.REGISTER {
 				// TODO: See if User does not exist, send a password confirm to client, then create.
 			}
-		case Net.CommandBasic:
-			if t.Type == Net.CYA {
-				s.RemoveClientByID(c.GetID())
-				c.GetSocket().Close()
-				log.Printf("Client %s(%d) left faithfully.\n", c.GetSocket().RemoteAddr().String(), c.GetID())
-				return
-			}
 		default: // Boot the client if it sends anything else.
 			s.RemoveClientByID(c.GetID())
 			c.GetSocket().Close()
@@ -133,21 +154,19 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 // HandleCharacterCreation handles the character creation/selection of a
 // connection and, potentially, sends it over to HandleGame.
 func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
+	isWaiting := true
+
 	var cmd Net.Command
-	for {
-		err := c.Receive(&cmd)
-		if err != nil {
-			panic(fmt.Errorf("client %s(%d) exploded, removing", c.GetSocket().RemoteAddr().String(), c.GetID()))
+	for isWaiting {
+		isHandled, shouldReturn := c.Receive(s, &cmd)
+		if shouldReturn {
+			return
 		}
-		switch t := cmd.(type) {
-		case Net.CommandBasic:
-			if t.Type == Net.CYA {
-				s.RemoveClientByID(c.GetID())
-				c.GetSocket().Close()
-				log.Printf("Client %s(%d) left faithfully.\n", c.GetSocket().RemoteAddr().String(), c.GetID())
-				return
-			}
+		if isHandled {
+			continue
 		}
+		/*switch t := cmd.(type) {
+		}*/
 	}
 	//c.HandleGame(s)
 }
@@ -157,19 +176,15 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 	var cmd Net.Command
 
 	for {
-		err := c.Receive(&cmd)
-		if err != nil {
-			panic(fmt.Errorf("client %s(%d) exploded, removing", c.GetSocket().RemoteAddr().String(), c.GetID()))
+		isHandled, shouldReturn := c.Receive(s, &cmd)
+		if isHandled {
+			continue
 		}
-		switch t := cmd.(type) {
-		case Net.CommandBasic:
-			if t.Type == Net.CYA {
-				s.RemoveClientByID(c.GetID())
-				c.GetSocket().Close()
-				log.Printf("Client %s(%d) left faithfully.\n", c.GetSocket().RemoteAddr().String(), c.GetID())
-				return
-			}
+		if shouldReturn {
+			return
 		}
+		/*switch t := cmd.(type) {
+		}*/
 	}
 
 }
@@ -179,4 +194,14 @@ func (c *ClientConnection) HandleTravel(s *GameServer, m *world.Map) {
 	//var cmd Net.Command
 	// Get list of unique archetype images in the map
 	// Send <CRC32>->PNG data for each
+}
+
+// GetOwner returns the owner(player) of this connection.
+func (c *ClientConnection) GetOwner() world.OwnerI {
+	return c.Owner
+}
+
+// SetOwner sets the owner(player) of this connection.
+func (c *ClientConnection) SetOwner(owner world.OwnerI) {
+	c.Owner = owner
 }

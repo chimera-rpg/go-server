@@ -40,7 +40,7 @@ func (server *GameServer) handleClientAcceptions() {
 		if err != nil {
 			log.Print("Error accepting: ", err.Error())
 		} else {
-			server.clientConnections <- *NewClientConnection(conn, server.acquireClientId())
+			server.clientConnections <- *NewClientConnection(conn, server.acquireClientID())
 		}
 	}
 }
