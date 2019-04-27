@@ -134,19 +134,17 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 					isWaiting = false
 				}
 			} else if t.Type == network.REGISTER {
-				// FIXME: we're not handling err in the case of access problems
-				user, _ := s.dataManager.GetUser(t.User)
-				if user != nil {
+				err := s.dataManager.CreateUser(t.User, t.Pass, t.Email)
+				if err != nil {
 					c.Send(network.Command(network.CommandBasic{
 						Type:   network.REJECT,
-						String: "user exists",
+						String: err.Error(),
 					}))
 					continue
 				}
-				//	user, err := s.dataManager.CreateUser(t.User, t.Pass, t.Email)
 				c.Send(network.Command(network.CommandBasic{
 					Type:   network.OK,
-					String: "Welcome, new user :)",
+					String: fmt.Sprintf("Welcome, %s!", t.User),
 				}))
 				isWaiting = false
 			}

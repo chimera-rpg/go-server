@@ -18,7 +18,8 @@ type User struct {
 	hasChanges       bool // if there are changes needing to be saved.
 }
 
-func (m *Manager) checkUser(user string) bool {
+// CheckUser checks to see if a user file exists.
+func (m *Manager) CheckUser(user string) bool {
 	filePath := path.Join(m.usersPath, user+".user")
 
 	if _, err := os.Stat(filePath); err != nil {
@@ -45,10 +46,10 @@ func (m *Manager) writeUser(u *User) (err error) {
 	return
 }
 
-// createUser will attempt to create a new user with the given username,
+// CreateUser will attempt to create a new user with the given username,
 // password, and email.
-func (m *Manager) createUser(user string, pass string, email string) (err error) {
-	if m.checkUser(user) {
+func (m *Manager) CreateUser(user string, pass string, email string) (err error) {
+	if m.CheckUser(user) {
 		return &userError{errType: UserExists}
 	}
 	u := &User{
