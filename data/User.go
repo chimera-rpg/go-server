@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 )
 
 // User is a collection of data for a single user, such as characters, shared
@@ -14,6 +15,7 @@ type User struct {
 	Password         string
 	Email            string
 	loadedCharacters map[string]*Character
+	hasChanges       bool // if there are changes needing to be saved.
 }
 
 func (m *Manager) checkUser(user string) bool {
@@ -26,6 +28,9 @@ func (m *Manager) checkUser(user string) bool {
 }
 
 func (m *Manager) writeUser(u *User) (err error) {
+	if !u.hasChanges {
+		return
+	}
 	var file *os.File
 	filePath := path.Join(m.usersPath, u.Username+".user")
 
@@ -47,9 +52,10 @@ func (m *Manager) createUser(user string, pass string, email string) (err error)
 		return &userError{errType: UserExists}
 	}
 	u := &User{
-		Username: user,
-		Password: pass,
-		Email:    email,
+		Username:   user,
+		Password:   pass,
+		Email:      email,
+		hasChanges: true,
 	}
 	if err = m.writeUser(u); err != nil {
 		err = &userError{err: err.Error()}
@@ -59,16 +65,53 @@ func (m *Manager) createUser(user string, pass string, email string) (err error)
 
 // loadUser attempts to load a given User from disk and add it to
 // the loadedUsers field in Manager.
-func (m *Manager) loadUser(user string) (p *User, err error) {
+func (m *Manager) loadUser(user string) (u *User, err error) {
+	var bytes []byte
 	filepath := path.Join(m.usersPath, user+".user")
 	//
-	if _, err = ioutil.ReadFile(filepath); err != nil {
+	if bytes, err = ioutil.ReadFile(filepath); err != nil {
 		err = &userError{err: err.Error()}
 		return
 	}
-	// TODO: Deserialize it.
+	u = &User{}
+	// NOTE: For now we're not implementing a parser as it'd be too
+	// heavy for the functionality we need at the moment.
+	lines := strings.Split(string(bytes), "\n")
+	for _, line := range lines {
+		kv := strings.SplitN(line, " ", 1)
+		if len(kv) == 1 {
+			continue
+		}
+		switch kv[0] {
+		case "Username":
+			u.Username = kv[1]
+		case "Password":
+			u.Password = kv[1]
+			if len(kv) == 1 {
+				err = &userError{errType: BadData, err: "Password field empty"}
+			}
+		case "Email":
+			u.Email = kv[1]
+		}
+	}
+	if u.Username == "" {
+		err = &userError{errType: BadData, err: "Username missing"}
+	}
+	if u.Password == "" {
+		err = &userError{errType: BadData, err: "Password missing"}
+	}
+	if err != nil {
+		u = nil
+	}
 
-	err = &userError{errType: NoSuchUser}
+	return
+}
+
+func (m *Manager) unloadUser(user string) (err error) {
+	if u, ok := m.loadedUsers[user]; ok {
+		err = m.writeUser(u)
+		delete(m.loadedUsers, user)
+	}
 	return
 }
 
@@ -113,6 +156,7 @@ const (
 	NoSuchUser
 	BadPassword
 	NoSuchCharacter
+	BadData
 	AccessError
 	UserExists
 )
