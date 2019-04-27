@@ -3,11 +3,12 @@ package data
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path"
 )
 
-// User is a collection of data, such as characters, shared storage, or
-// otherwise that pertains to a single user.
+// User is a collection of data for a single user, such as characters, shared
+// storage, or otherwise
 type User struct {
 	Username         string
 	Password         string
@@ -15,17 +16,57 @@ type User struct {
 	loadedCharacters map[string]*Character
 }
 
+func (m *Manager) checkUser(user string) bool {
+	filePath := path.Join(m.usersPath, user+".user")
+
+	if _, err := os.Stat(filePath); err != nil {
+		return false
+	}
+	return true
+}
+
+func (m *Manager) writeUser(u *User) (err error) {
+	var file *os.File
+	filePath := path.Join(m.usersPath, u.Username+".user")
+
+	if file, err = os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, 0600); err != nil {
+		err = &userError{err: err.Error()}
+		return
+	}
+	// We really should do some more intelligent serializing, especially for
+	// future functionality of shared inventories.
+	file.WriteString(fmt.Sprintf("Username %s\nPassword %s\nEmail %s", u.Username, u.Password, u.Email))
+	file.Close()
+	return
+}
+
+// createUser will attempt to create a new user with the given username,
+// password, and email.
+func (m *Manager) createUser(user string, pass string, email string) (err error) {
+	if m.checkUser(user) {
+		return &userError{errType: UserExists}
+	}
+	u := &User{
+		Username: user,
+		Password: pass,
+		Email:    email,
+	}
+	if err = m.writeUser(u); err != nil {
+		err = &userError{err: err.Error()}
+	}
+	return
+}
+
 // loadUser attempts to load a given User from disk and add it to
 // the loadedUsers field in Manager.
 func (m *Manager) loadUser(user string) (p *User, err error) {
 	filepath := path.Join(m.usersPath, user+".user")
 	//
-	_, readErr := ioutil.ReadFile(filepath)
-	if readErr != nil {
-		err = &userError{err: readErr.Error()}
+	if _, err = ioutil.ReadFile(filepath); err != nil {
+		err = &userError{err: err.Error()}
 		return
 	}
-	// TODO: Parse it.
+	// TODO: Deserialize it.
 
 	err = &userError{errType: NoSuchUser}
 	return
@@ -36,6 +77,9 @@ func (m *Manager) GetUser(user string) (u *User, err error) {
 	var ok bool
 	if u, ok = m.loadedUsers[user]; !ok {
 		u, err = m.loadUser(user)
+		if err == nil {
+			m.loadedUsers[user] = u
+		}
 	}
 	return
 }
@@ -43,6 +87,13 @@ func (m *Manager) GetUser(user string) (u *User, err error) {
 // loadUserCharacter attempts to load a given Character from disk and add it
 // to the given User's loadedCharacters field.
 func (m *Manager) loadUserCharacter(u *User, name string) (c *Character, err error) {
+	filepath := path.Join(m.usersPath, u.Username+".user", name+".arch")
+	//
+	if _, err = ioutil.ReadFile(filepath); err != nil {
+		err = &userError{err: err.Error()}
+		return
+	}
+
 	err = &userError{errType: NoSuchCharacter, err: name}
 	return
 }
@@ -63,6 +114,7 @@ const (
 	BadPassword
 	NoSuchCharacter
 	AccessError
+	UserExists
 )
 
 type userError struct {
@@ -80,6 +132,8 @@ func (e *userError) Error() string {
 		return fmt.Sprintf("no such character: %s", e.err)
 	case AccessError:
 		return fmt.Sprintf("access error: %s", e.err)
+	case UserExists:
+		return fmt.Sprintf("user exists: %s", e.err)
 	}
 	return fmt.Sprintf("undefined error: %s", e.err)
 }
