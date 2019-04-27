@@ -120,18 +120,19 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 						Type:   network.REJECT,
 						String: err.Error(),
 					}))
-				}
-				if user.Password != t.Pass {
-					c.Send(network.Command(network.CommandBasic{
-						Type:   network.REJECT,
-						String: "bad password",
-					}))
 				} else {
-					c.Send(network.Command(network.CommandBasic{
-						Type:   network.OK,
-						String: "Welcome :)",
-					}))
-					isWaiting = false
+					if user.Password != t.Pass {
+						c.Send(network.Command(network.CommandBasic{
+							Type:   network.REJECT,
+							String: "bad password",
+						}))
+					} else {
+						c.Send(network.Command(network.CommandBasic{
+							Type:   network.OK,
+							String: "Welcome :)",
+						}))
+						isWaiting = false
+					}
 				}
 			} else if t.Type == network.REGISTER {
 				err := s.dataManager.CreateUser(t.User, t.Pass, t.Email)

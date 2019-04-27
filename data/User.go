@@ -19,13 +19,20 @@ type User struct {
 }
 
 // CheckUser checks to see if a user file exists.
-func (m *Manager) CheckUser(user string) bool {
+func (m *Manager) CheckUser(user string) (exists bool, err error) {
 	filePath := path.Join(m.usersPath, user+".user")
 
-	if _, err := os.Stat(filePath); err != nil {
-		return false
+	if _, serr := os.Stat(filePath); serr != nil {
+		if os.IsNotExist(serr) {
+			exists = false
+			err = &userError{errType: UserNotExists, err: user}
+		} else {
+			err = &userError{err: err.Error()}
+		}
+		return
 	}
-	return true
+	exists = true
+	return
 }
 
 func (m *Manager) writeUser(u *User) (err error) {
@@ -49,7 +56,7 @@ func (m *Manager) writeUser(u *User) (err error) {
 // CreateUser will attempt to create a new user with the given username,
 // password, and email.
 func (m *Manager) CreateUser(user string, pass string, email string) (err error) {
-	if m.CheckUser(user) {
+	if exists, _ := m.CheckUser(user); exists {
 		return &userError{errType: UserExists}
 	}
 	u := &User{
@@ -67,10 +74,15 @@ func (m *Manager) CreateUser(user string, pass string, email string) (err error)
 // loadUser attempts to load a given User from disk and add it to
 // the loadedUsers field in Manager.
 func (m *Manager) loadUser(user string) (u *User, err error) {
+	var exists bool
 	var bytes []byte
-	filepath := path.Join(m.usersPath, user+".user")
+	filePath := path.Join(m.usersPath, user+".user")
+
+	if exists, err = m.CheckUser(user); !exists || err != nil {
+		return
+	}
 	//
-	if bytes, err = ioutil.ReadFile(filepath); err != nil {
+	if bytes, err = ioutil.ReadFile(filePath); err != nil {
 		err = &userError{err: err.Error()}
 		return
 	}
@@ -160,6 +172,7 @@ const (
 	BadData
 	AccessError
 	UserExists
+	UserNotExists
 )
 
 type userError struct {
@@ -179,6 +192,8 @@ func (e *userError) Error() string {
 		return fmt.Sprintf("access error: %s", e.err)
 	case UserExists:
 		return fmt.Sprintf("user exists: %s", e.err)
+	case UserNotExists:
+		return fmt.Sprintf("user does not exist: %s", e.err)
 	}
 	return fmt.Sprintf("undefined error: %s", e.err)
 }
