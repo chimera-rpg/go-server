@@ -114,32 +114,41 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 			if t.Type == network.QUERY {
 				// TODO: Query if user exists
 			} else if t.Type == network.LOGIN {
-				// TODO: Check Database for entry
-				if t.User == "nommak" {
-					// TODO: Check Database for pass
-					if t.Pass == "nommak" {
-						c.Send(network.Command(network.CommandBasic{
-							Type:   network.OK,
-							String: "Welcome :)",
-						}))
-						// Load the Database? Set the player to point to it? dunno
-						// Probably Player should be <conn,playerstruct,databaseentry>
-						//c.Player = world.NewOwnerPlayer(c)
-						isWaiting = false
-					} else {
-						c.Send(network.Command(network.CommandBasic{
-							Type:   network.REJECT,
-							String: "Password is wrong",
-						}))
-					}
-				} else {
+				user, err := s.dataManager.GetUser(t.User)
+				if err != nil {
 					c.Send(network.Command(network.CommandBasic{
 						Type:   network.REJECT,
-						String: "Account does not exist",
+						String: err.Error(),
 					}))
 				}
+				if user.Password != t.Pass {
+					c.Send(network.Command(network.CommandBasic{
+						Type:   network.REJECT,
+						String: "bad password",
+					}))
+				} else {
+					c.Send(network.Command(network.CommandBasic{
+						Type:   network.OK,
+						String: "Welcome :)",
+					}))
+					isWaiting = false
+				}
 			} else if t.Type == network.REGISTER {
-				// TODO: See if User does not exist, send a password confirm to client, then create.
+				// FIXME: we're not handling err in the case of access problems
+				user, _ := s.dataManager.GetUser(t.User)
+				if user != nil {
+					c.Send(network.Command(network.CommandBasic{
+						Type:   network.REJECT,
+						String: "user exists",
+					}))
+					continue
+				}
+				//	user, err := s.dataManager.CreateUser(t.User, t.Pass, t.Email)
+				c.Send(network.Command(network.CommandBasic{
+					Type:   network.OK,
+					String: "Welcome, new user :)",
+				}))
+				isWaiting = false
 			}
 		default: // Boot the client if it sends anything else.
 			s.RemoveClientByID(c.GetID())

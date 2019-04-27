@@ -14,12 +14,15 @@ import (
 type Manager struct {
 	dataPath       string
 	archetypesPath string
+	varPath        string
+	usersPath      string
 	//musicPath string
 	//soundPath string
 	mapsPath     string
 	archetypes   map[string]*Archetype // Full Map of archetypes.
 	pcArchetypes []*Archetype          // Player Character archetypes, used for creating new characters.
 	maps         map[string]*Map       // Full map of Maps.
+	loadedUsers  map[string]*User      // Map of loaded Players
 	//animations map[string]gameAnimation
 }
 
@@ -153,6 +156,7 @@ func (m *Manager) Setup() error {
 		log.Fatal(err)
 		return nil
 	}
+	// Data
 	dataPath := path.Join(dir, "share", "chimera")
 	if _, err := os.Stat(dataPath); os.IsNotExist(err) {
 		log.Fatal(err)
@@ -168,6 +172,22 @@ func (m *Manager) Setup() error {
 	if _, err := os.Stat(m.mapsPath); os.IsNotExist(err) {
 		log.Fatal(err)
 		return err
+	}
+	// Variable Data
+	varPath := path.Join(dir, "var", "chimera")
+	if _, err := os.Stat(varPath); os.IsNotExist(err) {
+		if err = os.MkdirAll(varPath, os.ModePerm); err != nil {
+			log.Fatal(err)
+			return err
+		}
+	}
+	m.varPath = varPath
+	m.usersPath = path.Join(varPath, "players")
+	if _, err := os.Stat(m.usersPath); os.IsNotExist(err) {
+		if err = os.Mkdir(m.usersPath, os.ModePerm); err != nil {
+			log.Fatal(err)
+			return err
+		}
 	}
 	/*
 	  m.musicPath = path.Join(dataPath, "music")
