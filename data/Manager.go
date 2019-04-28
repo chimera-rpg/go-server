@@ -151,11 +151,13 @@ func (m *Manager) GetMap(name string) (Map *Map, err error) {
 func (m *Manager) Setup() error {
 	m.archetypes = make(map[string]*Archetype)
 	m.maps = make(map[string]*Map)
-	dir, err := os.Getwd()
+	// Get the parent dir of command; should resolve like /path/bin/server -> /path/
+	dir, err := filepath.Abs(os.Args[0])
 	if err != nil {
 		log.Fatal(err)
 		return nil
 	}
+	dir = filepath.Dir(filepath.Dir(dir))
 	// Data
 	dataPath := path.Join(dir, "share", "chimera")
 	if _, err := os.Stat(dataPath); os.IsNotExist(err) {
