@@ -151,6 +151,7 @@ func (m *Manager) GetMap(name string) (Map *Map, err error) {
 func (m *Manager) Setup() error {
 	m.archetypes = make(map[string]*Archetype)
 	m.maps = make(map[string]*Map)
+	m.loadedUsers = make(map[string]*User)
 	// Get the parent dir of command; should resolve like /path/bin/server -> /path/
 	dir, err := filepath.Abs(os.Args[0])
 	if err != nil {

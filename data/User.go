@@ -91,20 +91,19 @@ func (m *Manager) loadUser(user string) (u *User, err error) {
 	// heavy for the functionality we need at the moment.
 	lines := strings.Split(string(bytes), "\n")
 	for _, line := range lines {
-		kv := strings.SplitN(line, " ", 1)
-		if len(kv) == 1 {
+		ws := strings.Index(line, " ")
+		if ws == -1 {
 			continue
 		}
-		switch kv[0] {
+		key := line[:ws]
+		value := line[ws+1:]
+		switch key {
 		case "Username":
-			u.Username = kv[1]
+			u.Username = value
 		case "Password":
-			u.Password = kv[1]
-			if len(kv) == 1 {
-				err = &userError{errType: BadData, err: "Password field empty"}
-			}
+			u.Password = value
 		case "Email":
-			u.Email = kv[1]
+			u.Email = value
 		}
 	}
 	if u.Username == "" {
@@ -116,6 +115,7 @@ func (m *Manager) loadUser(user string) (u *User, err error) {
 	if err != nil {
 		u = nil
 	}
+	fmt.Printf("%v\n", u)
 
 	return
 }
@@ -135,6 +135,7 @@ func (m *Manager) GetUser(user string) (u *User, err error) {
 		u, err = m.loadUser(user)
 		if err == nil {
 			m.loadedUsers[user] = u
+			fmt.Printf("Ayy\n")
 		}
 	}
 	return

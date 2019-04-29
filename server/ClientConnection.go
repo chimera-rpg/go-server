@@ -141,13 +141,12 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 						Type:   network.REJECT,
 						String: err.Error(),
 					}))
-					continue
+				} else {
+					c.Send(network.Command(network.CommandBasic{
+						Type:   network.OK,
+						String: fmt.Sprintf("Hail, %s! You have been registered.", t.User),
+					}))
 				}
-				c.Send(network.Command(network.CommandBasic{
-					Type:   network.OK,
-					String: fmt.Sprintf("Welcome, %s!", t.User),
-				}))
-				isWaiting = false
 			}
 		default: // Boot the client if it sends anything else.
 			s.RemoveClientByID(c.GetID())
