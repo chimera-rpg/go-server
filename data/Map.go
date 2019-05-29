@@ -6,6 +6,7 @@ type Map struct {
 	Name        string
 	Description string
 	Lore        string
+	Depth       int
 	Width       int
 	Height      int
 	Darkness    int
@@ -14,5 +15,5 @@ type Map struct {
 	WestMap     string
 	SouthMap    string
 	NorthMap    string
-	Tiles       [][][]Archetype
+	Tiles       [][][][]Archetype
 }

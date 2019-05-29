@@ -31,8 +31,8 @@ Loop:
 }
 
 func (p *mapParser) parseMap(name string) Map {
-	newMap := Map{DataName: name}
-	newMap.Tiles = make([][][]Archetype, 0, 100)
+	newMap := Map{DataName: name, Height: 1}
+	newMap.Tiles = make([][][][]Archetype, 0, 100)
 	p.expectToken(TokenContainerBegin, "Expected '{' after Map declaration.")
 	p.nextToken()
 Loop:
@@ -69,20 +69,37 @@ func (p *mapParser) parseMapVariable(newMap *Map, name string) {
 		p.expectToken(TokenValue, "Expected string after Lore.")
 		newMap.Lore = p.tokenValue()
 		p.nextToken()
-	case "Width":
-		p.expectToken(TokenValue, "Expected number after Width.")
-		newMap.Width, _ = strconv.Atoi(p.tokenValue())
-		newMap.Tiles = make([][][]Archetype, newMap.Height)
-		for i := range newMap.Tiles {
-			newMap.Tiles[i] = make([][]Archetype, newMap.Width)
-		}
-		p.nextToken()
 	case "Height":
 		p.expectToken(TokenValue, "Expected number after Height.")
 		newMap.Height, _ = strconv.Atoi(p.tokenValue())
-		newMap.Tiles = make([][][]Archetype, newMap.Height)
-		for i := range newMap.Tiles {
-			newMap.Tiles[i] = make([][]Archetype, newMap.Width)
+		newMap.Tiles = make([][][][]Archetype, newMap.Height)
+		for y := range newMap.Tiles {
+			newMap.Tiles[y] = make([][][]Archetype, newMap.Width)
+			for x := range newMap.Tiles[y] {
+				newMap.Tiles[y][x] = make([][]Archetype, newMap.Depth)
+			}
+		}
+		p.nextToken()
+	case "Width":
+		p.expectToken(TokenValue, "Expected number after Width.")
+		newMap.Width, _ = strconv.Atoi(p.tokenValue())
+		newMap.Tiles = make([][][][]Archetype, newMap.Height)
+		for y := range newMap.Tiles {
+			newMap.Tiles[y] = make([][][]Archetype, newMap.Width)
+			for x := range newMap.Tiles[y] {
+				newMap.Tiles[y][x] = make([][]Archetype, newMap.Depth)
+			}
+		}
+		p.nextToken()
+	case "Depth":
+		p.expectToken(TokenValue, "Expected number after Depth.")
+		newMap.Depth, _ = strconv.Atoi(p.tokenValue())
+		newMap.Tiles = make([][][][]Archetype, newMap.Height)
+		for y := range newMap.Tiles {
+			newMap.Tiles[y] = make([][][]Archetype, newMap.Width)
+			for x := range newMap.Tiles[y] {
+				newMap.Tiles[y][x] = make([][]Archetype, newMap.Depth)
+			}
 		}
 		p.nextToken()
 	case "Darkness":
@@ -141,19 +158,26 @@ func (p *mapParser) parseMapTile(newMap *Map, coords string) {
 	coordsSlice := strings.Split(coords, "x")
 	x := 0
 	y := 0
-	if len(coordsSlice) != 2 {
-		log.Print("Incorrect Tile coordinates format, expected NUMxNUM")
-	} else {
+	z := 0
+	if len(coordsSlice) == 2 {
 		x, _ = strconv.Atoi(coordsSlice[0])
-		y, _ = strconv.Atoi(coordsSlice[1])
+		z, _ = strconv.Atoi(coordsSlice[1])
+	} else if len(coordsSlice) == 3 {
+		y, _ = strconv.Atoi(coordsSlice[0])
+		x, _ = strconv.Atoi(coordsSlice[1])
+		z, _ = strconv.Atoi(coordsSlice[2])
+	} else {
+		log.Print("Incorrect Tile coordinates format, expected YxXxZ or XxZ")
 	}
-	newMap.Tiles[y][x] = make([]Archetype, 0, 0)
+	log.Printf("Okay: %dx%dx%d\n", y, x, z)
+	log.Printf("%+v\n", newMap)
+	newMap.Tiles[y][x][z] = make([]Archetype, 0, 0)
 Loop:
 	for {
 		p.nextToken()
 		switch p.currentToken.Type {
 		case TokenVariable:
-			p.parseMapTileVariable(&newMap.Tiles[y][x], p.tokenValue())
+			p.parseMapTileVariable(&newMap.Tiles[y][x][z], p.tokenValue())
 		case TokenContainerEnd:
 			p.nextToken()
 			break Loop
