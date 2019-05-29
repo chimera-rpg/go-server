@@ -29,5 +29,6 @@ func NewOwnerPlayer(cc clientConnectionI) *OwnerPlayer {
 
 // Update does something.?
 func (player *OwnerPlayer) Update(delta int64) error {
+	// I guess here is where we'd have some sort of "handleCommandQueue" functionality.
 	return nil
 }

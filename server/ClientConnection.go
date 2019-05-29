@@ -163,6 +163,10 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 	isWaiting := true
 
+	// TODO: Send two CommandCharacter messages:
+	//		* All Species, Culture, Training, Description, AbilityScores, Skills, and Images
+	//		* All of the associated player's Characters as Image, Character, Level, and AbilityScores
+
 	var cmd network.Command
 	for isWaiting {
 		isHandled, shouldReturn := c.Receive(s, &cmd)
@@ -174,15 +178,11 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 		}
 		switch t := cmd.(type) {
 		case network.CommandCharacter:
-			if t.Type == network.QueryRace {
-				// Return results for given race by name.
-			} else if t.Type == network.QueryClass {
-				// Return results for given class by name.
-			} else if t.Type == network.QueryCharacter {
-				// Return full description of existing character.
-			} else if t.Type == network.CreateCharacter {
-				// Create a character according to race,class,name
-			} else if t.Type == network.LoadCharacter {
+			if t.Type == network.CreateCharacter {
+				// Create a character according to species, culture, training, name
+			} else if t.Type == network.AdjustCharacter {
+				// Changes a given character's species, culture, or training.
+			} else if t.Type == network.ChooseCharacter {
 				// Load a given character by name and spawn the character.
 			} else if t.Type == network.DeleteCharacter {
 				// Delete a given character by name.
