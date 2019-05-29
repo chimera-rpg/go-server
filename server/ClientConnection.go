@@ -50,7 +50,7 @@ func (c *ClientConnection) Receive(s *GameServer, cmd *network.Command) (isHandl
 	switch t := (*cmd).(type) {
 	// Here is where we'd also handle GFX requests and otherwise
 	case network.CommandBasic:
-		if t.Type == network.CYA {
+		if t.Type == network.Cya {
 			s.RemoveClientByID(c.GetID())
 			c.GetSocket().Close()
 			log.Printf("Client %s(%d) left faithfully.\n", c.GetSocket().RemoteAddr().String(), c.GetID())
@@ -75,22 +75,22 @@ func (c *ClientConnection) OnExplode(s *GameServer) {
 // HandleHandshake handles the client's handshake state.
 func (c *ClientConnection) HandleHandshake(s *GameServer) {
 	c.Send(network.Command(network.CommandHandshake{
-		Version: network.VERSION,
+		Version: network.Version,
 		Program: "Chimera Golang Server",
 	}))
 
 	hs := c.ReceiveCommandHandshake()
 
-	if hs.Version != network.VERSION {
+	if hs.Version != network.Version {
 		c.Send(network.Command(network.CommandBasic{
-			Type:   network.NOK,
-			String: fmt.Sprintf("Version mismatch, expected %d, got %d", network.VERSION, hs.Version),
+			Type:   network.Nokay,
+			String: fmt.Sprintf("Version mismatch, expected %d, got %d", network.Version, hs.Version),
 		}))
-		panic(fmt.Errorf("Client version mismatch, expected %d, got %d", network.VERSION, hs.Version))
+		panic(fmt.Errorf("Client version mismatch, expected %d, got %d", network.Version, hs.Version))
 	}
 
 	c.Send(network.Command(network.CommandBasic{
-		Type:   network.OK,
+		Type:   network.Okay,
 		String: "HAY",
 	}))
 	c.HandleLogin(s)
@@ -111,39 +111,39 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 		}
 		switch t := cmd.(type) {
 		case network.CommandLogin:
-			if t.Type == network.QUERY {
+			if t.Type == network.Query {
 				// TODO: Query if user exists
-			} else if t.Type == network.LOGIN {
+			} else if t.Type == network.Login {
 				user, err := s.dataManager.GetUser(t.User)
 				if err != nil {
 					c.Send(network.Command(network.CommandBasic{
-						Type:   network.REJECT,
+						Type:   network.Reject,
 						String: err.Error(),
 					}))
 				} else {
 					if user.Password != t.Pass {
 						c.Send(network.Command(network.CommandBasic{
-							Type:   network.REJECT,
+							Type:   network.Reject,
 							String: "bad password",
 						}))
 					} else {
 						c.Send(network.Command(network.CommandBasic{
-							Type:   network.OK,
+							Type:   network.Okay,
 							String: "Welcome :)",
 						}))
 						isWaiting = false
 					}
 				}
-			} else if t.Type == network.REGISTER {
+			} else if t.Type == network.Register {
 				err := s.dataManager.CreateUser(t.User, t.Pass, t.Email)
 				if err != nil {
 					c.Send(network.Command(network.CommandBasic{
-						Type:   network.REJECT,
+						Type:   network.Reject,
 						String: err.Error(),
 					}))
 				} else {
 					c.Send(network.Command(network.CommandBasic{
-						Type:   network.OK,
+						Type:   network.Okay,
 						String: fmt.Sprintf("Hail, %s! You have been registered.", t.User),
 					}))
 				}
@@ -174,23 +174,25 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 		}
 		switch t := cmd.(type) {
 		case network.CommandCharacter:
-			if t.Type == network.QUERY_RACE {
+			if t.Type == network.QueryRace {
 				// Return results for given race by name.
-			} else if t.Type == network.QUERY_CLASS {
+			} else if t.Type == network.QueryClass {
 				// Return results for given class by name.
-			} else if t.Type == network.QUERY_CHARACTER {
+			} else if t.Type == network.QueryCharacter {
 				// Return full description of existing character.
-			} else if t.Type == network.CREATE_CHARACTER {
+			} else if t.Type == network.CreateCharacter {
 				// Create a character according to race,class,name
-			} else if t.Type == network.LOAD_CHARACTER {
+			} else if t.Type == network.LoadCharacter {
 				// Load a given character by name and spawn the character.
-			} else if t.Type == network.DELETE_CHARACTER {
+			} else if t.Type == network.DeleteCharacter {
 				// Delete a given character by name.
-			} else if t.Type == network.ROLL_ABILITY_SCORES {
+			} else if t.Type == network.RollAbilityScores {
 				// Request rolling ability scores for an in-creation character.
 			}
 		}
 	}
+	// Here we'd instantiate the Connection's OwnerPlayer and create the ObjectPC instance from the
+	// appropriate database.
 	//c.HandleGame(s)
 }
 
@@ -206,6 +208,8 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 		if shouldReturn {
 			return
 		}
+		// Handle "meta" netcommands
+		// Handle
 		/*switch t := cmd.(type) {
 		}*/
 	}
