@@ -49,7 +49,7 @@ func NewMap(gm *data.Manager, name string) (*Map, error) {
 			for z := range gd.Tiles[y][x] {
 				log.Printf("Setting %dx%dx%d\n", y, x, z)
 				for a := range gd.Tiles[y][x][z] {
-					object, err := gmap.CreateObjectByName(gm, gd.Tiles[y][x][z][a].Arch)
+					object, err := gmap.CreateObjectByArchId(gm, gd.Tiles[y][x][z][a].ArchId)
 					if err != nil {
 						continue
 					}
@@ -58,7 +58,7 @@ func NewMap(gm *data.Manager, name string) (*Map, error) {
 				target := gmap.tiles[y][x][z].object
 				log.Print("----")
 				for ; target != nil; target = target.getNext() {
-					log.Printf("%+v\n", target)
+					//log.Printf("%+v\n", target)
 				}
 			}
 		}
@@ -102,11 +102,11 @@ func (gmap *Map) GetTile(y int, x int, z int) (*Tile, error) {
 	return nil, errors.New("invalid Tile")
 }
 
-// CreateObjectByName will attempt to create an Object by its archetype name.
-func (gmap *Map) CreateObjectByName(gm *data.Manager, name string) (o ObjectI, err error) {
-	ga, err := gm.GetArchetype(name)
+// CreateObjectByArchId will attempt to create an Object by its archetype id.
+func (gmap *Map) CreateObjectByArchId(gm *data.Manager, id data.FileId) (o ObjectI, err error) {
+	ga, err := gm.GetArchetype(id)
 	if err != nil {
-		return nil, fmt.Errorf("could not load arch '%s'", name)
+		return nil, fmt.Errorf("could not load arch '%d'", id)
 	}
 
 	switch ga.Type {
@@ -121,7 +121,6 @@ func (gmap *Map) CreateObjectByName(gm *data.Manager, name string) (o ObjectI, e
 	default:
 		gameobj := ObjectGeneric{
 			Object: Object{
-				Arch:      name,
 				Archetype: *ga,
 			},
 		}

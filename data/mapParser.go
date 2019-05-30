@@ -9,6 +9,7 @@ import (
 )
 
 type mapParser struct {
+	stringsMap   *StringsMap
 	lexer        *lexer.Lexer
 	currentToken lexer.Token
 }
@@ -169,8 +170,6 @@ func (p *mapParser) parseMapTile(newMap *Map, coords string) {
 	} else {
 		log.Print("Incorrect Tile coordinates format, expected YxXxZ or XxZ")
 	}
-	log.Printf("Okay: %dx%dx%d\n", y, x, z)
-	log.Printf("%+v\n", newMap)
 	newMap.Tiles[y][x][z] = make([]Archetype, 0, 0)
 Loop:
 	for {
@@ -193,7 +192,7 @@ func (p *mapParser) parseMapTileVariable(tileStack *[]Archetype, variable string
 	case "Arch":
 		p.expectToken(TokenValue, "Expected string after Arch")
 		arch := Archetype{}
-		arch.Arch = p.tokenValue()
+		arch.ArchId = p.stringsMap.Acquire(p.tokenValue())
 		*tileStack = append(*tileStack, arch)
 	default:
 		p.nextToken()

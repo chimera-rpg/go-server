@@ -163,6 +163,21 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 	isWaiting := true
 
+	// Send Genera
+	/*genera := make(map[string]string)
+	images := make([][]byte)
+	descriptions := make([]string)
+	for _, pc := range s.dataManager.GetPCArchetypes() {
+		genera[pc.Properties["Genus"]] = true
+		//images = append(images, s.dataManager.GetAnimImage(pc.Anim, "default", "south", 0))
+		descriptions[pc.Properties["Genus"]]
+	}
+	c.Send(network.Command(network.CommandCharacter{
+		Type:   network.QueryGenera,
+		Genera: genera,
+	}))
+	fmt.Printf("Sending %+v\n", pc)*/
+
 	// TODO: Send two CommandCharacter messages:
 	//		* All Species, Culture, Training, Description, AbilityScores, Skills, and Images
 	//		* All of the associated player's Characters as Image, Character, Level, and AbilityScores

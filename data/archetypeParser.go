@@ -7,17 +7,19 @@ import (
 )
 
 type archetypeParser struct {
+	stringsMap   *StringsMap
 	lexer        *lexer.Lexer
 	currentToken lexer.Token
 }
 
-func (p *archetypeParser) parse() map[string]Archetype {
-	archetypes := make(map[string]Archetype)
+func (p *archetypeParser) parse() map[StringId]Archetype {
+	archetypes := make(map[StringId]Archetype)
 Loop:
 	for {
 		switch p.nextToken().Type {
 		case TokenVariable:
-			archetypes[p.tokenValue()] = p.parseArchetype(p.tokenValue())
+			archId := p.stringsMap.Acquire(p.tokenValue())
+			archetypes[archId] = p.parseArchetype(archId)
 		case TokenEOF:
 			break Loop
 		default:
@@ -27,9 +29,9 @@ Loop:
 	return archetypes
 }
 
-func (p *archetypeParser) parseArchetype(name string) Archetype {
+func (p *archetypeParser) parseArchetype(id StringId) Archetype {
 	archetype := NewArchetype()
-	archetype.Arch = name
+	archetype.ArchId = id
 	p.expectToken(TokenContainerBegin, "Expected '{' after Archetype declaration.")
 	p.nextToken()
 Loop:

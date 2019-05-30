@@ -18,12 +18,19 @@ type Manager struct {
 	usersPath      string
 	//musicPath string
 	//soundPath string
-	mapsPath     string
-	archetypes   map[string]*Archetype // Full Map of archetypes.
-	pcArchetypes []*Archetype          // Player Character archetypes, used for creating new characters.
-	maps         map[string]*Map       // Full map of Maps.
-	loadedUsers  map[string]*User      // Map of loaded Players
-	//animations map[string]gameAnimation
+	mapsPath   string
+	archetypes map[StringId]*Archetype // Full Map of archetypes.
+	//animations map[string]*Animation // Full Map of animations.
+	animations map[StringId]*Animation // ID to Animation map
+	// Hmm... almost map[uint32]*Archetype... with CRC id
+	Strings      StringsMap
+	imageFileMap FileMap
+	// images map[string][]bytes
+	generaArchetypes  []*Archetype     // Slice of genera archetypes.
+	speciesArchetypes []*Archetype     // Slice of species archetypes.
+	pcArchetypes      []*Archetype     // Player Character archetypes, used for creating new characters.
+	maps              map[string]*Map  // Full map of Maps.
+	loadedUsers       map[string]*User // Map of loaded Players
 }
 
 type objectTemplate struct {
@@ -42,6 +49,7 @@ func (m *Manager) parseArchetypeFile(filepath string) error {
 	}
 	parser := new(archetypeParser)
 	parser.lexer = NewObjectLexer(string(r))
+	parser.stringsMap = &m.Strings
 	// Parse our archetypes and merge with existing.
 	for k, v := range parser.parse() {
 		log.Printf("%s = %v\n", k, v)
@@ -71,7 +79,9 @@ func (m *Manager) parseArchetypeFiles() error {
 		log.Printf("Error walking the path %s: %v\n", m.archetypesPath, err)
 	}
 	log.Printf("%d archetypes loaded.\n", len(m.archetypes))
-	log.Printf("%d PC archetypes loaded: ", m.buildPCArchetypes())
+	log.Printf("%d Genera.", m.buildGeneraArchetypes())
+	log.Printf("%d Species.", m.buildSpeciesArchetypes())
+	log.Printf("%d PCs.", m.buildPCArchetypes())
 	for _, v := range m.pcArchetypes {
 		name, _ := v.Name.GetString()
 		log.Printf("%s ", name)
@@ -90,12 +100,112 @@ func (m *Manager) buildPCArchetypes() int {
 	return len(m.pcArchetypes) - oldCount
 }
 
-// GetArchetype gets the given archetype by string if it exists.
-func (m *Manager) GetArchetype(name string) (archetype *Archetype, err error) {
-	if _, ok := m.archetypes[name]; ok {
-		return m.archetypes[name], nil
+func (m *Manager) buildGeneraArchetypes() int {
+	oldCount := len(m.generaArchetypes)
+	for _, v := range m.archetypes {
+		if v.Type == ArchetypeGenus {
+			m.generaArchetypes = append(m.generaArchetypes, v)
+		}
 	}
-	return nil, errors.New("Map does not exist")
+	return len(m.generaArchetypes) - oldCount
+}
+
+func (m *Manager) buildSpeciesArchetypes() int {
+	oldCount := len(m.speciesArchetypes)
+	for _, v := range m.archetypes {
+		if v.Type == ArchetypeSpecies {
+			m.speciesArchetypes = append(m.speciesArchetypes, v)
+		}
+	}
+	return len(m.speciesArchetypes) - oldCount
+}
+
+// GetArchetype gets the given archetype by id if it exists.
+func (m *Manager) GetArchetype(archId FileId) (archetype *Archetype, err error) {
+	if _, ok := m.archetypes[archId]; ok {
+		return m.archetypes[archId], nil
+	}
+	return nil, errors.New("Archetype does not exist")
+}
+
+// GetArchetypeByName gets the given archetype by string if it exists.
+func (m *Manager) GetArchetypeByName(name string) (archetype *Archetype, err error) {
+	archId := m.Strings.Acquire(name)
+	if _, ok := m.archetypes[archId]; ok {
+		return m.archetypes[archId], nil
+	}
+	return nil, errors.New("Archetype does not exist")
+}
+
+func (m *Manager) parseAnimationFiles() error {
+	log.Print("Animations: Loading...")
+	err := filepath.Walk(m.archetypesPath, func(filepath string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			if path.Ext(filepath) == ".anim" {
+				log.Printf("parseAnimationFile: %s\n", filepath)
+				err = m.parseAnimationFile(filepath)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		log.Printf("Error walking the path %s: %v\n", m.archetypesPath, err)
+	}
+	log.Printf("%d animations loaded.\n", len(m.animations))
+
+	log.Print("Animations: Done!")
+	return nil
+}
+
+func (m *Manager) parseAnimationFile(filepath string) error {
+	r, err := ioutil.ReadFile(filepath)
+	if err != nil {
+		return err
+	}
+	parser := new(animationParser)
+	parser.lexer = NewObjectLexer(string(r))
+	parser.stringsMap = &m.Strings
+	// Parse our archetypes and merge with existing.
+	for k, v := range parser.parse() {
+		log.Printf("%s = %v\n", k, v)
+		m.animations[k] = &v
+	}
+
+	return nil
+}
+
+func (m *Manager) buildImagesMap() error {
+	log.Print("imageFileMap: Loading...")
+	err := filepath.Walk(m.archetypesPath, func(filepath string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			if path.Ext(filepath) == ".png" {
+				shortpath := filepath[len(m.archetypesPath)+1:]
+				id := m.Strings.Acquire(shortpath)
+				crc, err := m.imageFileMap.BuildCRC(id, filepath)
+				log.Printf("%s(%d) = %d\n", shortpath, id, crc)
+
+				if err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		log.Printf("Error walking the path %s: %v\n", m.archetypesPath, err)
+		return err
+	}
+	log.Print("imageFileMap: Done!")
+	return nil
 }
 
 func (m *Manager) parseMapFile(filepath string) error {
@@ -105,6 +215,7 @@ func (m *Manager) parseMapFile(filepath string) error {
 	}
 	parser := new(mapParser)
 	parser.lexer = NewObjectLexer(string(r))
+	parser.stringsMap = &m.Strings
 	//log.Printf("%+v\n", parser.parse())
 	// Parse our maps and merge with existing.
 	for k, v := range parser.parse() {
@@ -149,9 +260,13 @@ func (m *Manager) GetMap(name string) (Map *Map, err error) {
 
 // Setup sets up the data Manager for use by the server.
 func (m *Manager) Setup() error {
-	m.archetypes = make(map[string]*Archetype)
+	m.archetypes = make(map[StringId]*Archetype)
+	//m.animations = make(map[string]*Animation)
+	m.animations = make(map[StringId]*Animation)
 	m.maps = make(map[string]*Map)
 	m.loadedUsers = make(map[string]*User)
+	m.Strings = NewStringsMap()
+	m.imageFileMap = NewFileMap()
 	// Get the parent dir of command; should resolve like /path/bin/server -> /path/
 	dir, err := filepath.Abs(os.Args[0])
 	if err != nil {
@@ -209,6 +324,18 @@ func (m *Manager) Setup() error {
 		log.Fatal(err)
 		return err
 	}
+	// Images
+	err = m.buildImagesMap()
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	// Animations
+	err = m.parseAnimationFiles()
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
 	// Maps!
 	err = m.parseMapFiles()
 	if err != nil {
@@ -217,6 +344,21 @@ func (m *Manager) Setup() error {
 	}
 
 	return nil
+}
+
+// GetPCArchetypes returns the underlying *Archetype slice for player character archetypes.
+func (m *Manager) GetPCArchetypes() []*Archetype {
+	return m.pcArchetypes
+}
+
+// GetGeneraArchetypes returns the underlying *Archetype slice for genera archetypes.
+func (m *Manager) GetGeneraArchetypes() []*Archetype {
+	return m.generaArchetypes
+}
+
+// GetSpeciesArchetypes returns the underlying *Archetype slice for species archetypes.
+func (m *Manager) GetSpeciesArchetypes() []*Archetype {
+	return m.speciesArchetypes
 }
 
 /*func (m *Manager) createObject(which string) World.GameObject {

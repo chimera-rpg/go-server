@@ -11,6 +11,8 @@ type ArchetypeType int
 // These are the our Archetype types.
 const (
 	ArchetypeUnknown ArchetypeType = iota
+	ArchetypeGenus
+	ArchetypeSpecies
 	ArchetypePC
 	ArchetypeNPC
 	ArchetypeTile
@@ -24,8 +26,8 @@ const (
 // Archetype represents a collection of data that should be used for the
 // creation of Objects.
 type Archetype struct {
-	Arch string // This value should always map to its place in game data's templates
-	Name Variable
+	ArchId StringId
+	Name   Variable
 	//Name string
 	Description Variable
 	Type        ArchetypeType
@@ -47,6 +49,10 @@ func NewArchetype() Archetype {
 
 func (arch *Archetype) setType(value string) error {
 	switch value {
+	case "Genus":
+		arch.Type = ArchetypeGenus
+	case "Species":
+		arch.Type = ArchetypeSpecies
 	case "PC":
 		arch.Type = ArchetypePC
 	case "NPC":
@@ -72,8 +78,6 @@ func (arch *Archetype) setType(value string) error {
 
 func (arch *Archetype) setStructProperty(key string, value string) error {
 	switch key {
-	case "Arch":
-		arch.Arch = value
 	case "Anim":
 		arch.Anim = String(value)
 	case "Description":
