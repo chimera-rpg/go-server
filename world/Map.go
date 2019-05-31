@@ -49,7 +49,7 @@ func NewMap(gm *data.Manager, name string) (*Map, error) {
 			for z := range gd.Tiles[y][x] {
 				log.Printf("Setting %dx%dx%d\n", y, x, z)
 				for a := range gd.Tiles[y][x][z] {
-					object, err := gmap.CreateObjectByArchId(gm, gd.Tiles[y][x][z][a].ArchId)
+					object, err := gmap.CreateObjectByArchID(gm, gd.Tiles[y][x][z][a].ArchID)
 					if err != nil {
 						continue
 					}
@@ -102,8 +102,8 @@ func (gmap *Map) GetTile(y int, x int, z int) (*Tile, error) {
 	return nil, errors.New("invalid Tile")
 }
 
-// CreateObjectByArchId will attempt to create an Object by its archetype id.
-func (gmap *Map) CreateObjectByArchId(gm *data.Manager, id data.FileId) (o ObjectI, err error) {
+// CreateObjectByArchID will attempt to create an Object by its archetype id.
+func (gmap *Map) CreateObjectByArchID(gm *data.Manager, id data.FileID) (o ObjectI, err error) {
 	ga, err := gm.GetArchetype(id)
 	if err != nil {
 		return nil, fmt.Errorf("could not load arch '%d'", id)

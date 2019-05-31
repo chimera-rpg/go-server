@@ -192,7 +192,7 @@ func (p *mapParser) parseMapTileVariable(tileStack *[]Archetype, variable string
 	case "Arch":
 		p.expectToken(TokenValue, "Expected string after Arch")
 		arch := Archetype{}
-		arch.ArchId = p.stringsMap.Acquire(p.tokenValue())
+		arch.ArchID = p.stringsMap.Acquire(p.tokenValue())
 		*tileStack = append(*tileStack, arch)
 	default:
 		p.nextToken()

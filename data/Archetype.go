@@ -26,12 +26,12 @@ const (
 // Archetype represents a collection of data that should be used for the
 // creation of Objects.
 type Archetype struct {
-	ArchId StringId
+	ArchID StringID
 	Name   Variable
 	//Name string
 	Description Variable
 	Type        ArchetypeType
-	Anim        Variable // TODO: This should reference an already compiled AnimId
+	AnimID      StringID
 	//
 	Value      Variable
 	Count      Variable
@@ -78,8 +78,6 @@ func (arch *Archetype) setType(value string) error {
 
 func (arch *Archetype) setStructProperty(key string, value string) error {
 	switch key {
-	case "Anim":
-		arch.Anim = String(value)
 	case "Description":
 		arch.Description = String(value)
 	case "Name":

@@ -6,28 +6,32 @@ import (
 
 var stringMapTable = crc32.MakeTable(crc32.Koopman)
 
-type StringId = uint32
+// StringID is a unique ID for a particular string
+type StringID = uint32
 
+// StringsMap provides a StringID to string map and reverse map.
 type StringsMap struct {
-	Ids     map[StringId]string
-	Strings map[string]StringId
+	IDs     map[StringID]string
+	Strings map[string]StringID
 }
 
-func (n *StringsMap) Acquire(name string) StringId {
+// Acquire returns the StringID that the provided name string corresponds to.
+func (n *StringsMap) Acquire(name string) StringID {
 	if val, ok := n.Strings[name]; ok {
 		return val
 	}
 	id := crc32.Checksum([]byte(name), stringMapTable)
 
-	n.Ids[id] = name
+	n.IDs[id] = name
 	n.Strings[name] = id
 
 	return id
 }
 
+// NewStringsMap provides a constructed instance of StringsMap.
 func NewStringsMap() StringsMap {
 	return StringsMap{
-		Ids:     make(map[StringId]string),
-		Strings: make(map[string]StringId),
+		IDs:     make(map[StringID]string),
+		Strings: make(map[string]StringID),
 	}
 }

@@ -7,18 +7,19 @@ import (
 
 var fileMapTable = crc32.MakeTable(crc32.Koopman)
 
-type FileId = uint32
+// FileID represents unique file string IDs
+type FileID = uint32
 
-// DataMapping provides a centralized location for referring to
+// FileMap provides a centralized location for referring to
 // filepaths via ids, and holding filepath data to CRC32 checksums.
 // These are built upon server load.
 type FileMap struct {
-	Paths     map[FileId]string
-	Checksums map[FileId]uint32
+	Paths     map[FileID]string
+	Checksums map[FileID]uint32
 }
 
 // BuildCRC builds a data CRC for a given id with a provided filepath
-func (f *FileMap) BuildCRC(id FileId, filepath string) (uint32, error) {
+func (f *FileMap) BuildCRC(id FileID, filepath string) (uint32, error) {
 	if val, ok := f.Checksums[id]; ok {
 		if val != 0 {
 			return val, nil
@@ -36,9 +37,10 @@ func (f *FileMap) BuildCRC(id FileId, filepath string) (uint32, error) {
 	return f.Checksums[id], nil
 }
 
+// NewFileMap returns a constructed FileMap.
 func NewFileMap() FileMap {
 	return FileMap{
-		Paths:     make(map[FileId]string),
-		Checksums: make(map[FileId]uint32),
+		Paths:     make(map[FileID]string),
+		Checksums: make(map[FileID]uint32),
 	}
 }

@@ -19,9 +19,9 @@ type Manager struct {
 	//musicPath string
 	//soundPath string
 	mapsPath   string
-	archetypes map[StringId]*Archetype // Full Map of archetypes.
+	archetypes map[StringID]*Archetype // Full Map of archetypes.
 	//animations map[string]*Animation // Full Map of animations.
-	animations map[StringId]*Animation // ID to Animation map
+	animations map[StringID]*Animation // ID to Animation map
 	// Hmm... almost map[uint32]*Archetype... with CRC id
 	Strings      StringsMap
 	imageFileMap FileMap
@@ -52,7 +52,7 @@ func (m *Manager) parseArchetypeFile(filepath string) error {
 	parser.stringsMap = &m.Strings
 	// Parse our archetypes and merge with existing.
 	for k, v := range parser.parse() {
-		log.Printf("%s = %v\n", k, v)
+		log.Printf("%d = %v\n", k, v)
 		m.archetypes[k] = &v
 	}
 
@@ -121,18 +121,18 @@ func (m *Manager) buildSpeciesArchetypes() int {
 }
 
 // GetArchetype gets the given archetype by id if it exists.
-func (m *Manager) GetArchetype(archId FileId) (archetype *Archetype, err error) {
-	if _, ok := m.archetypes[archId]; ok {
-		return m.archetypes[archId], nil
+func (m *Manager) GetArchetype(archID FileID) (archetype *Archetype, err error) {
+	if _, ok := m.archetypes[archID]; ok {
+		return m.archetypes[archID], nil
 	}
 	return nil, errors.New("Archetype does not exist")
 }
 
 // GetArchetypeByName gets the given archetype by string if it exists.
 func (m *Manager) GetArchetypeByName(name string) (archetype *Archetype, err error) {
-	archId := m.Strings.Acquire(name)
-	if _, ok := m.archetypes[archId]; ok {
-		return m.archetypes[archId], nil
+	archID := m.Strings.Acquire(name)
+	if _, ok := m.archetypes[archID]; ok {
+		return m.archetypes[archID], nil
 	}
 	return nil, errors.New("Archetype does not exist")
 }
@@ -173,7 +173,7 @@ func (m *Manager) parseAnimationFile(filepath string) error {
 	parser.stringsMap = &m.Strings
 	// Parse our archetypes and merge with existing.
 	for k, v := range parser.parse() {
-		log.Printf("%s = %v\n", k, v)
+		log.Printf("%d = %v\n", k, v)
 		m.animations[k] = &v
 	}
 
@@ -260,9 +260,8 @@ func (m *Manager) GetMap(name string) (Map *Map, err error) {
 
 // Setup sets up the data Manager for use by the server.
 func (m *Manager) Setup() error {
-	m.archetypes = make(map[StringId]*Archetype)
-	//m.animations = make(map[string]*Animation)
-	m.animations = make(map[StringId]*Animation)
+	m.archetypes = make(map[StringID]*Archetype)
+	m.animations = make(map[StringID]*Animation)
 	m.maps = make(map[string]*Map)
 	m.loadedUsers = make(map[string]*User)
 	m.Strings = NewStringsMap()
@@ -359,6 +358,23 @@ func (m *Manager) GetGeneraArchetypes() []*Archetype {
 // GetSpeciesArchetypes returns the underlying *Archetype slice for species archetypes.
 func (m *Manager) GetSpeciesArchetypes() []*Archetype {
 	return m.speciesArchetypes
+}
+
+// GetString returns the StringId associated with the passed name.
+func (m *Manager) GetString(name string) StringID {
+	return m.Strings.Acquire(name)
+}
+
+// GetAnimationFrame returns the AnimationFrame for an animation ID, its face ID, and an entry index.
+func (m *Manager) GetAnimationFrame(animID StringID, faceID StringID, index int) AnimationFrame {
+	if anim, ok := m.animations[animID]; ok {
+		if face, ok := anim.Faces[faceID]; ok {
+			if index >= 0 && index < len(face) {
+				return face[index]
+			}
+		}
+	}
+	return AnimationFrame{0, 0}
 }
 
 /*func (m *Manager) createObject(which string) World.GameObject {

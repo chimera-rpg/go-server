@@ -12,14 +12,14 @@ type animationParser struct {
 	currentToken lexer.Token
 }
 
-func (p *animationParser) parse() map[FileId]Animation {
-	animations := make(map[FileId]Animation)
+func (p *animationParser) parse() map[FileID]Animation {
+	animations := make(map[FileID]Animation)
 Loop:
 	for {
 		switch p.nextToken().Type {
 		case TokenVariable:
-			animId := p.stringsMap.Acquire(p.tokenValue())
-			animations[animId] = p.parseAnimation(p.tokenValue())
+			animID := p.stringsMap.Acquire(p.tokenValue())
+			animations[animID] = p.parseAnimation(p.tokenValue())
 		case TokenEOF:
 			log.Print("Finished reading animation!")
 			break Loop
@@ -32,7 +32,7 @@ Loop:
 
 func (p *animationParser) parseAnimation(name string) Animation {
 	newAnimation := Animation{
-		AnimId: p.stringsMap.Acquire(name),
+		AnimID: p.stringsMap.Acquire(name),
 		Faces:  make(map[uint32][]AnimationFrame),
 	}
 	p.expectToken(TokenContainerBegin, "Expected '{' after Animation declaration.")
@@ -87,14 +87,14 @@ Loop:
 }
 
 func (p *animationParser) parseAnimationFaceSet(newAnimation *Animation, faceset string) {
-	faceId := p.stringsMap.Acquire(faceset)
-	newAnimation.Faces[faceId] = make([]AnimationFrame, 0, 0)
+	faceID := p.stringsMap.Acquire(faceset)
+	newAnimation.Faces[faceID] = make([]AnimationFrame, 0, 0)
 Loop:
 	for {
 		p.nextToken()
 		switch p.currentToken.Type {
 		case TokenVariable:
-			newAnimation.Faces[faceId] = append(newAnimation.Faces[faceId], p.parseAnimationFaceSetFrame(p.tokenValue()))
+			newAnimation.Faces[faceID] = append(newAnimation.Faces[faceID], p.parseAnimationFaceSetFrame(p.tokenValue()))
 		case TokenContainerEnd:
 			log.Print("Done with end of faceset")
 			p.nextToken()
@@ -112,7 +112,7 @@ func (p *animationParser) parseAnimationFaceSetFrame(framepath string) Animation
 	frametime := 100 // Default to 100ms
 
 	frame := AnimationFrame{
-		ImageId:   p.stringsMap.Acquire(framepath),
+		ImageID:   p.stringsMap.Acquire(framepath),
 		FrameTime: frametime,
 	}
 	return frame
