@@ -35,6 +35,15 @@ func (m *Manager) CheckUser(user string) (exists bool, err error) {
 	return
 }
 
+// CheckUserPassword returns if the provided plaintext password matches the user's stored password.
+func (m *Manager) CheckUserPassword(u *User, password string) (match bool, err error) {
+	match, err = comparePasswordAndHash(password, u.Password)
+	if err != nil {
+		err = &userError{errType: BadPassword, err: err.Error()}
+	}
+	return
+}
+
 func (m *Manager) writeUser(u *User) (err error) {
 	if !u.hasChanges {
 		return
@@ -59,9 +68,13 @@ func (m *Manager) CreateUser(user string, pass string, email string) (err error)
 	if exists, _ := m.CheckUser(user); exists {
 		return &userError{errType: UserExists}
 	}
+	encodedHash, err := encodePassword(pass, &m.cryptParams)
+	if err != nil {
+		return err
+	}
 	u := &User{
 		Username:   user,
-		Password:   pass,
+		Password:   encodedHash,
 		Email:      email,
 		hasChanges: true,
 	}
@@ -115,7 +128,6 @@ func (m *Manager) loadUser(user string) (u *User, err error) {
 	if err != nil {
 		u = nil
 	}
-	fmt.Printf("%v\n", u)
 
 	return
 }
@@ -135,7 +147,6 @@ func (m *Manager) GetUser(user string) (u *User, err error) {
 		u, err = m.loadUser(user)
 		if err == nil {
 			m.loadedUsers[user] = u
-			fmt.Printf("Ayy\n")
 		}
 	}
 	return

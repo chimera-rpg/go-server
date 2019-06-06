@@ -121,15 +121,16 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 						String: err.Error(),
 					}))
 				} else {
-					if user.Password != t.Pass {
+					match, err := s.dataManager.CheckUserPassword(user, t.Pass)
+					if !match {
 						c.Send(network.Command(network.CommandBasic{
 							Type:   network.Reject,
-							String: "bad password",
+							String: err.Error(),
 						}))
 					} else {
 						c.Send(network.Command(network.CommandBasic{
 							Type:   network.Okay,
-							String: "Welcome :)",
+							String: fmt.Sprintf("Welcome, %s!", t.User),
 						}))
 						isWaiting = false
 					}

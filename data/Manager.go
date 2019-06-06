@@ -31,6 +31,7 @@ type Manager struct {
 	pcArchetypes      []*Archetype     // Player Character archetypes, used for creating new characters.
 	maps              map[string]*Map  // Full map of Maps.
 	loadedUsers       map[string]*User // Map of loaded Players
+	cryptParams       cryptParams      // Cryptography parameters
 }
 
 type objectTemplate struct {
@@ -266,6 +267,13 @@ func (m *Manager) Setup() error {
 	m.loadedUsers = make(map[string]*User)
 	m.Strings = NewStringsMap()
 	m.imageFileMap = NewFileMap()
+	m.cryptParams = cryptParams{
+		memory:      64 * 1024,
+		iterations:  12,
+		parallelism: 2,
+		saltLength:  16,
+		keyLength:   32,
+	}
 	// Get the parent dir of command; should resolve like /path/bin/server -> /path/
 	dir, err := filepath.Abs(os.Args[0])
 	if err != nil {
