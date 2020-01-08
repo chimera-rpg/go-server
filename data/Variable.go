@@ -31,6 +31,22 @@ type Bool bool
 
 func (b Bool) isVariable() {}
 
+// GetInt returns 0 or 1 of a bool.
+func (b Bool) GetInt() (int, error) {
+	if b == true {
+		return 1, nil
+	}
+	return 0, nil
+}
+
+// GetString returns "true" or "false".
+func (b Bool) GetString() (string, error) {
+	if b == true {
+		return "true", nil
+	}
+	return "false", nil
+}
+
 // String is our string type.
 type String string
 

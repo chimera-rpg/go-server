@@ -7,6 +7,9 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
+
+	"gopkg.in/yaml.v2"
 )
 
 // Manager is the controlling type for accessing archetypes, maps, player
@@ -48,15 +51,19 @@ func (m *Manager) parseArchetypeFile(filepath string) error {
 	if err != nil {
 		return err
 	}
-	parser := new(archetypeParser)
-	parser.lexer = NewObjectLexer(string(r))
-	parser.stringsMap = &m.Strings
-	// Parse our archetypes and merge with existing.
-	for k, v := range parser.parse() {
-		log.Printf("%d = %v\n", k, v)
-		m.archetypes[k] = &v
-	}
 
+	archetypesMap := make(map[string]Archetype)
+
+	if err = yaml.Unmarshal(r, &archetypesMap); err != nil {
+		return err
+	}
+	for k, archetype := range archetypesMap {
+		// Post-processing
+		archetype.ArchID = m.Strings.Acquire(k)
+		// TODO: Iterate through inventory to ensure entries have Arch=>ArchID mapping
+		m.archetypes[archetype.ArchID] = &archetype
+		log.Printf("%+v\n", archetype)
+	}
 	return nil
 }
 
@@ -67,7 +74,7 @@ func (m *Manager) parseArchetypeFiles() error {
 			return err
 		}
 		if !info.IsDir() {
-			if path.Ext(filepath) == ".arch" {
+			if strings.HasSuffix(filepath, ".arch.yaml") {
 				err = m.parseArchetypeFile(filepath)
 				if err != nil {
 					return err
