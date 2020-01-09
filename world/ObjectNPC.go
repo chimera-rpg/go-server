@@ -1,7 +1,10 @@
 package world
 
 import (
+	"log"
+
 	"github.com/chimera-rpg/go-server/data"
+	"github.com/imdario/mergo"
 )
 
 // ObjectNPC represents non player characters.
@@ -22,16 +25,26 @@ type ObjectNPC struct {
 func NewObjectNPC(a *data.Archetype) (o *ObjectNPC) {
 	o = &ObjectNPC{
 		Object: Object{
-			Archetype: *a,
+			Archetype: a,
 		},
 	}
 
-	// o.name, _ = a.GetValue("Name")
-	if a.Name != nil {
-		o.name, _ = a.Name.GetString()
-	}
+	o.setArchetype(a)
 
 	return
+}
+
+func (o *ObjectNPC) setArchetype(targetArch *data.Archetype) {
+	// First inherit from another Archetype if ArchID is set.
+	baseArch := data.NewArchetype()
+	for targetArch != nil {
+		if err := mergo.Merge(&baseArch, targetArch); err != nil {
+			log.Fatal("o no")
+		}
+		targetArch = targetArch.InheritArch
+	}
+
+	o.name, _ = targetArch.Name.GetString()
 }
 
 func (o *ObjectNPC) update(d int) {

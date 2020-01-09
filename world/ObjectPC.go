@@ -1,7 +1,10 @@
 package world
 
 import (
+	"log"
+
 	"github.com/chimera-rpg/go-server/data"
+	"github.com/imdario/mergo"
 )
 
 // ObjectPC represents player characters.
@@ -22,16 +25,26 @@ type ObjectPC struct {
 func NewObjectPC(a *data.Archetype) (o *ObjectPC) {
 	o = &ObjectPC{
 		Object: Object{
-			Archetype: *a,
+			Archetype: a,
 		},
 	}
 
-	// o.name, _ = a.GetValue("Name")
-	if a.Name != nil {
-		o.name, _ = a.Name.GetString()
-	}
+	o.setArchetype(a)
 
 	return
+}
+
+func (o *ObjectPC) setArchetype(targetArch *data.Archetype) {
+	// First inherit from another Archetype if ArchID is set.
+	mutatedArch := data.NewArchetype()
+	for targetArch != nil {
+		if err := mergo.Merge(&mutatedArch, targetArch); err != nil {
+			log.Fatal("o no")
+		}
+		targetArch = targetArch.InheritArch
+	}
+
+	o.name, _ = mutatedArch.Name.GetString()
 }
 
 func (o *ObjectPC) update(d int) {

@@ -1,7 +1,10 @@
 package world
 
 import (
+	"log"
+
 	"github.com/chimera-rpg/go-server/data"
+	"github.com/imdario/mergo"
 )
 
 // ObjectItem represents generic items.
@@ -18,15 +21,24 @@ type ObjectItem struct {
 // NewObjectItem creates a new ObjectItem with the passed Archetype.
 func NewObjectItem(a *data.Archetype) (o *ObjectItem) {
 	o = &ObjectItem{
-		Object: Object{Archetype: *a},
+		Object: Object{Archetype: a},
 	}
-
-	// o.name, _ = a.GetValue("Name")
-	if a.Name != nil {
-		o.name, _ = a.Name.GetString()
-	}
+	o.setArchetype(a)
 
 	return
+}
+
+func (o *ObjectItem) setArchetype(targetArch *data.Archetype) {
+	// First inherit from another Archetype if ArchID is set.
+	baseArch := data.NewArchetype()
+	for targetArch != nil {
+		if err := mergo.Merge(&baseArch, targetArch); err != nil {
+			log.Fatal("o no")
+		}
+		targetArch = targetArch.InheritArch
+	}
+
+	o.name, _ = targetArch.Name.GetString()
 }
 
 func (o *ObjectItem) update(d int) {

@@ -2,7 +2,6 @@ package data
 
 import (
 	"fmt"
-	"log"
 	//"strconv"
 )
 
@@ -24,38 +23,70 @@ const (
 	ArchetypeGeneric
 )
 
+func (atype *ArchetypeType) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var value string
+	if err := unmarshal(&value); err != nil {
+		return err
+	}
+	switch value {
+	case "Genus":
+		*atype = ArchetypeGenus
+	case "Species":
+		*atype = ArchetypeSpecies
+	case "PC":
+		*atype = ArchetypePC
+	case "NPC":
+		*atype = ArchetypeNPC
+	case "Tile":
+		*atype = ArchetypeTile
+	case "Floor":
+		*atype = ArchetypeFloor
+	case "Wall":
+		*atype = ArchetypeWall
+	case "Item":
+		*atype = ArchetypeItem
+	case "Bullet":
+		*atype = ArchetypeBullet
+	case "Generic":
+		*atype = ArchetypeGeneric
+	default:
+		*atype = ArchetypeUnknown
+		return fmt.Errorf("Unknown Type '%s'", value)
+	}
+	return nil
+}
+
 // TODO: Should most Archetype properties be either StringExpression or NumberExpression? These would be string and int based types that can pull properties from their owning Archetype during Object creation. They likely should be a postfix-structured stack that can be passed some sort of context stack that contains the target Object and/or Archetype. We could also just have them as strings until they are instantized into an Object.
 
 // Archetype represents a collection of data that should be used for the
 // creation of Objects.
 type Archetype struct {
-	ArchID   StringID // Archetype ID used for generating objects and inheriting from.
-	copyArch string   `yaml:"Arch"` // Archetype to inherit from. During post-parsing this is used to acquire and set the ArchID for inventory archetypes.
-	Name     Variable // StringExpression
+	ArchID      StringID // Archetype ID used for generating objects and inheriting from.
+	Arch        string   `yaml:"Arch"` // Archetype to inherit from. During post-parsing this is used to acquire and set the ArchID for inventory archetypes.
+	InheritArch *Archetype
+	Name        StringExpression `yaml:"Name"` // StringExpression
 	//Name string
-	Description Variable // StringExpression
-	Type        ArchetypeType
+	Description StringExpression `yaml:"Description"` // StringExpression
+	Type        ArchetypeType    `yaml:"Type"`
 	AnimID      StringID
 	//
-	Value      Variable            // NumberExpression
-	Count      Variable            // NumberExpression
-	Weight     Variable            // NumberExpression
-	Properties map[string]Variable // ?? StringExpression ??
-	Inventory  map[string]Archetype
+	Value      StringExpression    `yaml:"Value"`  // NumberExpression
+	Count      StringExpression    `yaml:"Count"`  // NumberExpression
+	Weight     StringExpression    `yaml:"Weight"` // NumberExpression
+	Properties map[string]Variable `yaml:"Properties"`
+	Inventory  []Archetype         `yaml:"Inventory"`
 }
 
 // NewArchetype creates a new, blank archetype.
 func NewArchetype() Archetype {
 	return Archetype{
 		Properties: make(map[string]Variable),
-		Inventory:  make(map[string]Archetype),
 	}
 }
 
 // UnmarshalYAML unmarshals source YAML into an Archetype.
-func (arch *Archetype) UnmarshalYAML(unmarshal func(interface{}) error) error {
+/*func (arch *Archetype) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	arch.Properties = make(map[string]Variable)
-	arch.Inventory = make(map[string]Archetype)
 
 	kvs := make(map[string]interface{})
 	err := unmarshal(&kvs)
@@ -66,11 +97,17 @@ func (arch *Archetype) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		return err
 	}
 	return nil
-}
+}*/
 
-func (arch *Archetype) fromMap(kvs map[string]interface{}) error {
+/*func (arch *Archetype) fromMap(kvs map[string]interface{}) error {
 	for k, v := range kvs {
 		switch k {
+		case "Arch":
+			if s, ok := v.(string); !ok {
+				log.Printf("Error, wrong type for %s\n", k)
+			} else {
+				arch.Arch = s
+			}
 		case "Type":
 			if s, ok := v.(string); !ok {
 				log.Printf("Error, wrong type for %s\n", k)
@@ -83,13 +120,13 @@ func (arch *Archetype) fromMap(kvs map[string]interface{}) error {
 			if s, ok := v.(string); !ok {
 				log.Printf("Error, wrong type for %s\n", k)
 			} else {
-				arch.Name = String(s)
+				arch.Name = BuildStringExpression(s)
 			}
 		case "Description":
 			if s, ok := v.(string); !ok {
 				log.Printf("Error, wrong type for %s\n", k)
 			} else {
-				arch.Description = String(s)
+				arch.Description = BuildStringExpression(s)
 			}
 		case "Value":
 			if s, ok := v.(int); !ok {
@@ -110,17 +147,33 @@ func (arch *Archetype) fromMap(kvs map[string]interface{}) error {
 				arch.Weight = Expression(s)
 			}
 		case "Inventory":
-			if archs, ok := v.([]interface{}); !ok {
+			log.Printf("WOW: %T\n", v)
+			if items, ok := v.([]interface{}); !ok {
 				log.Printf("Error, wrong type for %s\n", k)
+				log.Printf("%+v\n", v)
 			} else {
-				log.Printf("TODO: Somehow generate Inventory for %+v.", archs)
+				fmt.Printf("archs: %+v\n", items)
+				for _, item := range items {
+					fmt.Printf("FUCK: %T %+v\n", item, item)
+					for key, value := range item.(map[string]interface{}) {
+						fmt.Printf("DANG: %+v %+v\n", key, value)
+					}
+					//itemMap := make(map[string]interface{})
+					/*for k, v := range items[i] {
+						strKey := fmt.Sprintf("%v", k)
+						itemMap[strKey] = v
+					}
+					itemArch.fromMap(itemMap)
+					//var itemArch Archetype
+					//arch.Inventory = append(arch.Inventory, itemArch)
+				}
 			}
 		default:
 			arch.setProperty(k, v)
 		}
 	}
 	return nil
-}
+}*/
 
 func (arch *Archetype) setProperty(key string, value interface{}) {
 	switch v := value.(type) {

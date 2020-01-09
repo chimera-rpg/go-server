@@ -11,7 +11,7 @@ import (
 // Map is a live instance of a map that contains and updates all objects
 // and tiles within it.
 type Map struct {
-	dataName     string
+	mapID        data.StringID
 	name         string
 	owners       []*OwnerI
 	playerCount  int
@@ -38,8 +38,8 @@ func NewMap(gm *data.Manager, name string) (*Map, error) {
 	}
 
 	gmap := Map{
-		dataName: gd.DataName,
-		name:     gd.Name,
+		mapID: gd.MapID,
+		name:  gd.Name,
 	}
 	gmap.owners = make([]*OwnerI, 0)
 	// Size map and populate it with the data tiles
@@ -49,17 +49,20 @@ func NewMap(gm *data.Manager, name string) (*Map, error) {
 			for z := range gd.Tiles[y][x] {
 				log.Printf("Setting %dx%dx%d\n", y, x, z)
 				for a := range gd.Tiles[y][x][z] {
-					object, err := gmap.CreateObjectByArchID(gm, gd.Tiles[y][x][z][a].ArchID)
+					object, err := gmap.CreateObjectFromArch(gm, &gd.Tiles[y][x][z][a])
 					if err != nil {
+						log.Print(err)
 						continue
 					}
 					gmap.tiles[y][x][z].insertObject(object, -1)
 				}
-				target := gmap.tiles[y][x][z].object
-				log.Print("----")
-				for ; target != nil; target = target.getNext() {
-					//log.Printf("%+v\n", target)
+				if gmap.tiles[y][x][z].object != nil {
+					target := gmap.tiles[y][x][z].object
+					for ; target != nil; target = target.getNext() {
+						//log.Printf("%+v\n", target)
+					}
 				}
+				log.Print("----")
 			}
 		}
 	}
@@ -74,7 +77,6 @@ func (gmap *Map) sizeMap(height int, width int, depth int) error {
 		for x := range gmap.tiles[y] {
 			gmap.tiles[y][x] = make([]Tile, depth)
 		}
-
 	}
 	gmap.width = width
 	gmap.height = height
@@ -102,41 +104,31 @@ func (gmap *Map) GetTile(y int, x int, z int) (*Tile, error) {
 	return nil, errors.New("invalid Tile")
 }
 
-// CreateObjectByArchID will attempt to create an Object by its archetype id.
-func (gmap *Map) CreateObjectByArchID(gm *data.Manager, id data.FileID) (o ObjectI, err error) {
-	ga, err := gm.GetArchetype(id)
-	if err != nil {
-		return nil, fmt.Errorf("could not load arch '%d'", id)
-	}
-
-	switch ga.Type {
+// CreateObjectFromArch will attempt to create an Object by an archetype, merging the result with the archetype's target Arch if possible.
+func (gmap *Map) CreateObjectFromArch(gm *data.Manager, arch *data.Archetype) (o ObjectI, err error) {
+	switch arch.Type {
 	case data.ArchetypeFloor:
-		o = ObjectI(NewObjectFloor(ga))
+		o = ObjectI(NewObjectFloor(arch))
 	case data.ArchetypeWall:
-		o = ObjectI(NewObjectWall(ga))
+		o = ObjectI(NewObjectWall(arch))
 	case data.ArchetypeItem:
-		o = ObjectI(NewObjectItem(ga))
+		o = ObjectI(NewObjectItem(arch))
 	case data.ArchetypeNPC:
-		o = ObjectI(NewObjectNPC(ga))
+		o = ObjectI(NewObjectNPC(arch))
 	default:
 		gameobj := ObjectGeneric{
 			Object: Object{
-				Archetype: *ga,
+				Archetype: arch,
 			},
 		}
-
-		if ga.Value != nil {
-			gameobj.value, _ = ga.Value.GetInt()
-		}
-		if ga.Count != nil {
-			gameobj.count, _ = ga.Count.GetInt()
-		}
-		if ga.Name != nil {
-			gameobj.name, _ = ga.Name.GetString()
-		}
+		gameobj.value, _ = arch.Value.GetInt()
+		gameobj.count, _ = arch.Count.GetInt()
+		gameobj.name, _ = arch.Name.GetString()
 
 		o = ObjectI(&gameobj)
 	}
+
+	// TODO: Create/Merge Archetype properties!
 	return
 }
 

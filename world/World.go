@@ -149,14 +149,14 @@ func (world *World) isMapLoaded(name string) (mapIndex int, isActive bool) {
 	world.activeMapsMutex.Lock()
 	defer world.activeMapsMutex.Unlock()
 	for i := range world.activeMaps {
-		if world.activeMaps[i].dataName == name {
+		if world.activeMaps[i].mapID == world.data.Strings.Acquire(name) {
 			return i, true
 		}
 	}
 	world.inactiveMapsMutex.Lock()
 	defer world.inactiveMapsMutex.Unlock()
 	for i := range world.inactiveMaps {
-		if world.inactiveMaps[i].dataName == name {
+		if world.inactiveMaps[i].mapID == world.data.Strings.Acquire(name) {
 			return i, false
 		}
 	}

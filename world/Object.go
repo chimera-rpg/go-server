@@ -7,8 +7,7 @@ import (
 // Object is the base type that should be used as an embeded struct in
 // all game Objects.
 type Object struct {
-	Arch string
-	data.Archetype
+	Archetype *data.Archetype
 	// Relationships
 	previous ObjectI
 	next     ObjectI

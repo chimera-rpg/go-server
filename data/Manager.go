@@ -2,6 +2,7 @@ package data
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -58,11 +59,26 @@ func (m *Manager) parseArchetypeFile(filepath string) error {
 		return err
 	}
 	for k, archetype := range archetypesMap {
-		// Post-processing
-		archetype.ArchID = m.Strings.Acquire(k)
-		// TODO: Iterate through inventory to ensure entries have Arch=>ArchID mapping
-		m.archetypes[archetype.ArchID] = &archetype
-		log.Printf("%+v\n", archetype)
+		archID := m.Strings.Acquire(k)
+		m.archetypes[archID] = &archetype
+	}
+	return nil
+}
+
+func (m *Manager) postProcessArchetype(archetype *Archetype) error {
+	if archetype.Arch != "" {
+		inheritArch, err := m.GetArchetypeByName(archetype.Arch)
+		if err != nil {
+			return err
+		}
+		archetype.InheritArch = inheritArch
+	}
+	//archetype.Arch = archName
+	//archetype.ArchID = m.Strings.Acquire(archName)
+	for i := range archetype.Inventory {
+		if err := m.postProcessArchetype(&archetype.Inventory[i]); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -86,12 +102,18 @@ func (m *Manager) parseArchetypeFiles() error {
 	if err != nil {
 		log.Printf("Error walking the path %s: %v\n", m.archetypesPath, err)
 	}
+	// Post-process our archetypes so they properly set up inheritance relationships.
+	for _, archetype := range m.archetypes {
+		m.postProcessArchetype(archetype)
+	}
+	fmt.Printf("%+v\n", m.archetypes)
+
 	log.Printf("%d archetypes loaded.\n", len(m.archetypes))
 	log.Printf("%d Genera.", m.buildGeneraArchetypes())
 	log.Printf("%d Species.", m.buildSpeciesArchetypes())
 	log.Printf("%d PCs.", m.buildPCArchetypes())
 	for _, v := range m.pcArchetypes {
-		name, _ := v.Name.GetString()
+		name, _ := v.Name.Get()
 		log.Printf("%s ", name)
 	}
 	log.Print("Archetypes: Done!")
@@ -221,14 +243,30 @@ func (m *Manager) parseMapFile(filepath string) error {
 	if err != nil {
 		return err
 	}
-	parser := new(mapParser)
-	parser.lexer = NewObjectLexer(string(r))
-	parser.stringsMap = &m.Strings
-	//log.Printf("%+v\n", parser.parse())
-	// Parse our maps and merge with existing.
-	for k, v := range parser.parse() {
-		log.Printf("%s = %v\n", k, v)
+	maps := make(map[string]Map)
+
+	if err = yaml.Unmarshal(r, &maps); err != nil {
+		return err
+	}
+	log.Printf("%+v\n", maps)
+	for k, v := range maps {
+		// Acquire our ArchIDs for Tiles
+		for y := range v.Tiles {
+			for x := range v.Tiles[y] {
+				for z := range v.Tiles[y][x] {
+					for i := range v.Tiles[y][x][z] {
+						// We also post-process our tiles so as to allow for XTREME custom archs in maps!
+						if err := m.postProcessArchetype(&v.Tiles[y][x][z][i]); err != nil {
+							return err
+						} else {
+							log.Printf("%+v\n", v.Tiles[y][x][z][i])
+						}
+					}
+				}
+			}
+		}
 		m.maps[k] = &v
+		log.Printf("%+v\n", v)
 	}
 
 	return nil
@@ -241,7 +279,7 @@ func (m *Manager) parseMapFiles() error {
 			return err
 		}
 		if !info.IsDir() {
-			if path.Ext(filepath) == ".map" {
+			if strings.HasSuffix(filepath, ".map.yaml") {
 				err = m.parseMapFile(filepath)
 				if err != nil {
 					return err

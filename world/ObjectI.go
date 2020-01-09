@@ -11,6 +11,7 @@ type ObjectI interface {
 	getNext() ObjectI
 	setNext(ObjectI)
 	removeSelf()
+	setArchetype(*data.Archetype)
 	update(int)
 	getType() data.ArchetypeType
 }
