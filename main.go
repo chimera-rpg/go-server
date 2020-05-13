@@ -14,7 +14,14 @@ func main() {
 
 	// Begin listening on all interfaces.
 	s := server.New(":1337")
-	s.Start()
+	// TODO: We need to pass in a server YAML file that contains information such as whether to use TLS or not. Ideally we would also merge this with passed flags. For now we'll try to start securely, and if that fails, we do an insecure start. This presumes that server.crt exists in the CWD.
+	if err := s.SecureStart(); err != nil {
+		log.Print(err)
+		if err := s.Start(); err != nil {
+			log.Print(err)
+			return
+		}
+	}
 
 	// Main co-processing looperino
 	ticker := time.NewTicker(time.Millisecond * 100)
