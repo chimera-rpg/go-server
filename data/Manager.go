@@ -11,6 +11,8 @@ import (
 	"strings"
 
 	"gopkg.in/yaml.v2"
+
+	"github.com/chimera-rpg/go-server/config"
 )
 
 // Manager is the controlling type for accessing archetypes, maps, player
@@ -274,7 +276,7 @@ func (m *Manager) parseMapFile(filepath string) error {
 }
 
 func (m *Manager) parseMapFiles() error {
-	log.Print("Maps: Loading...")
+	log.Printf("Maps: Loading from \"%s\"...\n", m.mapsPath)
 	err := filepath.Walk(m.mapsPath, func(filepath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -306,7 +308,7 @@ func (m *Manager) GetMap(name string) (Map *Map, err error) {
 }
 
 // Setup sets up the data Manager for use by the server.
-func (m *Manager) Setup() error {
+func (m *Manager) Setup(config *config.Config) error {
 	m.archetypes = make(map[StringID]*Archetype)
 	m.animations = make(map[StringID]*Animation)
 	m.maps = make(map[string]*Map)
@@ -360,7 +362,7 @@ func (m *Manager) Setup() error {
 			return err
 		}
 	}
-	// Variable Data
+	// Etc Data
 	etcPath := path.Join(dir, "etc", "chimera")
 	if _, err := os.Stat(etcPath); os.IsNotExist(err) {
 		if err = os.MkdirAll(etcPath, os.ModePerm); err != nil {

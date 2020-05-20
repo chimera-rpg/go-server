@@ -2,14 +2,11 @@ package server
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net"
-	"path"
 
+	"github.com/chimera-rpg/go-server/config"
 	"github.com/chimera-rpg/go-server/data"
 	"github.com/chimera-rpg/go-server/world"
-
-	"gopkg.in/yaml.v2"
 )
 
 // GameServer is our main server for the game. It contains the client
@@ -25,7 +22,7 @@ type GameServer struct {
 	// players []Player.Player
 	// activeMaps []Maps.Map
 	world       world.World
-	config      Config
+	config      *config.Config
 	dataManager data.Manager
 	End         chan bool
 }
@@ -37,23 +34,13 @@ func New() *GameServer {
 	}
 }
 
-// Setup sets up the server for use, loading in configuration files and setting up data manager.
-func (s *GameServer) Setup() error {
-	s.dataManager.Setup()
+// Setup sets up the server for use.
+func (s *GameServer) Setup(cfg *config.Config) error {
+	s.dataManager.Setup(cfg)
+	s.world.Setup(&s.dataManager)
 
 	// Load in our configuration
-	s.config = Config{
-		Address: ":1337",
-	}
-	filepath := path.Join(s.dataManager.GetEtcPath(), "config.yml")
-	r, err := ioutil.ReadFile(filepath)
-	if err != nil {
-		return err
-	}
-
-	if err = yaml.Unmarshal(r, &s.config); err != nil {
-		return err
-	}
+	s.config = cfg
 	return nil
 }
 

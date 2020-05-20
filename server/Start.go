@@ -12,8 +12,6 @@ func (server *GameServer) Start() (err error) {
 	server.connectedClients = make(map[int]ClientConnection)
 	server.clientConnections = make(chan ClientConnection)
 
-	server.world.Setup(&server.dataManager)
-
 	server.listener, err = net.Listen("tcp", server.config.Address)
 	if err != nil {
 		return err
@@ -29,10 +27,8 @@ func (server *GameServer) SecureStart() (err error) {
 	server.connectedClients = make(map[int]ClientConnection)
 	server.clientConnections = make(chan ClientConnection)
 
-	server.world.Setup(&server.dataManager)
-
-	serverCert := path.Join(server.dataManager.GetEtcPath(), "server.crt")
-	serverKey := path.Join(server.dataManager.GetEtcPath(), "server.key")
+	serverCert := path.Join(server.dataManager.GetEtcPath(), server.config.TLSCert)
+	serverKey := path.Join(server.dataManager.GetEtcPath(), server.config.TLSKey)
 	cer, err := tls.LoadX509KeyPair(serverCert, serverKey)
 	if err != nil {
 		return err

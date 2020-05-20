@@ -1,28 +1,77 @@
 package main
 
 import (
+	"io/ioutil"
 	"log"
-	/*  "bufio"
-	    "strings"*/
+	"os"
+	"path"
+	"path/filepath"
 	"time"
-	//
+
+	"github.com/chimera-rpg/go-server/config"
 	"github.com/chimera-rpg/go-server/server"
+
+	"gopkg.in/yaml.v2"
 )
 
 func main() {
 	log.Print("Starting Chimera (golang)")
 
+	// Copied from data/Manager.go
+	// Get the parent dir of command; should resolve like /path/bin/server -> /path/
+	dir, err := filepath.Abs(os.Args[0])
+	if err != nil {
+		log.Fatal(err)
+	}
+	dir = filepath.Dir(filepath.Dir(dir))
+
+	// Attempt to get our configuration file.
+	cfgPath := path.Join(dir, "etc", "chimera", "config.yml")
+
+	// Setup our default configuration.
+	cfg := config.Config{
+		Address: ":1337",
+		UseTLS:  true,
+		TLSKey:  "server.key",
+		TLSCert: "server.crt",
+	}
+	// Load in our configuration.
+	log.Printf("Attempting to load config from \"%s\"\n", cfgPath)
+	r, err := ioutil.ReadFile(cfgPath)
+	if err != nil {
+		// Ensure path to cfg exists.
+		if _, err := os.Stat(filepath.Dir(cfgPath)); os.IsNotExist(err) {
+			if err = os.MkdirAll(filepath.Dir(cfgPath), os.ModePerm); err != nil {
+				log.Fatal(err)
+			}
+		}
+		// Write out default config.
+		log.Printf("Creating default config \"%s\"\n", cfgPath)
+		bytes, _ := yaml.Marshal(&cfg)
+		err = ioutil.WriteFile(cfgPath, bytes, 0644)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		if err = yaml.Unmarshal(r, &cfg); err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	// Begin listening on all interfaces.
 	s := server.New()
-	if err := s.Setup(); err != nil {
-		log.Print(err)
+	if err := s.Setup(&cfg); err != nil {
+		log.Fatal(err)
 	}
-	// TODO: We need to pass in a server YAML file that contains information such as whether to use TLS or not. Ideally we would also merge this with passed flags. For now we'll try to start securely, and if that fails, we do an insecure start. This presumes that server.crt exists in the CWD.
-	if err := s.SecureStart(); err != nil {
-		log.Print(err)
+
+	// Start our server either securely or insecurely.
+	if cfg.UseTLS == true {
+		if err := s.SecureStart(); err != nil {
+			log.Fatal(err)
+		}
+	} else {
 		if err := s.Start(); err != nil {
-			log.Print(err)
-			return
+			log.Fatal(err)
 		}
 	}
 
