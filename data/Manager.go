@@ -19,6 +19,7 @@ type Manager struct {
 	dataPath       string
 	archetypesPath string
 	varPath        string
+	etcPath        string
 	usersPath      string
 	//musicPath string
 	//soundPath string
@@ -359,6 +360,15 @@ func (m *Manager) Setup() error {
 			return err
 		}
 	}
+	// Variable Data
+	etcPath := path.Join(dir, "etc", "chimera")
+	if _, err := os.Stat(etcPath); os.IsNotExist(err) {
+		if err = os.MkdirAll(etcPath, os.ModePerm); err != nil {
+			log.Fatal(err)
+			return err
+		}
+	}
+	m.etcPath = etcPath
 	/*
 	  m.musicPath = path.Join(dataPath, "music")
 	  if _, err := os.Stat(m.musicPath); os.IsNotExist(err) {
