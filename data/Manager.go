@@ -408,6 +408,11 @@ func (m *Manager) Setup() error {
 	return nil
 }
 
+// GetEtcPath returns the path to the current etc directory.
+func (m *Manager) GetEtcPath() string {
+	return m.etcPath
+}
+
 // GetPCArchetypes returns the underlying *Archetype slice for player character archetypes.
 func (m *Manager) GetPCArchetypes() []*Archetype {
 	return m.pcArchetypes
