@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"log"
 	"net"
+	"path"
 )
 
 // Start sets up and starts handling client connections and acceptions.
@@ -32,7 +33,9 @@ func (server *GameServer) SecureStart() (err error) {
 	server.dataManager.Setup()
 	server.world.Setup(&server.dataManager)
 
-	cer, err := tls.LoadX509KeyPair("server.crt", "server.key")
+	serverCert := path.Join(server.dataManager.GetEtcPath(), "server.crt")
+	serverKey := path.Join(server.dataManager.GetEtcPath(), "server.key")
+	cer, err := tls.LoadX509KeyPair(serverCert, serverKey)
 	if err != nil {
 		return err
 	}
