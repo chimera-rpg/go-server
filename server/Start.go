@@ -12,16 +12,15 @@ func (server *GameServer) Start() (err error) {
 	server.connectedClients = make(map[int]ClientConnection)
 	server.clientConnections = make(chan ClientConnection)
 
-	server.dataManager.Setup()
 	server.world.Setup(&server.dataManager)
 
-	server.listener, err = net.Listen("tcp", server.Addr)
+	server.listener, err = net.Listen("tcp", server.config.Address)
 	if err != nil {
 		return err
 	}
 	go server.handleClientConnections()
 	go server.handleClientAcceptions()
-	log.Printf("Listening on %s\n", server.Addr)
+	log.Printf("Listening on %s\n", server.config.Address)
 	return nil
 }
 
@@ -30,7 +29,6 @@ func (server *GameServer) SecureStart() (err error) {
 	server.connectedClients = make(map[int]ClientConnection)
 	server.clientConnections = make(chan ClientConnection)
 
-	server.dataManager.Setup()
 	server.world.Setup(&server.dataManager)
 
 	serverCert := path.Join(server.dataManager.GetEtcPath(), "server.crt")
@@ -40,12 +38,12 @@ func (server *GameServer) SecureStart() (err error) {
 		return err
 	}
 	conf := &tls.Config{Certificates: []tls.Certificate{cer}}
-	server.listener, err = tls.Listen("tcp", server.Addr, conf)
+	server.listener, err = tls.Listen("tcp", server.config.Address, conf)
 	if err != nil {
 		return err
 	}
 	go server.handleClientConnections()
 	go server.handleClientAcceptions()
-	log.Printf("Securely listening on %s\n", server.Addr)
+	log.Printf("Securely listening on %s\n", server.config.Address)
 	return nil
 }
