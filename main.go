@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"io/ioutil"
 	"log"
 	"os"
@@ -24,9 +25,13 @@ func main() {
 		log.Fatal(err)
 	}
 	dir = filepath.Dir(filepath.Dir(dir))
-
-	// Attempt to get our configuration file.
+	// Get our default configuration path.
 	cfgPath := path.Join(dir, "etc", "chimera", "config.yml")
+
+	// Load up flags.
+	flag.StringVar(&cfgPath, "config", cfgPath, "configuration file")
+	flag.StringVar(&cfgPath, "c", cfgPath, "configuration file (shorthand)")
+	flag.Parse()
 
 	// Setup our default configuration.
 	cfg := config.Config{
