@@ -1,8 +1,12 @@
 package world
 
+import (
+	"github.com/chimera-rpg/go-server/data"
+)
+
 type clientConnectionI interface {
-	SetOwner(p *OwnerPlayer)
-	GetOwner() *OwnerPlayer
+	SetOwner(p OwnerI)
+	GetOwner() OwnerI
 }
 
 // OwnerPlayer represents a player character through a network
@@ -12,18 +16,22 @@ type OwnerPlayer struct {
 	target           ObjectI
 }
 
-func (player OwnerPlayer) getTarget() ObjectI {
+// getTarget returns the player's target object.
+func (player *OwnerPlayer) getTarget() ObjectI {
 	return player.target
 }
-func (player OwnerPlayer) setTarget(object ObjectI) {
+
+// setTarget sets the given object as the target of the player.
+func (player *OwnerPlayer) setTarget(object ObjectI) {
 	player.target = object
 	object.setOwner(player)
 }
 
 // NewOwnerPlayer creates a Player from a given client connection.
-func NewOwnerPlayer(cc clientConnectionI) *OwnerPlayer {
+func NewOwnerPlayer(cc clientConnectionI, character *data.Character) *OwnerPlayer {
 	return &OwnerPlayer{
 		ClientConnection: cc,
+		target:           NewObjectPC(character.Archetype),
 	}
 }
 
