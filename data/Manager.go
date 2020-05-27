@@ -76,6 +76,10 @@ func (m *Manager) postProcessArchetype(archetype *Archetype) error {
 		}
 		archetype.InheritArch = inheritArch
 	}
+	if archetype.Anim != "" {
+		archetype.AnimID = m.Strings.Acquire(archetype.Anim)
+		archetype.Anim = ""
+	}
 	//archetype.Arch = archName
 	//archetype.ArchID = m.Strings.Acquire(archName)
 	for i := range archetype.Inventory {
@@ -177,8 +181,7 @@ func (m *Manager) parseAnimationFiles() error {
 			return err
 		}
 		if !info.IsDir() {
-			if path.Ext(filepath) == ".anim" {
-				log.Printf("parseAnimationFile: %s\n", filepath)
+			if strings.HasSuffix(filepath, ".anim.yaml") {
 				err = m.parseAnimationFile(filepath)
 				if err != nil {
 					return err
@@ -196,20 +199,41 @@ func (m *Manager) parseAnimationFiles() error {
 	return nil
 }
 
+// parseAnimationFile parses the given animation file into our animations field.
 func (m *Manager) parseAnimationFile(filepath string) error {
 	r, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		return err
 	}
-	parser := new(animationParser)
-	parser.lexer = NewObjectLexer(string(r))
-	parser.stringsMap = &m.Strings
-	// Parse our archetypes and merge with existing.
-	for k, v := range parser.parse() {
-		log.Printf("%d = %v\n", k, v)
-		m.animations[k] = &v
-	}
 
+	animationsMap := make(map[string]AnimationPre)
+
+	if err = yaml.Unmarshal(r, &animationsMap); err != nil {
+		return err
+	}
+	for k, animation := range animationsMap {
+		animID := m.Strings.Acquire(k)
+
+		parsedAnimation := &Animation{
+			Faces: make(map[StringID][]AnimationFrame),
+		}
+
+		for faceKey, face := range animation.Faces {
+			faceID := m.Strings.Acquire(faceKey)
+
+			parsedAnimation.Faces[faceID] = make([]AnimationFrame, 0)
+
+			for _, frame := range face {
+				imageID := m.Strings.Acquire(frame.Image)
+				parsedFrame := AnimationFrame{
+					ImageID: imageID,
+					Time:    frame.Time,
+				}
+				parsedAnimation.Faces[faceID] = append(parsedAnimation.Faces[faceID], parsedFrame)
+			}
+		}
+		m.animations[animID] = parsedAnimation
+	}
 	return nil
 }
 

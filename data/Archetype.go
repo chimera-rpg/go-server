@@ -68,6 +68,7 @@ type Archetype struct {
 	//Name string
 	Description StringExpression `yaml:"Description"` // StringExpression
 	Type        ArchetypeType    `yaml:"Type"`
+	Anim        string           `yaml:"Anim"`
 	AnimID      StringID
 	//
 	Value      StringExpression    `yaml:"Value"`  // NumberExpression
