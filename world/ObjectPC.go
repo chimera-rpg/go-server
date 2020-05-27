@@ -29,7 +29,7 @@ func NewObjectPC(a *data.Archetype) (o *ObjectPC) {
 		},
 	}
 
-	o.setArchetype(a)
+	//o.setArchetype(a)
 
 	return
 }

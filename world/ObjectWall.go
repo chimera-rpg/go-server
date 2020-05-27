@@ -23,7 +23,7 @@ func NewObjectWall(a *data.Archetype) (o *ObjectWall) {
 		},
 	}
 
-	o.setArchetype(a)
+	//o.setArchetype(a)
 
 	return
 }

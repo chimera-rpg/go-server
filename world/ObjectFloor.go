@@ -20,7 +20,7 @@ func NewObjectFloor(a *data.Archetype) (o *ObjectFloor) {
 		Object: Object{Archetype: a},
 	}
 
-	o.setArchetype(a)
+	//o.setArchetype(a)
 
 	return
 }

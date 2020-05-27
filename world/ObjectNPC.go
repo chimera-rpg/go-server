@@ -29,7 +29,7 @@ func NewObjectNPC(a *data.Archetype) (o *ObjectNPC) {
 		},
 	}
 
-	o.setArchetype(a)
+	//o.setArchetype(a)
 
 	return
 }

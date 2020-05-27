@@ -23,7 +23,7 @@ func NewObjectItem(a *data.Archetype) (o *ObjectItem) {
 	o = &ObjectItem{
 		Object: Object{Archetype: a},
 	}
-	o.setArchetype(a)
+	//o.setArchetype(a)
 
 	return
 }
