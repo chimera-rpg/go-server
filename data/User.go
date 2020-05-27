@@ -2,6 +2,7 @@ package data
 
 import (
 	"fmt"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"path"
@@ -99,7 +100,9 @@ func (m *Manager) loadUser(user string) (u *User, err error) {
 		err = &userError{err: err.Error()}
 		return
 	}
-	u = &User{}
+	u = &User{
+		loadedCharacters: make(map[string]*Character),
+	}
 	// NOTE: For now we're not implementing a parser as it'd be too
 	// heavy for the functionality we need at the moment.
 	lines := strings.Split(string(bytes), "\n")
@@ -155,14 +158,38 @@ func (m *Manager) GetUser(user string) (u *User, err error) {
 // loadUserCharacter attempts to load a given Character from disk and add it
 // to the given User's loadedCharacters field.
 func (m *Manager) loadUserCharacter(u *User, name string) (c *Character, err error) {
-	filepath := path.Join(m.usersPath, u.Username+".user", name+".arch")
+	filepath := path.Join(m.usersPath, u.Username, name+".arch")
+	fmt.Printf("Loading character \"%s\"", filepath)
 	//
-	if _, err = ioutil.ReadFile(filepath); err != nil {
+	r, err := ioutil.ReadFile(filepath)
+	if err != nil {
 		err = &userError{err: err.Error()}
 		return
 	}
 
-	err = &userError{errType: NoSuchCharacter, err: name}
+	archetypesMap := make(map[string]Archetype)
+
+	if err = yaml.Unmarshal(r, &archetypesMap); err != nil {
+		err = &userError{err: err.Error()}
+		return
+	}
+
+	var targetArch *Archetype
+	for k, archetype := range archetypesMap {
+		if k == name {
+			targetArch = &archetype
+		}
+	}
+
+	if targetArch == nil {
+		err = &userError{errType: NoSuchCharacter, err: name}
+	}
+
+	c = &Character{
+		Archetype: targetArch,
+	}
+	fmt.Println("Looks good...")
+
 	return
 }
 
@@ -171,6 +198,9 @@ func (m *Manager) GetUserCharacter(u *User, name string) (c *Character, err erro
 	var ok bool
 	if c, ok = u.loadedCharacters[name]; !ok {
 		c, err = m.loadUserCharacter(u, name)
+		if err == nil {
+			u.loadedCharacters[name] = c
+		}
 	}
 	return
 }

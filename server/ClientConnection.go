@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"github.com/chimera-rpg/go-common/network"
+	"github.com/chimera-rpg/go-server/data"
 	"github.com/chimera-rpg/go-server/world"
 )
 
@@ -100,6 +101,8 @@ func (c *ClientConnection) HandleHandshake(s *GameServer) {
 func (c *ClientConnection) HandleLogin(s *GameServer) {
 	isWaiting := true
 	var cmd network.Command
+	var err error
+	var user *data.User
 
 	for isWaiting {
 		isHandled, shouldReturn := c.Receive(s, &cmd)
@@ -114,7 +117,7 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 			if t.Type == network.Query {
 				// TODO: Query if user exists
 			} else if t.Type == network.Login {
-				user, err := s.dataManager.GetUser(t.User)
+				user, err = s.dataManager.GetUser(t.User)
 				if err != nil {
 					c.Send(network.Command(network.CommandBasic{
 						Type:   network.Reject,
@@ -156,12 +159,12 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 		}
 	}
 	// If we get to here, then the user has successfully logged in.
-	c.HandleCharacterCreation(s)
+	c.HandleCharacterCreation(s, user)
 }
 
 // HandleCharacterCreation handles the character creation/selection of a
 // connection and, potentially, sends it over to HandleGame.
-func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
+func (c *ClientConnection) HandleCharacterCreation(s *GameServer, user *data.User) {
 	isWaiting := true
 
 	// Send Genera
@@ -184,6 +187,9 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 	//		* All of the associated player's Characters as Image, Character, Level, and AbilityScores
 
 	var cmd network.Command
+	var err error
+	var character *data.Character
+
 	for isWaiting {
 		isHandled, shouldReturn := c.Receive(s, &cmd)
 		if shouldReturn {
@@ -199,6 +205,34 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 			} else if t.Type == network.AdjustCharacter {
 				// Changes a given character's species, culture, or training.
 			} else if t.Type == network.ChooseCharacter {
+				fmt.Printf("Received choose, %+v\n", t.Characters)
+				if len(t.Characters) != 1 {
+					// TODO: Deny request, as it is malformed.
+					c.Send(network.Command(network.CommandBasic{
+						Type:   network.Reject,
+						String: "Invalid Characters length",
+					}))
+					continue
+				}
+				// TODO: Check if "userpath/characters/..." exists.
+				character, err = s.dataManager.GetUserCharacter(user, t.Characters[0])
+				if err != nil {
+					c.Send(network.Command(network.CommandBasic{
+						Type:   network.Reject,
+						String: err.Error(),
+					}))
+					continue
+				}
+				// Somehow load in character.
+				c.SetOwner(world.OwnerI(world.NewOwnerPlayer(c, character)))
+
+				// Send a ChooseCharacter command to let the player know we have accepted the character.
+				fmt.Println("Letting connection know the character is logging in...")
+				c.Send(network.Command(network.CommandCharacter{
+					Type: network.ChooseCharacter,
+				}))
+
+				isWaiting = false
 				// Load a given character by name and spawn the character.
 			} else if t.Type == network.DeleteCharacter {
 				// Delete a given character by name.
@@ -207,13 +241,12 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 			}
 		}
 	}
-	// Here we'd instantiate the Connection's OwnerPlayer and create the ObjectPC instance from the
-	// appropriate database.
-	//c.HandleGame(s)
+	c.HandleGame(s)
 }
 
 // HandleGame handles the loop for the client when in the game state.
 func (c *ClientConnection) HandleGame(s *GameServer) {
+	log.Println("Now handling game connection...")
 	var cmd network.Command
 
 	for {
@@ -228,6 +261,12 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 		// Handle
 		/*switch t := cmd.(type) {
 		}*/
+		switch cmd.(type) {
+		default: // Boot the client if it sends anything else.
+			s.RemoveClientByID(c.GetID())
+			c.GetSocket().Close()
+			log.Printf("Client %s(%d) send bad data, kicking.\n", c.GetSocket().RemoteAddr().String(), c.GetID())
+		}
 	}
 
 }

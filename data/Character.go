@@ -6,5 +6,5 @@ package data
 // Perhaps Character should be: Archetype, RaceArchetype, ClassArchetype,
 // all of which are built upon one another?
 type Character struct {
-	Archetype Archetype
+	Archetype *Archetype
 }
