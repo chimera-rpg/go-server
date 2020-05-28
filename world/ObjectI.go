@@ -4,8 +4,8 @@ import "github.com/chimera-rpg/go-server/data"
 
 // ObjectI is the basic interface for Object access.
 type ObjectI interface {
-	getOwner() OwnerI
-	setOwner(OwnerI)
+	GetOwner() OwnerI
+	SetOwner(OwnerI)
 	getPrevious() ObjectI
 	setPrevious(ObjectI)
 	getNext() ObjectI

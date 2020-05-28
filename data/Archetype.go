@@ -61,22 +61,22 @@ func (atype *ArchetypeType) UnmarshalYAML(unmarshal func(interface{}) error) err
 // Archetype represents a collection of data that should be used for the
 // creation of Objects.
 type Archetype struct {
-	ArchID      StringID // Archetype ID used for generating objects and inheriting from.
-	Arch        string   `yaml:"Arch"` // Archetype to inherit from. During post-parsing this is used to acquire and set the ArchID for inventory archetypes.
-	InheritArch *Archetype
-	SelfID      StringID         // The Archetype's own SelfID
-	Name        StringExpression `yaml:"Name"` // StringExpression
+	ArchID      StringID         `yaml:"-"`              // Archetype ID used for generating objects and inheriting from.
+	Arch        string           `yaml:"Arch,omitempty"` // Archetype to inherit from. During post-parsing this is used to acquire and set the ArchID for inventory archetypes.
+	InheritArch *Archetype       `yaml:"-"`
+	SelfID      StringID         `yaml:"-"`              // The Archetype's own SelfID
+	Name        StringExpression `yaml:"Name,omitempty"` // StringExpression
 	//Name string
-	Description StringExpression `yaml:"Description"` // StringExpression
-	Type        ArchetypeType    `yaml:"Type"`
-	Anim        string           `yaml:"Anim"`
-	AnimID      StringID
+	Description StringExpression `yaml:"Description,omitempty"` // StringExpression
+	Type        ArchetypeType    `yaml:"Type,omitempty"`
+	Anim        string           `yaml:"Anim,omitempty"`
+	AnimID      StringID         `yaml:"-"`
 	//
-	Value      StringExpression    `yaml:"Value"`  // NumberExpression
-	Count      StringExpression    `yaml:"Count"`  // NumberExpression
-	Weight     StringExpression    `yaml:"Weight"` // NumberExpression
-	Properties map[string]Variable `yaml:"Properties"`
-	Inventory  []Archetype         `yaml:"Inventory"`
+	Value      StringExpression    `yaml:"Value,omitempty"`  // NumberExpression
+	Count      StringExpression    `yaml:"Count,omitempty"`  // NumberExpression
+	Weight     StringExpression    `yaml:"Weight,omitempty"` // NumberExpression
+	Properties map[string]Variable `yaml:"Properties,omitempty"`
+	Inventory  []Archetype         `yaml:"Inventory,omitempty"`
 }
 
 // NewArchetype creates a new, blank archetype.

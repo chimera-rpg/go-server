@@ -9,6 +9,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"gopkg.in/yaml.v2"
 
@@ -23,6 +24,7 @@ type Manager struct {
 	varPath        string
 	etcPath        string
 	usersPath      string
+	usersMutex     sync.Mutex
 	//musicPath string
 	//soundPath string
 	mapsPath   string

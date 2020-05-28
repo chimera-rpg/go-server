@@ -16,6 +16,7 @@ type ClientConnection struct {
 	network.Connection
 	id    int
 	Owner world.OwnerI
+	user  *data.User
 }
 
 // GetSocket returns the connection's socket.
@@ -52,7 +53,9 @@ func (c *ClientConnection) Receive(s *GameServer, cmd *network.Command) (isHandl
 	// Here is where we'd also handle GFX requests and otherwise
 	case network.CommandBasic:
 		if t.Type == network.Cya {
-			s.RemoveClientByID(c.GetID())
+			if err := s.cleanupConnection(c); err != nil {
+				log.Print(err)
+			}
 			c.GetSocket().Close()
 			log.Printf("Client %s(%d) left faithfully.\n", c.GetSocket().RemoteAddr().String(), c.GetID())
 			isHandled = true
@@ -66,7 +69,7 @@ func (c *ClientConnection) Receive(s *GameServer, cmd *network.Command) (isHandl
 // OnExplode handles when the client explodes.
 func (c *ClientConnection) OnExplode(s *GameServer) {
 	if r := recover(); r != nil {
-		s.RemoveClientByID(c.GetID())
+		s.cleanupConnection(c)
 		c.GetSocket().Close()
 		log.Print(r.(error))
 		log.Print(fmt.Errorf("client %s(%d) exploded, removing", c.GetSocket().RemoteAddr().String(), c.GetID()))
@@ -102,7 +105,6 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 	isWaiting := true
 	var cmd network.Command
 	var err error
-	var user *data.User
 
 	for isWaiting {
 		isHandled, shouldReturn := c.Receive(s, &cmd)
@@ -117,14 +119,14 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 			if t.Type == network.Query {
 				// TODO: Query if user exists
 			} else if t.Type == network.Login {
-				user, err = s.dataManager.GetUser(t.User)
+				c.user, err = s.dataManager.GetUser(t.User)
 				if err != nil {
 					c.Send(network.Command(network.CommandBasic{
 						Type:   network.Reject,
 						String: err.Error(),
 					}))
 				} else {
-					match, err := s.dataManager.CheckUserPassword(user, t.Pass)
+					match, err := s.dataManager.CheckUserPassword(c.user, t.Pass)
 					if !match {
 						c.Send(network.Command(network.CommandBasic{
 							Type:   network.Reject,
@@ -159,12 +161,12 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 		}
 	}
 	// If we get to here, then the user has successfully logged in.
-	c.HandleCharacterCreation(s, user)
+	c.HandleCharacterCreation(s)
 }
 
 // HandleCharacterCreation handles the character creation/selection of a
 // connection and, potentially, sends it over to HandleGame.
-func (c *ClientConnection) HandleCharacterCreation(s *GameServer, user *data.User) {
+func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 	isWaiting := true
 
 	// Send Genera
@@ -188,7 +190,7 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer, user *data.Use
 
 	// Send characters.
 	var playerCharacters []string
-	for key, _ := range user.Characters {
+	for key, _ := range c.user.Characters {
 		playerCharacters = append(playerCharacters, key)
 	}
 	c.Send(network.Command(network.CommandCharacter{
@@ -197,8 +199,6 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer, user *data.Use
 	}))
 
 	var cmd network.Command
-	var err error
-	var character *data.Character
 
 	for isWaiting {
 		isHandled, shouldReturn := c.Receive(s, &cmd)
@@ -214,7 +214,7 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer, user *data.Use
 				// Create a character according to species, culture, training, name
 				// TODO: Maybe the Character type should have a set/array of ArchIDs to inherit from?
 				// Attempt to create the character.
-				if createErr := s.dataManager.CreateUserCharacter(user, t.Characters[0]); createErr != nil {
+				if createErr := s.dataManager.CreateUserCharacter(c.user, t.Characters[0]); createErr != nil {
 					c.Send(network.Command(network.CommandBasic{
 						Type:   network.Reject,
 						String: createErr.Error(),
@@ -238,8 +238,9 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer, user *data.Use
 					}))
 					continue
 				}
-				// TODO: Check if "userpath/characters/..." exists.
-				character, err = s.dataManager.GetUserCharacter(user, t.Characters[0])
+
+				// Get the associated character.
+				_, err := s.dataManager.GetUserCharacter(c.user, t.Characters[0])
 				if err != nil {
 					c.Send(network.Command(network.CommandBasic{
 						Type:   network.Reject,
@@ -247,8 +248,12 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer, user *data.Use
 					}))
 					continue
 				}
-				// Somehow load in character.
-				c.SetOwner(world.OwnerI(world.NewOwnerPlayer(c, character)))
+				// TODO: We need to have the world instance handle creating a player owner and associated player object(from character). This should probably be done by either a channel or a mutex. Owner(s) in general should use channels for their communications, so that network messages can be handed over to Owners which the world can then process. Network Connection -> receives command request -> processes into an owner-compatible command -> sends it to the owner channel -> world processes it on next tick.
+				// s.world.addPlayerAndCharacter(c, character) // now we can c.GetOwner() <- NewData
+				// Create and set up owner corresponding to this connection.
+				//c.SetOwner(world.OwnerI(world.NewOwnerPlayer(c)))
+				// Create character object from its archetypes and parent it.
+				//c.GetOwner().SetTarget(world.NewObjectPC(&character.Archetype))
 
 				// Send a ChooseCharacter command to let the player know we have accepted the character.
 				fmt.Println("Letting connection know the character is logging in...")

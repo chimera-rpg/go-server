@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"sync"
 )
 
 // User is a collection of data for a single user, such as characters, shared
@@ -18,6 +19,7 @@ type User struct {
 	Characters map[string]*Character `yaml:"Characters"`
 	hasChanges bool                  // if there are changes needing to be saved.
 	userPath   string                // filepath of the given user file.
+	mutex      sync.Mutex
 }
 
 // CheckUser checks to see if a user file exists.
@@ -47,6 +49,8 @@ func (m *Manager) CheckUserPassword(u *User, password string) (match bool, err e
 }
 
 func (m *Manager) writeUser(u *User) (err error) {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
 	if !u.hasChanges {
 		return
 	}
@@ -72,6 +76,8 @@ func (m *Manager) writeUser(u *User) (err error) {
 // CreateUser will attempt to create a new user with the given username,
 // password, and email.
 func (m *Manager) CreateUser(user string, pass string, email string) (err error) {
+	m.usersMutex.Lock()
+	defer m.usersMutex.Unlock()
 	if exists, _ := m.CheckUser(user); exists {
 		return &userError{errType: UserExists}
 	}
@@ -94,6 +100,7 @@ func (m *Manager) CreateUser(user string, pass string, email string) (err error)
 // loadUser attempts to load a given User from disk and add it to
 // the loadedUsers field in Manager.
 func (m *Manager) loadUser(user string) (u *User, err error) {
+	log.Printf("Loading user %s\n", user)
 	var exists bool
 	var bytes []byte
 	filePath := path.Join(m.usersPath, user+".user.yaml")
@@ -124,22 +131,34 @@ func (m *Manager) loadUser(user string) (u *User, err error) {
 	return
 }
 
-func (m *Manager) unloadUser(user string) (err error) {
-	if u, ok := m.loadedUsers[user]; ok {
-		err = m.writeUser(u)
-		delete(m.loadedUsers, user)
-	}
+// unloadUser attempts to unload the given user by name.
+func (m *Manager) unloadUser(u *User) (err error) {
+	err = m.writeUser(u)
 	return
 }
 
 // GetUser returns the User tied to a user and pass.
 func (m *Manager) GetUser(user string) (u *User, err error) {
+	m.usersMutex.Lock()
+	defer m.usersMutex.Unlock()
 	var ok bool
 	if u, ok = m.loadedUsers[user]; !ok {
 		u, err = m.loadUser(user)
 		if err == nil {
 			m.loadedUsers[user] = u
 		}
+	}
+	return
+}
+
+// CleanupUser unloads the given user by name.
+func (m *Manager) CleanupUser(user string) (err error) {
+	m.usersMutex.Lock()
+	defer m.usersMutex.Unlock()
+	log.Printf("Cleaning up user %s\n", user)
+	if u, ok := m.loadedUsers[user]; ok {
+		err = m.unloadUser(u)
+		delete(m.loadedUsers, user)
 	}
 	return
 }
@@ -156,12 +175,14 @@ func (m *Manager) CreateUserCharacter(u *User, name string) (err error) {
 		Archetype: Archetype{
 			Name: StringExpression{src: name},
 		},
-		Race: m.Strings.Lookup(m.pcArchetypes[0].SelfID),
+		//Race: m.Strings.Lookup(m.pcArchetypes[0].SelfID),
 	}
 
+	u.mutex.Lock()
 	u.Characters[name] = c
-
 	u.hasChanges = true
+	u.mutex.Unlock()
+
 	if err = m.writeUser(u); err != nil {
 		err = &userError{err: err.Error()}
 	}
@@ -172,6 +193,8 @@ func (m *Manager) CreateUserCharacter(u *User, name string) (err error) {
 // CheckUserCharacter checks to see if the given character exists
 // for the provided user.
 func (m *Manager) CheckUserCharacter(u *User, name string) (exists bool, err error) {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
 	if _, ok := u.Characters[name]; ok {
 		exists = true
 	} else {
@@ -184,6 +207,8 @@ func (m *Manager) CheckUserCharacter(u *User, name string) (exists bool, err err
 
 // GetUserCharacter returns the given character by name if it eixsts.
 func (m *Manager) GetUserCharacter(u *User, name string) (c *Character, err error) {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
 	if character, ok := u.Characters[name]; ok {
 		c = character
 	} else {

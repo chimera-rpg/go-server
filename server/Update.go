@@ -16,7 +16,10 @@ func (server *GameServer) handleClientAcceptions() {
 		if err != nil {
 			log.Print("Error accepting: ", err.Error())
 		} else {
-			server.clientConnections <- *NewClientConnection(conn, server.acquireClientID())
+			server.connectedClientsMutex.Lock()
+			clientID := server.acquireClientID()
+			server.connectedClientsMutex.Unlock()
+			server.clientConnections <- *NewClientConnection(conn, clientID)
 		}
 	}
 }
@@ -27,7 +30,9 @@ func (server *GameServer) handleClientConnections() {
 		// Connected
 		log.Print("New Client: ", clientConnection.GetSocket().RemoteAddr(), " as ", clientConnection.GetID())
 		//
+		server.connectedClientsMutex.Lock()
 		server.connectedClients[clientConnection.GetID()] = clientConnection
+		server.connectedClientsMutex.Unlock()
 		go func() {
 			defer clientConnection.OnExplode(server)
 			clientConnection.HandleHandshake(server)

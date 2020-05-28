@@ -35,13 +35,13 @@ func (o *Object) removeSelf() {
 func (o *Object) update(d int) {
 }
 
-// getOwner returns the owning object.
-func (o *Object) getOwner() OwnerI {
+// GetOwner returns the owning object.
+func (o *Object) GetOwner() OwnerI {
 	return o.owner
 }
 
-// setOwner sets the owner to the given object.
-func (o *Object) setOwner(owner OwnerI) {
+// SetOwner sets the owner to the given object.
+func (o *Object) SetOwner(owner OwnerI) {
 	// TODO: check if owner is set
 	o.owner = owner
 }

@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"net"
+	"sync"
 
 	"github.com/chimera-rpg/go-server/config"
 	"github.com/chimera-rpg/go-server/data"
@@ -14,10 +15,11 @@ import (
 type GameServer struct {
 	listener net.Listener
 	// Client Connections
-	clientConnections chan ClientConnection
-	connectedClients  map[int]ClientConnection
-	topClientID       int
-	unusedClientIDs   []int
+	clientConnections     chan ClientConnection
+	connectedClients      map[int]ClientConnection
+	connectedClientsMutex sync.Mutex
+	topClientID           int
+	unusedClientIDs       []int
 	// Player Connections
 	// players []Player.Player
 	// activeMaps []Maps.Map
@@ -49,6 +51,28 @@ func (s *GameServer) RemoveClientByID(id int) (err error) {
 	if _, ok := s.connectedClients[id]; ok {
 		delete(s.connectedClients, id)
 		s.releaseClientID(id)
+		return nil
 	}
 	return fmt.Errorf("attempted to remove non-connected ID %d", id)
+}
+
+// cleanupConnection cleans up the client, its user data, its owner data, and its object data.
+func (s *GameServer) cleanupConnection(c *ClientConnection) (err error) {
+	s.connectedClientsMutex.Lock()
+	defer s.connectedClientsMutex.Unlock()
+
+	// Remove object and owner data.
+	fmt.Printf("cleanup data for %d\n", c.GetID())
+
+	// Unload user data.
+	if c.user != nil {
+		s.dataManager.CleanupUser(c.user.Username)
+	}
+
+	// Remove the client.
+	if err = s.RemoveClientByID(c.GetID()); err != nil {
+		return
+	}
+
+	return
 }

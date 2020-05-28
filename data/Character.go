@@ -6,10 +6,10 @@ package data
 // Perhaps Character should be: Archetype, RaceArchetype, ClassArchetype,
 // all of which are built upon one another?
 type Character struct {
-	Name          string    `yaml:"Name"`
-	Archetype     Archetype `yaml:"Archetype"`
-	RaceArchetype *Archetype
-	Race          string `yaml:"Race"`
-	Class         string `yaml:"Class"`
+	Name          string     `yaml:"Name"`
+	Archetype     Archetype  `yaml:"Archetype"`
+	RaceArchetype *Archetype `yaml:"-"`
+	//Race          string `yaml:"Race"`
+	//Class         string `yaml:"Class"`
 	//	ClassArchetype *Archetype
 }
