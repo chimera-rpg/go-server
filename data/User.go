@@ -2,12 +2,13 @@ package data
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"os"
 	"path"
 	"sync"
+
+	"gopkg.in/yaml.v2"
 )
 
 // User is a collection of data for a single user, such as characters, shared
@@ -166,6 +167,9 @@ func (m *Manager) CleanupUser(user string) (err error) {
 // CreateUserCharacter will attempt to create a new character named by the
 // given name.
 func (m *Manager) CreateUserCharacter(u *User, name string) (err error) {
+	if name == "" {
+		return &userError{errType: EmptyCharacterName}
+	}
 	if exists, _ := m.CheckUserCharacter(u, name); exists {
 		return &userError{errType: SuchCharacter, err: name}
 	}
@@ -223,6 +227,7 @@ const (
 	_ = iota
 	NoSuchUser
 	BadPassword
+	EmptyCharacterName
 	NoSuchCharacter
 	SuchCharacter
 	BadData
@@ -242,6 +247,8 @@ func (e *userError) Error() string {
 		return fmt.Sprintf("no such user: %s", e.err)
 	case BadPassword:
 		return fmt.Sprintf("bad password: %s", e.err)
+	case EmptyCharacterName:
+		return fmt.Sprintf("empty character name")
 	case NoSuchCharacter:
 		return fmt.Sprintf("no such character: %s", e.err)
 	case SuchCharacter:
