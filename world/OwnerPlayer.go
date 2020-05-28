@@ -31,7 +31,7 @@ func (player *OwnerPlayer) setTarget(object ObjectI) {
 func NewOwnerPlayer(cc clientConnectionI, character *data.Character) *OwnerPlayer {
 	return &OwnerPlayer{
 		ClientConnection: cc,
-		target:           NewObjectPC(character.Archetype),
+		target:           NewObjectPC(&character.Archetype),
 	}
 }
 

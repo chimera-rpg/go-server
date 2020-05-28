@@ -64,6 +64,7 @@ func (m *Manager) parseArchetypeFile(filepath string) error {
 	for k, archetype := range archetypesMap {
 		archID := m.Strings.Acquire(k)
 		m.archetypes[archID] = &archetype
+		m.archetypes[archID].SelfID = archID
 	}
 	return nil
 }

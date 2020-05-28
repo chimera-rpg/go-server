@@ -28,6 +28,14 @@ func (n *StringsMap) Acquire(name string) StringID {
 	return id
 }
 
+// Lookup reutrns the string that the provided StringID corresponds to.
+func (n *StringsMap) Lookup(id StringID) string {
+	if val, ok := n.IDs[id]; ok {
+		return val
+	}
+	return ""
+}
+
 // NewStringsMap provides a constructed instance of StringsMap.
 func NewStringsMap() StringsMap {
 	return StringsMap{

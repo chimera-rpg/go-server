@@ -64,6 +64,7 @@ type Archetype struct {
 	ArchID      StringID // Archetype ID used for generating objects and inheriting from.
 	Arch        string   `yaml:"Arch"` // Archetype to inherit from. During post-parsing this is used to acquire and set the ArchID for inventory archetypes.
 	InheritArch *Archetype
+	SelfID      StringID         // The Archetype's own SelfID
 	Name        StringExpression `yaml:"Name"` // StringExpression
 	//Name string
 	Description StringExpression `yaml:"Description"` // StringExpression

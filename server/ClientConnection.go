@@ -186,6 +186,16 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer, user *data.Use
 	//		* All Species, Culture, Training, Description, AbilityScores, Skills, and Images
 	//		* All of the associated player's Characters as Image, Character, Level, and AbilityScores
 
+	// Send characters.
+	var playerCharacters []string
+	for key, _ := range user.Characters {
+		playerCharacters = append(playerCharacters, key)
+	}
+	c.Send(network.Command(network.CommandCharacter{
+		Type:       network.CreateCharacter,
+		Characters: playerCharacters,
+	}))
+
 	var cmd network.Command
 	var err error
 	var character *data.Character
@@ -202,6 +212,20 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer, user *data.Use
 		case network.CommandCharacter:
 			if t.Type == network.CreateCharacter {
 				// Create a character according to species, culture, training, name
+				// TODO: Maybe the Character type should have a set/array of ArchIDs to inherit from?
+				// Attempt to create the character.
+				if createErr := s.dataManager.CreateUserCharacter(user, t.Characters[0]); createErr != nil {
+					c.Send(network.Command(network.CommandBasic{
+						Type:   network.Reject,
+						String: createErr.Error(),
+					}))
+					continue
+				}
+				// Let the client know the character exists.
+				c.Send(network.Command(network.CommandCharacter{
+					Type:       network.CreateCharacter,
+					Characters: []string{t.Characters[0]},
+				}))
 			} else if t.Type == network.AdjustCharacter {
 				// Changes a given character's species, culture, or training.
 			} else if t.Type == network.ChooseCharacter {

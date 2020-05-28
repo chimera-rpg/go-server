@@ -17,6 +17,10 @@ func (exp *StringExpression) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return nil
 }
 
+func (exp *StringExpression) MarshalYAML() (interface{}, error) {
+	return exp.src, nil
+}
+
 func (exp *StringExpression) Compile() error {
 	exp.result = exp.src
 	return nil
