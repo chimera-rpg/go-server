@@ -155,11 +155,12 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 				}
 			}
 		default: // Boot the client if it sends anything else.
-			s.RemoveClientByID(c.GetID())
+			log.Printf("Client %s(%d) sent bad data, kicking.\n", c.GetSocket().RemoteAddr().String(), c.GetID())
+			s.cleanupConnection(c)
 			c.GetSocket().Close()
-			log.Printf("Client %s(%d) send bad data, kicking.\n", c.GetSocket().RemoteAddr().String(), c.GetID())
 		}
 	}
+
 	// If we get to here, then the user has successfully logged in.
 	c.HandleCharacterCreation(s)
 }
@@ -169,6 +170,35 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 	isWaiting := true
 
+	// Await an Okay response so we know the client is ready.
+	for isWaiting {
+		var cmd network.Command
+		isHandled, shouldReturn := c.Receive(s, &cmd)
+		if isHandled {
+			continue
+		}
+		if shouldReturn {
+			return
+		}
+		switch t := cmd.(type) {
+		case network.CommandBasic:
+			if t.Type == network.Okay {
+				isWaiting = false
+			} else {
+				log.Printf("Client %s(%d) sent bad data, kicking.\n", c.GetSocket().RemoteAddr().String(), c.GetID())
+				s.cleanupConnection(c)
+				c.GetSocket().Close()
+				return
+			}
+		default:
+			log.Printf("Client %s(%d) sent bad data, kicking.\n", c.GetSocket().RemoteAddr().String(), c.GetID())
+			s.cleanupConnection(c)
+			c.GetSocket().Close()
+			return
+		}
+	}
+
+	//isHandled, shouldReturn := c.Receive(s, &cmd)
 	// Send Genera
 	/*genera := make(map[string]string)
 	images := make([][]byte)
@@ -190,7 +220,7 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 
 	// Send characters.
 	var playerCharacters []string
-	for key, _ := range c.user.Characters {
+	for key := range c.user.Characters {
 		playerCharacters = append(playerCharacters, key)
 	}
 	c.Send(network.Command(network.CommandCharacter{
@@ -200,6 +230,7 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 
 	var cmd network.Command
 
+	isWaiting = true
 	for isWaiting {
 		isHandled, shouldReturn := c.Receive(s, &cmd)
 		if shouldReturn {
