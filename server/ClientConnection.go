@@ -170,7 +170,7 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 	isWaiting := true
 
-	// Await an Okay response so we know the client is ready.
+	// Await a QueryCharacters response so we know the client is ready.
 	for isWaiting {
 		var cmd network.Command
 		isHandled, shouldReturn := c.Receive(s, &cmd)
@@ -181,8 +181,8 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 			return
 		}
 		switch t := cmd.(type) {
-		case network.CommandBasic:
-			if t.Type == network.Okay {
+		case network.CommandCharacter:
+			if t.Type == network.QueryCharacters {
 				isWaiting = false
 			} else {
 				log.Printf("Client %s(%d) sent bad data, kicking.\n", c.GetSocket().RemoteAddr().String(), c.GetID())
