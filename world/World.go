@@ -76,7 +76,7 @@ func (world *World) Update(delta int64) error {
 	case msg := <-world.MessageChannel:
 		switch t := msg.(type) {
 		case MessageAddClient:
-			world.addPlayerConnection(t.Client, t.Character)
+			world.addPlayerByConnection(t.Client, t.Character)
 		case MessageRemoveClient:
 			world.removePlayerByConnection(t.Client)
 		default:
@@ -179,7 +179,7 @@ func (world *World) isMapLoaded(name string) (mapIndex int, isActive bool) {
 	return -1, false
 }
 
-func (world *World) addPlayerConnection(conn clientConnectionI, character *data.Character) {
+func (world *World) addPlayerByConnection(conn clientConnectionI, character *data.Character) {
 	if index := world.getExistingPlayerConnectionIndex(conn); index == -1 {
 		player := NewOwnerPlayer(conn)
 		// TODO: Create character Object and set it as target for new player.
