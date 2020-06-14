@@ -1,6 +1,7 @@
 package world
 
 import (
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -16,12 +17,15 @@ type World struct {
 	inactiveMaps      []*Map
 	inactiveMapsMutex sync.Mutex
 	players           []*OwnerPlayer
+	MessageChannel    chan MessageI
 }
 
 // Setup loads our initial starting world location and starts the
 // map cleanup goroutine.
 func (world *World) Setup(data *data.Manager) error {
+	world.MessageChannel = make(chan MessageI)
 	world.data = data
+	world.players = make([]*OwnerPlayer, 0)
 	world.LoadMap("Chamber of Origins")
 	// FIXME: Create a temporary dummy map
 	// Create a timer for doing cleanup.
@@ -67,6 +71,29 @@ func (world *World) cleanupMaps() {
 
 // Update processes updates for each player then updates each map as necessary.
 func (world *World) Update(delta int64) error {
+	// Process world event channel.
+	select {
+	case msg := <-world.MessageChannel:
+		switch t := msg.(type) {
+		case MessageAddClient:
+			if index := world.getExistingPlayerConnectionIndex(t.Client); index == -1 {
+				player := NewOwnerPlayer(t.Client)
+				// TODO: Create character Object and set it as target for new player.
+				world.players = append(world.players, player)
+				// TODO: Add character Object to default world -- likely read from character, but for now just place in temp map.
+			} else {
+				fmt.Println("client already exists, oh no")
+			}
+		case MessageRemoveClient:
+			if index := world.getExistingPlayerConnectionIndex(t.Client); index >= 0 {
+				// TODO: Clean up OwnerPlayer and character Object.
+				// TODO: We would also (probably) trigger synchronizing the character object to its character data here, potentially via a channel.
+				world.players = append(world.players[:index], world.players[index+1:]...)
+			}
+		default:
+		}
+	default:
+	}
 	// Process our players.
 	for _, player := range world.players {
 		player.Update(delta)
@@ -161,4 +188,13 @@ func (world *World) isMapLoaded(name string) (mapIndex int, isActive bool) {
 		}
 	}
 	return -1, false
+}
+
+func (world *World) getExistingPlayerConnectionIndex(conn clientConnectionI) int {
+	for index, player := range world.players {
+		if conn.GetID() == player.ClientConnection.GetID() {
+			return index
+		}
+	}
+	return -1
 }

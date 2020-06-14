@@ -88,6 +88,8 @@ func (gmap *Map) sizeMap(height int, width int, depth int) error {
 func (gmap *Map) Update(gm *World, delta int64) error {
 	gmap.lifeTime += delta
 
+	// TODO: Have some sort of new owners check block for sending current Map info, initial visible tiles, and similar.
+
 	for i := range gmap.activeTiles {
 		if i == 0 {
 		}

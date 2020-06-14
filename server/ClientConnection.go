@@ -271,7 +271,7 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 				}
 
 				// Get the associated character.
-				_, err := s.dataManager.GetUserCharacter(c.user, t.Characters[0])
+				character, err := s.dataManager.GetUserCharacter(c.user, t.Characters[0])
 				if err != nil {
 					c.Send(network.Command(network.CommandBasic{
 						Type:   network.Reject,
@@ -280,6 +280,10 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 					continue
 				}
 				// TODO: We need to have the world instance handle creating a player owner and associated player object(from character). This should probably be done by either a channel or a mutex. Owner(s) in general should use channels for their communications, so that network messages can be handed over to Owners which the world can then process. Network Connection -> receives command request -> processes into an owner-compatible command -> sends it to the owner channel -> world processes it on next tick.
+				s.world.MessageChannel <- world.MessageAddClient{
+					Client:    c,
+					Character: character,
+				}
 				// s.world.addPlayerAndCharacter(c, character) // now we can c.GetOwner() <- NewData
 				// Create and set up owner corresponding to this connection.
 				//c.SetOwner(world.OwnerI(world.NewOwnerPlayer(c)))

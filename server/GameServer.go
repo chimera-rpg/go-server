@@ -69,6 +69,10 @@ func (s *GameServer) cleanupConnection(c *ClientConnection) (err error) {
 		s.dataManager.CleanupUser(c.user.Username)
 	}
 
+	s.world.MessageChannel <- world.MessageRemoveClient{
+		Client: c,
+	}
+
 	// Remove the client.
 	if err = s.RemoveClientByID(c.GetID()); err != nil {
 		return

@@ -6,4 +6,6 @@ package world
 type OwnerI interface {
 	GetTarget() ObjectI
 	SetTarget(ObjectI)
+	GetCommandChannel() chan OwnerCommand
+	Update(delta int64) error
 }
