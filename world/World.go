@@ -76,20 +76,9 @@ func (world *World) Update(delta int64) error {
 	case msg := <-world.MessageChannel:
 		switch t := msg.(type) {
 		case MessageAddClient:
-			if index := world.getExistingPlayerConnectionIndex(t.Client); index == -1 {
-				player := NewOwnerPlayer(t.Client)
-				// TODO: Create character Object and set it as target for new player.
-				world.players = append(world.players, player)
-				// TODO: Add character Object to default world -- likely read from character, but for now just place in temp map.
-			} else {
-				fmt.Println("client already exists, oh no")
-			}
+			world.addPlayerConnection(t.Client, t.Character)
 		case MessageRemoveClient:
-			if index := world.getExistingPlayerConnectionIndex(t.Client); index >= 0 {
-				// TODO: Clean up OwnerPlayer and character Object.
-				// TODO: We would also (probably) trigger synchronizing the character object to its character data here, potentially via a channel.
-				world.players = append(world.players[:index], world.players[index+1:]...)
-			}
+			world.removePlayerByConnection(t.Client)
 		default:
 		}
 	default:
@@ -188,6 +177,25 @@ func (world *World) isMapLoaded(name string) (mapIndex int, isActive bool) {
 		}
 	}
 	return -1, false
+}
+
+func (world *World) addPlayerConnection(conn clientConnectionI, character *data.Character) {
+	if index := world.getExistingPlayerConnectionIndex(conn); index == -1 {
+		player := NewOwnerPlayer(conn)
+		// TODO: Create character Object and set it as target for new player.
+		world.players = append(world.players, player)
+		// TODO: Add character Object to default world -- likely read from character, but for now just place in temp map.
+		fmt.Println("Added player to world.")
+	}
+}
+
+func (world *World) removePlayerByConnection(conn clientConnectionI) {
+	if index := world.getExistingPlayerConnectionIndex(conn); index >= 0 {
+		// TODO: Clean up OwnerPlayer and character Object.
+		// TODO: We would also (probably) trigger synchronizing the character object to its character data here, potentially via a channel.
+		world.players = append(world.players[:index], world.players[index+1:]...)
+		fmt.Println("Removed player from world.")
+	}
 }
 
 func (world *World) getExistingPlayerConnectionIndex(conn clientConnectionI) int {
