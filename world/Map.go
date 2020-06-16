@@ -54,15 +54,8 @@ func NewMap(gm *data.Manager, name string) (*Map, error) {
 						log.Print(err)
 						continue
 					}
-					gmap.tiles[y][x][z].insertObject(object, -1)
+					gmap.tiles[y][x][z].insertObject(object, 0)
 				}
-				if gmap.tiles[y][x][z].object != nil {
-					target := gmap.tiles[y][x][z].object
-					for ; target != nil; target = target.getNext() {
-						//log.Printf("%+v\n", target)
-					}
-				}
-				log.Print("----")
 			}
 		}
 	}

@@ -6,11 +6,6 @@ import "github.com/chimera-rpg/go-server/data"
 type ObjectI interface {
 	GetOwner() OwnerI
 	SetOwner(OwnerI)
-	getPrevious() ObjectI
-	setPrevious(ObjectI)
-	getNext() ObjectI
-	setNext(ObjectI)
-	removeSelf()
 	setArchetype(*data.Archetype)
 	update(int)
 	getType() data.ArchetypeType
