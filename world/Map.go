@@ -101,11 +101,6 @@ func (gmap *Map) Update(gm *World, delta int64) error {
 	return nil
 }
 
-// GetTile returns the tile at the given x, y, and z.
-func (gmap *Map) GetTile(y int, x int, z int) (*Tile, error) {
-	return nil, errors.New("invalid Tile")
-}
-
 // CreateObjectFromArch will attempt to create an Object by an archetype, merging the result with the archetype's target Arch if possible.
 func (gmap *Map) CreateObjectFromArch(gm *data.Manager, arch *data.Archetype) (o ObjectI, err error) {
 	switch arch.Type {
@@ -134,7 +129,24 @@ func (gmap *Map) CreateObjectFromArch(gm *data.Manager, arch *data.Archetype) (o
 	return
 }
 
+// GetTile returns a pointer to the given tile.
+func (gmap *Map) GetTile(y, x, z int) *Tile {
+	if len(gmap.tiles) > y {
+		if len(gmap.tiles[y]) > x {
+			if len(gmap.tiles[y][x]) > z {
+				return &gmap.tiles[y][x][z]
+			}
+		}
+	}
+	return nil
+}
+
 // PlaceObject is supposed to place an object at the given x, y, and z
 func (gmap *Map) PlaceObject(o ObjectI, y int, x int, z int) (err error) {
+	tile := gmap.GetTile(y, x, z)
+	if tile == nil {
+		return errors.New("Attempted to place object out of bounds!")
+	}
+	// TODO: Add object to given tile
 	return
 }
