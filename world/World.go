@@ -111,7 +111,7 @@ func (world *World) LoadMap(name string) (*Map, error) {
 		}
 		return world.inactivateMap(mapIndex), nil
 	}
-	gmap, err := NewMap(world.data, "Chamber of Origins")
+	gmap, err := NewMap(world.data, name)
 	if err != nil {
 		return nil, err
 	}
