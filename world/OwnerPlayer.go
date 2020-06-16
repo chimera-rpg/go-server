@@ -1,6 +1,9 @@
 package world
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+)
 
 type clientConnectionI interface {
 	SetOwner(p OwnerI)
@@ -13,7 +16,7 @@ type clientConnectionI interface {
 type OwnerPlayer struct {
 	commandChannel   chan OwnerCommand
 	ClientConnection clientConnectionI
-	target           ObjectI
+	target           *ObjectPC
 }
 
 // GetTarget returns the player's target object.
@@ -23,7 +26,11 @@ func (player *OwnerPlayer) GetTarget() ObjectI {
 
 // SetTarget sets the given object as the target of the player.
 func (player *OwnerPlayer) SetTarget(object ObjectI) {
-	player.target = object
+	if objectpc, ok := object.(*ObjectPC); ok {
+		player.target = objectpc
+	} else {
+		log.Printf("Attempted to set OwnerPlayer to non-ObjectPC...\n")
+	}
 	object.SetOwner(player)
 }
 

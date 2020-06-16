@@ -34,6 +34,17 @@ func NewObjectPC(a *data.Archetype) (o *ObjectPC) {
 	return
 }
 
+// NewObjectPCFromCharacter creates a new ObjectPC from the given character data.
+func NewObjectPCFromCharacter(c *data.Character) (o *ObjectPC) {
+	o = &ObjectPC{
+		Object: Object{
+			Archetype: &c.Archetype,
+		},
+		name: c.Name,
+	}
+	return
+}
+
 func (o *ObjectPC) setArchetype(targetArch *data.Archetype) {
 	// First inherit from another Archetype if ArchID is set.
 	mutatedArch := data.NewArchetype()

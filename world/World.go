@@ -182,10 +182,13 @@ func (world *World) isMapLoaded(name string) (mapIndex int, isActive bool) {
 func (world *World) addPlayerByConnection(conn clientConnectionI, character *data.Character) {
 	if index := world.getExistingPlayerConnectionIndex(conn); index == -1 {
 		player := NewOwnerPlayer(conn)
-		// TODO: Create character Object and set it as target for new player.
+		// Create character object.
+		pc := NewObjectPCFromCharacter(character)
+		player.SetTarget(pc)
+		// Add player to the world's record of players.
 		world.players = append(world.players, player)
-		// TODO: Add character Object to default world -- likely read from character, but for now just place in temp map.
-		fmt.Println("Added player to world.")
+		// TODO: Add ObjectPC to default map -- likely read from character, but for now just place in temp map.
+		fmt.Println("Added player and PC to world.")
 	}
 }
 
