@@ -1,7 +1,6 @@
 package world
 
 import (
-	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -187,17 +186,25 @@ func (world *World) addPlayerByConnection(conn clientConnectionI, character *dat
 		player.SetTarget(pc)
 		// Add player to the world's record of players.
 		world.players = append(world.players, player)
-		// TODO: Add ObjectPC to default map -- likely read from character, but for now just place in temp map.
-		fmt.Println("Added player and PC to world.")
+		// Add character object to its target map. TODO: Read target map from character and use fallback if map does not exist.
+		if gmap, err := world.LoadMap("Chamber of Origins"); err == nil {
+			gmap.PlaceObject(pc, 0, 1, 1)
+		} else {
+			log.Println("Could not load character's map")
+		}
+		log.Println("Added player and PC to world.")
 	}
 }
 
 func (world *World) removePlayerByConnection(conn clientConnectionI) {
 	if index := world.getExistingPlayerConnectionIndex(conn); index >= 0 {
-		// TODO: Clean up OwnerPlayer and character Object.
-		// TODO: We would also (probably) trigger synchronizing the character object to its character data here, potentially via a channel.
+		// Remove character object from its owning tile.
+		if tile := world.players[index].target.GetTile(); tile != nil {
+			tile.removeObject(world.players[index].target)
+		}
+		// TODO: Save ObjectPC to connection's associated Character data.
 		world.players = append(world.players[:index], world.players[index+1:]...)
-		fmt.Println("Removed player from world.")
+		log.Println("Removed player and PC from world.")
 	}
 }
 

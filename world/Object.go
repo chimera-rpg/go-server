@@ -9,6 +9,7 @@ import (
 type Object struct {
 	Archetype *data.Archetype
 	// Relationships
+	tile   *Tile
 	parent ObjectI
 	owner  OwnerI
 	//
@@ -28,4 +29,14 @@ func (o *Object) GetOwner() OwnerI {
 func (o *Object) SetOwner(owner OwnerI) {
 	// TODO: check if owner is set
 	o.owner = owner
+}
+
+// SetTile sets the tile to the given tile.
+func (o *Object) SetTile(tile *Tile) {
+	o.tile = tile
+}
+
+// GetTile gets the tile where the object is contained.
+func (o *Object) GetTile() *Tile {
+	return o.tile
 }

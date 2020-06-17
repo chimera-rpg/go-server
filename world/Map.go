@@ -140,6 +140,6 @@ func (gmap *Map) PlaceObject(o ObjectI, y int, x int, z int) (err error) {
 	if tile == nil {
 		return errors.New("Attempted to place object out of bounds!")
 	}
-	// TODO: Add object to given tile
+	tile.insertObject(o, 0)
 	return
 }
