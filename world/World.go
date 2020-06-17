@@ -186,11 +186,14 @@ func (world *World) addPlayerByConnection(conn clientConnectionI, character *dat
 		player.SetTarget(pc)
 		// Add player to the world's record of players.
 		world.players = append(world.players, player)
-		// Add character object to its target map. TODO: Read target map from character and use fallback if map does not exist.
-		if gmap, err := world.LoadMap("Chamber of Origins"); err == nil {
-			gmap.PlaceObject(pc, 0, 1, 1)
+		// Add character object to its target map.
+		if gmap, err := world.LoadMap(character.SaveInfo.Map); err == nil {
+			gmap.PlaceObject(pc, character.SaveInfo.Y, character.SaveInfo.X, character.SaveInfo.Z)
 		} else {
-			log.Println("Could not load character's map")
+			log.Println("Could not load character's map, using default")
+			if gmap, err := world.LoadMap("Chamber of Origins"); err == nil {
+				gmap.PlaceObject(pc, 0, 1, 1)
+			}
 		}
 		log.Println("Added player and PC to world.")
 	}
