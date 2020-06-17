@@ -179,6 +179,11 @@ func (m *Manager) CreateUserCharacter(u *User, name string) (err error) {
 		Archetype: Archetype{
 			Name: StringExpression{src: name},
 		},
+		SaveInfo: SaveInfo{
+			Map: "Chamber of Origins",
+			X:   0,
+			Y:   0,
+		},
 		//Race: m.Strings.Lookup(m.pcArchetypes[0].SelfID),
 	}
 

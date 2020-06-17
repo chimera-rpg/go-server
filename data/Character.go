@@ -9,12 +9,14 @@ type Character struct {
 	Name          string     `yaml:"Name"`
 	Archetype     Archetype  `yaml:"Archetype"`
 	RaceArchetype *Archetype `yaml:"-"`
-	SaveInfo      struct {
-		Map string `yaml:"Map"`
-		X   int    `yaml:"X"`
-		Y   int    `yaml:"Y"`
-	} `yaml:"SaveInfo"`
+	SaveInfo      SaveInfo   `yaml:"SaveInfo"`
 	//Race          string `yaml:"Race"`
 	//Class         string `yaml:"Class"`
 	//	ClassArchetype *Archetype
+}
+
+type SaveInfo struct {
+	Map string `yaml:"Map"`
+	X   int    `yaml:"X"`
+	Y   int    `yaml:"Y"`
 }
