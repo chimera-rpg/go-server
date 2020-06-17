@@ -17,6 +17,7 @@ type Character struct {
 
 type SaveInfo struct {
 	Map string `yaml:"Map"`
-	X   int    `yaml:"X"`
 	Y   int    `yaml:"Y"`
+	X   int    `yaml:"X"`
+	Z   int    `yaml:"Z"`
 }
