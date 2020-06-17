@@ -35,10 +35,11 @@ func main() {
 
 	// Setup our default configuration.
 	cfg := config.Config{
-		Address: ":1337",
-		UseTLS:  true,
-		TLSKey:  "server.key",
-		TLSCert: "server.crt",
+		Address:  ":1337",
+		UseTLS:   true,
+		TLSKey:   "server.key",
+		TLSCert:  "server.crt",
+		Tickrate: 16,
 	}
 	// Load in our configuration.
 	log.Printf("Attempting to load config from \"%s\"\n", cfgPath)
@@ -81,7 +82,8 @@ func main() {
 	}
 
 	// Main co-processing looperino
-	ticker := time.NewTicker(time.Millisecond * 100)
+	log.Printf("Ticking at %dms\n", cfg.Tickrate)
+	ticker := time.NewTicker(time.Millisecond * time.Duration(cfg.Tickrate))
 	go func() {
 		lastTime := time.Now()
 		for currentTime := range ticker.C {
