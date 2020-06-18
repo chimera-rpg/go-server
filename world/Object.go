@@ -8,6 +8,7 @@ import (
 // all game Objects.
 type Object struct {
 	Archetype *data.Archetype
+	id        ID
 	// Relationships
 	tile   *Tile
 	parent ObjectI
@@ -39,4 +40,9 @@ func (o *Object) SetTile(tile *Tile) {
 // GetTile gets the tile where the object is contained.
 func (o *Object) GetTile() *Tile {
 	return o.tile
+}
+
+// GetID gets the object's id.
+func (o *Object) GetID() ID {
+	return o.id
 }

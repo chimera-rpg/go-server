@@ -32,7 +32,8 @@ type Map struct {
 }
 
 // NewMap loads the given map file from the data manager.
-func NewMap(gm *data.Manager, name string) (*Map, error) {
+func NewMap(world *World, name string) (*Map, error) {
+	gm := world.data
 	gd, err := gm.GetMap(name)
 	if err != nil {
 		return nil, fmt.Errorf("could not load map '%s'", name)
@@ -50,7 +51,7 @@ func NewMap(gm *data.Manager, name string) (*Map, error) {
 			for z := range gd.Tiles[y][x] {
 				log.Printf("Setting %dx%dx%d\n", y, x, z)
 				for a := range gd.Tiles[y][x][z] {
-					object, err := gmap.CreateObjectFromArch(gm, &gd.Tiles[y][x][z][a])
+					object, err := gmap.CreateObjectFromArch(world, &gd.Tiles[y][x][z][a])
 					if err != nil {
 						log.Print(err)
 						continue
@@ -90,6 +91,20 @@ func (gmap *Map) Update(gm *World, delta int64) error {
 	  for x := range gmap.tiles[y] {
 	  }
 	}*/
+	return nil
+}
+
+// Cleanup cleans up the given map, readying it for unloading.
+func (gmap *Map) Cleanup(world *World) error {
+	for y := range gmap.tiles {
+		for x := range gmap.tiles[y] {
+			for z := range gmap.tiles[y][x] {
+				for _, o := range gmap.tiles[y][x][z].objects {
+					world.objectIDs.free(o.GetID())
+				}
+			}
+		}
+	}
 	return nil
 }
 
@@ -144,7 +159,8 @@ func (gmap *Map) RemoveOwner(owner OwnerI) error {
 }
 
 // CreateObjectFromArch will attempt to create an Object by an archetype, merging the result with the archetype's target Arch if possible.
-func (gmap *Map) CreateObjectFromArch(gm *data.Manager, arch *data.Archetype) (o ObjectI, err error) {
+func (gmap *Map) CreateObjectFromArch(world *World, arch *data.Archetype) (o ObjectI, err error) {
+	//gm := world.data
 	switch arch.Type {
 	case data.ArchetypeFloor:
 		o = ObjectI(NewObjectFloor(arch))
@@ -158,6 +174,7 @@ func (gmap *Map) CreateObjectFromArch(gm *data.Manager, arch *data.Archetype) (o
 		gameobj := ObjectGeneric{
 			Object: Object{
 				Archetype: arch,
+				id:        world.objectIDs.acquire(),
 			},
 		}
 		gameobj.value, _ = arch.Value.GetInt()

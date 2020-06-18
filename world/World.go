@@ -16,6 +16,7 @@ type World struct {
 	inactiveMaps      []*Map
 	inactiveMapsMutex sync.Mutex
 	players           []*OwnerPlayer
+	objectIDs         IDMap
 	MessageChannel    chan MessageI
 }
 
@@ -61,6 +62,7 @@ func (world *World) cleanupMaps() {
 	for i := range world.inactiveMaps {
 		j := i - expired
 		if world.inactiveMaps[j].shouldExpire == true {
+			world.inactiveMaps[j].Cleanup(world)
 			world.inactiveMaps = world.inactiveMaps[:j+copy(world.inactiveMaps[j:], world.inactiveMaps[j+1:])]
 			expired++
 		}
@@ -75,7 +77,9 @@ func (world *World) Update(delta int64) error {
 	case msg := <-world.MessageChannel:
 		switch t := msg.(type) {
 		case MessageAddClient:
-			world.addPlayerByConnection(t.Client, t.Character)
+			if err := world.addPlayerByConnection(t.Client, t.Character); err != nil {
+				log.Println("TODO: Kick player as we errored while adding them.")
+			}
 		case MessageRemoveClient:
 			world.removePlayerByConnection(t.Client)
 		default:
@@ -110,7 +114,7 @@ func (world *World) LoadMap(name string) (*Map, error) {
 		}
 		return world.inactivateMap(mapIndex), nil
 	}
-	gmap, err := NewMap(world.data, name)
+	gmap, err := NewMap(world, name)
 	if err != nil {
 		return nil, err
 	}
@@ -178,11 +182,12 @@ func (world *World) isMapLoaded(name string) (mapIndex int, isActive bool) {
 	return -1, false
 }
 
-func (world *World) addPlayerByConnection(conn clientConnectionI, character *data.Character) {
+func (world *World) addPlayerByConnection(conn clientConnectionI, character *data.Character) error {
 	if index := world.getExistingPlayerConnectionIndex(conn); index == -1 {
 		player := NewOwnerPlayer(conn)
 		// Create character object.
 		pc := NewObjectPCFromCharacter(character)
+		pc.id = world.objectIDs.acquire()
 		player.SetTarget(pc)
 		// Add player to the world's record of players.
 		world.players = append(world.players, player)
@@ -193,14 +198,20 @@ func (world *World) addPlayerByConnection(conn clientConnectionI, character *dat
 			log.Println("Could not load character's map, using default")
 			if gmap, err := world.LoadMap("Chamber of Origins"); err == nil {
 				gmap.AddOwner(player, 0, 1, 1)
+			} else {
+				return err
 			}
 		}
-		log.Println("Added player and PC to world.")
+		log.Printf("Added player and PC(%d) to world.\n", pc.id)
 	}
+	return nil
 }
 
 func (world *World) removePlayerByConnection(conn clientConnectionI) {
 	if index := world.getExistingPlayerConnectionIndex(conn); index >= 0 {
+		// Free player object ID.
+		objectID := world.players[index].GetTarget().GetID()
+		world.objectIDs.free(objectID)
 		// TODO: Save ObjectPC to connection's associated Character data.
 		// Remove character object from its owning map.
 		if playerMap := world.players[index].GetMap(); playerMap != nil {
@@ -208,7 +219,7 @@ func (world *World) removePlayerByConnection(conn clientConnectionI) {
 		}
 		// Remove from our slice.
 		world.players = append(world.players[:index], world.players[index+1:]...)
-		log.Println("Removed player and PC from world.")
+		log.Printf("Removed player and PC(%d) from world.\n", objectID)
 	}
 }
 
