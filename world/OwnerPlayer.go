@@ -17,6 +17,7 @@ type OwnerPlayer struct {
 	commandChannel   chan OwnerCommand
 	ClientConnection clientConnectionI
 	target           *ObjectPC
+	currentMap       *Map
 }
 
 // GetTarget returns the player's target object.
@@ -37,6 +38,16 @@ func (player *OwnerPlayer) SetTarget(object ObjectI) {
 // GetCommandChannel gets the command channel for the player.
 func (player *OwnerPlayer) GetCommandChannel() chan OwnerCommand {
 	return player.commandChannel
+}
+
+// GetMap gets the currentMap of the owner.
+func (player *OwnerPlayer) GetMap() *Map {
+	return player.currentMap
+}
+
+// SetMap sets the currentMap of the owner.
+func (player *OwnerPlayer) SetMap(m *Map) {
+	player.currentMap = m
 }
 
 // NewOwnerPlayer creates a Player from a given client connection.

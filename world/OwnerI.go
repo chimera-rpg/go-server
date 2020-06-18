@@ -7,5 +7,7 @@ type OwnerI interface {
 	GetTarget() ObjectI
 	SetTarget(ObjectI)
 	GetCommandChannel() chan OwnerCommand
+	SetMap(*Map)
+	GetMap() *Map
 	Update(delta int64) error
 }

@@ -13,7 +13,8 @@ import (
 type Map struct {
 	mapID        data.StringID
 	name         string
-	owners       []*OwnerI
+	owners       []OwnerI
+	newOwners    []OwnerI
 	playerCount  int
 	shouldSleep  bool
 	shouldExpire bool
@@ -24,7 +25,7 @@ type Map struct {
 	west         *Map
 	tiles        [][][]Tile
 	activeTiles  []*Tile
-	objects      []*ObjectI
+	objects      []ObjectI
 	width        int
 	height       int
 	depth        int
@@ -41,7 +42,7 @@ func NewMap(gm *data.Manager, name string) (*Map, error) {
 		mapID: gd.MapID,
 		name:  gd.Name,
 	}
-	gmap.owners = make([]*OwnerI, 0)
+	gmap.owners = make([]OwnerI, 0)
 	// Size map and populate it with the data tiles
 	gmap.sizeMap(gd.Height, gd.Width, gd.Depth)
 	for y := range gd.Tiles {
@@ -81,8 +82,6 @@ func (gmap *Map) sizeMap(height int, width int, depth int) error {
 func (gmap *Map) Update(gm *World, delta int64) error {
 	gmap.lifeTime += delta
 
-	// TODO: Have some sort of new owners check block for sending current Map info, initial visible tiles, and similar.
-
 	for i := range gmap.activeTiles {
 		if i == 0 {
 		}
@@ -91,6 +90,56 @@ func (gmap *Map) Update(gm *World, delta int64) error {
 	  for x := range gmap.tiles[y] {
 	  }
 	}*/
+	return nil
+}
+
+// AddOwner adds the provided owner and its associated object to the y, x, z coordinates. This removes the owner from any previously owning maps.
+func (gmap *Map) AddOwner(owner OwnerI, y, x, z int) error {
+	// Remove owner from previous map.
+	if m := owner.GetMap(); m != nil && m != gmap {
+		m.RemoveOwner(owner)
+	}
+
+	// Set ourselves as owner's map.
+	owner.SetMap(gmap)
+
+	// Place object in our map.
+	gmap.PlaceObject(owner.GetTarget(), y, x, z)
+
+	// Send map information to owner.
+	switch owner.(type) {
+	case *OwnerPlayer:
+		log.Println("TODO: Send OwnerPlayer our info!")
+	default:
+		log.Println("unhandled AddOwner")
+	}
+
+	// Add to our owners.
+	gmap.owners = append(gmap.owners, owner)
+	return nil
+}
+
+func (gmap *Map) RemoveOwner(owner OwnerI) error {
+	if m := owner.GetMap(); m != gmap {
+		return errors.New("RemoveOwner called on non-owning map")
+	}
+
+	// Remove owner's object from our map.
+	if tile := owner.GetTarget().GetTile(); tile != nil {
+		tile.removeObject(owner.GetTarget())
+	}
+
+	// Clear out map reference.
+	owner.SetMap(nil)
+
+	// Remove from our owners.
+	for i, v := range gmap.owners {
+		if v == owner {
+			gmap.owners = append(gmap.owners[:i], gmap.owners[i+1:]...)
+			break
+		}
+	}
+	log.Println("Removed Owner Object")
 	return nil
 }
 
@@ -134,8 +183,11 @@ func (gmap *Map) GetTile(y, x, z int) *Tile {
 	return nil
 }
 
-// PlaceObject is supposed to place an object at the given x, y, and z
+// PlaceObject is places an object at the given y, x, and z
 func (gmap *Map) PlaceObject(o ObjectI, y int, x int, z int) (err error) {
+	if o == nil {
+		return errors.New("Attempted to place a nil object!")
+	}
 	tile := gmap.GetTile(y, x, z)
 	if tile == nil {
 		return errors.New("Attempted to place object out of bounds!")

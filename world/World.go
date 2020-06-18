@@ -188,11 +188,11 @@ func (world *World) addPlayerByConnection(conn clientConnectionI, character *dat
 		world.players = append(world.players, player)
 		// Add character object to its target map.
 		if gmap, err := world.LoadMap(character.SaveInfo.Map); err == nil {
-			gmap.PlaceObject(pc, character.SaveInfo.Y, character.SaveInfo.X, character.SaveInfo.Z)
+			gmap.AddOwner(player, character.SaveInfo.Y, character.SaveInfo.X, character.SaveInfo.Z)
 		} else {
 			log.Println("Could not load character's map, using default")
 			if gmap, err := world.LoadMap("Chamber of Origins"); err == nil {
-				gmap.PlaceObject(pc, 0, 1, 1)
+				gmap.AddOwner(player, 0, 1, 1)
 			}
 		}
 		log.Println("Added player and PC to world.")
@@ -201,11 +201,12 @@ func (world *World) addPlayerByConnection(conn clientConnectionI, character *dat
 
 func (world *World) removePlayerByConnection(conn clientConnectionI) {
 	if index := world.getExistingPlayerConnectionIndex(conn); index >= 0 {
-		// Remove character object from its owning tile.
-		if tile := world.players[index].target.GetTile(); tile != nil {
-			tile.removeObject(world.players[index].target)
-		}
 		// TODO: Save ObjectPC to connection's associated Character data.
+		// Remove character object from its owning map.
+		if playerMap := world.players[index].GetMap(); playerMap != nil {
+			playerMap.RemoveOwner(world.players[index])
+		}
+		// Remove from our slice.
 		world.players = append(world.players[:index], world.players[index+1:]...)
 		log.Println("Removed player and PC from world.")
 	}
