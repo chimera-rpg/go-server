@@ -38,7 +38,7 @@ func NewMap(gm *data.Manager, name string) (*Map, error) {
 		return nil, fmt.Errorf("could not load map '%s'", name)
 	}
 
-	gmap := Map{
+	gmap := &Map{
 		mapID: gd.MapID,
 		name:  gd.Name,
 	}
@@ -60,7 +60,7 @@ func NewMap(gm *data.Manager, name string) (*Map, error) {
 			}
 		}
 	}
-	return &gmap, nil
+	return gmap, nil
 }
 
 // sizeMaps resizes the map according to the given height, width, and depth.
