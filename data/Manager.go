@@ -296,6 +296,7 @@ func (m *Manager) parseMapFile(filepath string) error {
 			}
 		}
 		m.maps[k] = &v
+		m.maps[k].MapID = m.Strings.Acquire(k)
 		log.Printf("%+v\n", v)
 	}
 
