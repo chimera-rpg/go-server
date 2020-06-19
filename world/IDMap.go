@@ -1,6 +1,6 @@
 package world
 
-type ID = int32
+type ID = uint32
 
 type IDMap struct {
 	id      ID
