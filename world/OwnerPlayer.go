@@ -1,6 +1,8 @@
 package world
 
 import (
+	"github.com/chimera-rpg/go-common/network"
+
 	"fmt"
 	"log"
 )
@@ -8,6 +10,7 @@ import (
 type clientConnectionI interface {
 	SetOwner(p OwnerI)
 	GetOwner() OwnerI
+	Send(network.Command) error
 	GetID() int
 }
 
@@ -38,6 +41,11 @@ func (player *OwnerPlayer) SetTarget(object ObjectI) {
 // GetCommandChannel gets the command channel for the player.
 func (player *OwnerPlayer) GetCommandChannel() chan OwnerCommand {
 	return player.commandChannel
+}
+
+// SendCommand
+func (player *OwnerPlayer) SendCommand(cmd network.Command) error {
+	return player.ClientConnection.Send(cmd)
 }
 
 // GetMap gets the currentMap of the owner.

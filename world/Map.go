@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/chimera-rpg/go-common/network"
 	"github.com/chimera-rpg/go-server/data"
 )
 
@@ -197,7 +198,19 @@ func (gmap *Map) sendOwnerInitialView(owner OwnerI) {
 				for zi := sz; zi < ez; zi++ {
 					//if t := gmap.GetTile(yi, xi, zi); t != nil {
 					for _, o := range gmap.tiles[yi][xi][zi].objects {
+						// TODO: We should probably offload all of this to the Owner so it can decide whether to do network transmission for OwnerPlayers or simply handle itself for OwnerAIs. Potentially there should be an Owner.acquireInitialView() command that handles all of this (and would take into account the ObjectPC/ObjectNPC).
 						log.Printf("send object @ %+v\n", o)
+						owner.SendCommand(network.CommandObject{
+							ObjectID: o.GetID(),
+							Payload: network.CommandObjectPayloadCreate{
+								AnimationID: 0,
+								FaceID:      0,
+								Y:           uint32(yi),
+								X:           uint32(xi),
+								Z:           uint32(zi),
+							},
+						})
+
 					}
 				}
 			}
