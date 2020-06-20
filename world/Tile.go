@@ -41,3 +41,7 @@ func (tile *Tile) removeObject(object ObjectI) error {
 	}
 	return errors.New("object to remove does not exist")
 }
+
+func (tile *Tile) GetObjects() []ObjectI {
+	return tile.objects
+}

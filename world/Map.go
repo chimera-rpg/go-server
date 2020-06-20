@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/chimera-rpg/go-common/network"
 	"github.com/chimera-rpg/go-server/data"
 )
 
@@ -132,7 +131,8 @@ func (gmap *Map) AddOwner(owner OwnerI, y, x, z int) error {
 		log.Println("unhandled AddOwner")
 	}
 
-	gmap.sendOwnerInitialView(owner)
+	// NOTE: Potentially we should just have a flag on the Owner that lets it know when it is somewhere new. If this flag is true, then it calls AcquireInitialView on its Update.
+	owner.AcquireView()
 
 	// Add to our owners.
 	gmap.owners = append(gmap.owners, owner)
@@ -151,6 +151,7 @@ func (gmap *Map) RemoveOwner(owner OwnerI) error {
 
 	// Clear out map reference.
 	owner.SetMap(nil)
+	owner.CreateView()
 
 	// Remove from our owners.
 	for i, v := range gmap.owners {
@@ -161,61 +162,6 @@ func (gmap *Map) RemoveOwner(owner OwnerI) error {
 	}
 	log.Println("Removed Owner Object")
 	return nil
-}
-
-func (gmap *Map) sendOwnerInitialView(owner OwnerI) {
-	// Get owner's viewport.
-	vw := 16 // assume 16 for now.
-	vh := 16 //
-	vd := 16 //
-	vwh := vw / 2
-	vhh := vh / 2
-	vdh := vd / 2
-	// Get tile where owner is, then send from negative half owner object's viewport to positive half in y, x, and z.
-	if tile := owner.GetTarget().GetTile(); tile != nil {
-		var sy, sx, sz, ey, ex, ez int
-		if sy = tile.y - vhh; sy < 0 {
-			sy = 0
-		}
-		if sx = tile.x - vwh; sx < 0 {
-			sx = 0
-		}
-		if sz = tile.z - vdh; sz < 0 {
-			sz = 0
-		}
-		if ey = tile.y + vhh; ey > gmap.height {
-			ey = gmap.height
-		}
-		if ex = tile.x + vwh; ex > gmap.width {
-			ex = gmap.width
-		}
-		if ez = tile.z + vdh; ez > gmap.depth {
-			ez = gmap.depth
-		}
-
-		for yi := sy; yi < ey; yi++ {
-			for xi := sx; xi < ex; xi++ {
-				for zi := sz; zi < ez; zi++ {
-					//if t := gmap.GetTile(yi, xi, zi); t != nil {
-					for _, o := range gmap.tiles[yi][xi][zi].objects {
-						// TODO: We should probably offload all of this to the Owner so it can decide whether to do network transmission for OwnerPlayers or simply handle itself for OwnerAIs. Potentially there should be an Owner.acquireInitialView() command that handles all of this (and would take into account the ObjectPC/ObjectNPC).
-						log.Printf("send object @ %+v\n", o)
-						owner.SendCommand(network.CommandObject{
-							ObjectID: o.GetID(),
-							Payload: network.CommandObjectPayloadCreate{
-								AnimationID: 0,
-								FaceID:      0,
-								Y:           uint32(yi),
-								X:           uint32(xi),
-								Z:           uint32(zi),
-							},
-						})
-
-					}
-				}
-			}
-		}
-	}
 }
 
 // CreateObjectFromArch will attempt to create an Object by an archetype, merging the result with the archetype's target Arch if possible.

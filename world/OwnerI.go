@@ -15,4 +15,6 @@ type OwnerI interface {
 	SetMap(*Map)
 	GetMap() *Map
 	Update(delta int64) error
+	CreateView()
+	AcquireView() error
 }
