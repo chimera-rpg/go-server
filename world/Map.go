@@ -14,7 +14,6 @@ type Map struct {
 	mapID        data.StringID
 	name         string
 	owners       []OwnerI
-	newOwners    []OwnerI
 	playerCount  int
 	shouldSleep  bool
 	shouldExpire bool
@@ -156,6 +155,7 @@ func (gmap *Map) RemoveOwner(owner OwnerI) error {
 		}
 	}
 	log.Println("Removed Owner Object")
+	gmap.updateTime++
 	return nil
 }
 
@@ -212,5 +212,22 @@ func (gmap *Map) PlaceObject(o ObjectI, y int, x int, z int) (err error) {
 	}
 	tile.insertObject(o, -1)
 	gmap.updateTime++
+	return
+}
+
+// DeleteObject deletes a given object.
+func (gmap *Map) DeleteObject(world *World, o ObjectI) (err error) {
+	if o == nil {
+		return errors.New("Attempted to delete a nil object!")
+	}
+	if tile := o.GetTile(); tile != nil {
+		tile.removeObject(o)
+	}
+	world.objectIDs.free(o.GetID())
+	// TODO: Send CommandObjecPayloadDelete
+	for _, owner := range gmap.owners {
+		owner.OnObjectDelete(o.GetID())
+	}
+
 	return
 }
