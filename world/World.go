@@ -112,7 +112,7 @@ func (world *World) LoadMap(name string) (*Map, error) {
 		if !isActive {
 			return world.activateMap(mapIndex), nil
 		}
-		return world.inactivateMap(mapIndex), nil
+		return world.activeMaps[mapIndex], nil
 	}
 	gmap, err := NewMap(world, name)
 	if err != nil {
