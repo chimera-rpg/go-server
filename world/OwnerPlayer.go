@@ -201,3 +201,16 @@ func (player *OwnerPlayer) OnMapUpdate(delta int64) error {
 
 	return nil
 }
+
+// OnObjectDelete is called when an object on the map is deleted. If the player knows about it, then an object delete command is sent to the client.
+func (player *OwnerPlayer) OnObjectDelete(oID ID) error {
+	if _, isObjectKnown := player.knownIDs[oID]; isObjectKnown {
+		player.ClientConnection.Send(network.CommandObject{
+			ObjectID: oID,
+			Payload:  network.CommandObjectPayloadDelete{},
+		})
+		delete(player.knownIDs, oID)
+	}
+
+	return nil
+}

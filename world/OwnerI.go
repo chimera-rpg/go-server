@@ -11,6 +11,7 @@ type OwnerI interface {
 	GetMap() *Map
 	Update(delta int64) error
 	OnMapUpdate(delta int64) error
+	OnObjectDelete(ID) error
 	CreateView()
 	CheckView()
 }
