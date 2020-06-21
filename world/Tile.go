@@ -40,10 +40,10 @@ func (tile *Tile) removeObject(object ObjectI) error {
 		if tile.objects[i] == object {
 			tile.objects = append(tile.objects[:i], tile.objects[i+1:]...)
 			object.SetTile(nil)
+			tile.modTime++
 			return nil
 		}
 	}
-	tile.modTime++
 	return errors.New("object to remove does not exist")
 }
 
