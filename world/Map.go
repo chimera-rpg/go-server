@@ -129,14 +129,6 @@ func (gmap *Map) AddOwner(owner OwnerI, y, x, z int) error {
 	// Place object in our map.
 	gmap.PlaceObject(owner.GetTarget(), y, x, z)
 
-	// Send map information to owner.
-	switch owner.(type) {
-	case *OwnerPlayer:
-		log.Println("TODO: Send OwnerPlayer our info!")
-	default:
-		log.Println("unhandled AddOwner")
-	}
-
 	// Add to our owners.
 	gmap.owners = append(gmap.owners, owner)
 	return nil
