@@ -54,6 +54,16 @@ func (player *OwnerPlayer) GetMap() *Map {
 // SetMap sets the currentMap of the owner.
 func (player *OwnerPlayer) SetMap(m *Map) {
 	player.currentMap = m
+	// Might as well let the client know what's up.
+	if m != nil {
+		player.ClientConnection.Send(network.CommandMap{
+			Name:   m.name,
+			Height: m.height,
+			Width:  m.width,
+			Depth:  m.depth,
+		})
+	}
+	// Create a fresh view corresponding to our new map.
 	player.CreateView()
 }
 
@@ -84,14 +94,8 @@ func (player *OwnerPlayer) CreateView() {
 
 // CheckView checks the view around the player and calls any associated network functions to update the client.
 func (player *OwnerPlayer) CheckView() {
-	if player.mapUpdateTime == player.currentMap.updateTime {
-		return
-	}
 	// Map has changed in some way, so let's check our viewable tiles for updates.
 	player.checkVisibleTiles()
-
-	// Make sure we're in sync.
-	player.mapUpdateTime = player.currentMap.updateTime
 }
 
 // checkVisibleTiles gets the initial view of the player. This sends tile information equal to how far the owner's PC can see.
@@ -134,9 +138,10 @@ func (player *OwnerPlayer) checkVisibleTiles() error {
 					if mapTile.modTime == player.view[yi][xi][zi].modTime {
 						continue
 					}
-					// TODO: We probably just need to send a TileUpdate that contains an array of object IDs in a given tile. If the player doesn't know what the objectID is, we would send the create payload first.
+					// NOTE: We could maintain a list of known objects on a tile in the player's tile view and send the difference instead. For large stacks of infrequently changing tiles, this would be more bandwidth efficient, though at the expense of server-side RAM and CPU time.
 					player.view[yi][xi][zi].modTime = mapTile.modTime
-					for _, o := range mapTile.GetObjects() {
+					tileObjectIDs := make([]ID, len(mapTile.GetObjects()))
+					for i, o := range mapTile.GetObjects() {
 						oID := o.GetID()
 						if _, isObjectKnown := player.knownIDs[oID]; !isObjectKnown {
 							player.ClientConnection.Send(network.CommandObject{
@@ -150,17 +155,15 @@ func (player *OwnerPlayer) checkVisibleTiles() error {
 								},
 							})
 							player.knownIDs[oID] = struct{}{}
-						} else {
-							player.ClientConnection.Send(network.CommandObject{
-								ObjectID: o.GetID(),
-								Payload: network.CommandObjectPayloadMove{
-									Y: uint32(yi),
-									X: uint32(xi),
-									Z: uint32(zi),
-								},
-							})
 						}
+						tileObjectIDs[i] = oID
 					}
+					player.ClientConnection.Send(network.CommandTile{
+						X:         uint32(yi),
+						Y:         uint32(xi),
+						Z:         uint32(zi),
+						ObjectIDs: tileObjectIDs,
+					})
 				}
 			}
 		}
@@ -188,8 +191,13 @@ func (player *OwnerPlayer) Update(delta int64) error {
 
 // OnMapUpdate is called when the map is updated and the player should update its view and/or react.
 func (player *OwnerPlayer) OnMapUpdate(delta int64) error {
-	log.Println("checking owner map")
+	if player.mapUpdateTime == player.currentMap.updateTime {
+		return nil
+	}
 	player.CheckView()
+
+	// Make sure we're in sync.
+	player.mapUpdateTime = player.currentMap.updateTime
 
 	return nil
 }
