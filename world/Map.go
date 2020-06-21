@@ -29,6 +29,7 @@ type Map struct {
 	width        int
 	height       int
 	depth        int
+	updateTime   uint8 // Whenever this is updated, owners will check their surroundings for updates.
 }
 
 // NewMap loads the given map file from the data manager.
@@ -78,12 +79,17 @@ func (gmap *Map) sizeMap(height int, width int, depth int) error {
 	gmap.width = width
 	gmap.height = height
 	gmap.depth = depth
+	gmap.updateTime++
 	return nil
 }
 
 // Update updates all active tiles and objects within the map.
 func (gmap *Map) Update(gm *World, delta int64) error {
 	gmap.lifeTime += delta
+
+	for _, owner := range gmap.owners {
+		owner.OnMapUpdate(delta)
+	}
 
 	for i := range gmap.activeTiles {
 		if i == 0 {
@@ -131,14 +137,12 @@ func (gmap *Map) AddOwner(owner OwnerI, y, x, z int) error {
 		log.Println("unhandled AddOwner")
 	}
 
-	// NOTE: Potentially we should just have a flag on the Owner that lets it know when it is somewhere new. If this flag is true, then it calls AcquireInitialView on its Update.
-	owner.AcquireView()
-
 	// Add to our owners.
 	gmap.owners = append(gmap.owners, owner)
 	return nil
 }
 
+// RemoveOwner removes a given owner from the map.
 func (gmap *Map) RemoveOwner(owner OwnerI) error {
 	if m := owner.GetMap(); m != gmap {
 		return errors.New("RemoveOwner called on non-owning map")
@@ -151,7 +155,6 @@ func (gmap *Map) RemoveOwner(owner OwnerI) error {
 
 	// Clear out map reference.
 	owner.SetMap(nil)
-	owner.CreateView()
 
 	// Remove from our owners.
 	for i, v := range gmap.owners {
@@ -216,5 +219,6 @@ func (gmap *Map) PlaceObject(o ObjectI, y int, x int, z int) (err error) {
 		return errors.New("Attempted to place object out of bounds!")
 	}
 	tile.insertObject(o, -1)
+	gmap.updateTime++
 	return
 }

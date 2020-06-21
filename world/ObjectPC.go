@@ -17,6 +17,7 @@ type ObjectPC struct {
 	race          string
 	count         int
 	value         int
+	mapUpdateTime uint8 // Corresponds to the map's updateTime -- if they are out of sync then the player will sample its view space.
 	resistance    AttackTypes
 	abilityScores AbilityScores
 }

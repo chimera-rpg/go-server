@@ -6,9 +6,11 @@ import (
 
 // Tile represents a location on the ground.
 type Tile struct {
-	y, x, z    int // Location of the tile.
-	objects    []ObjectI
-	brightness int
+	y, x, z     int       // Location of the tile.
+	objects     []ObjectI // objects contains Objects that origin from this tile. This data is used in network transmission.
+	objectParts []ObjectI // objectParts contains Object pointers that are used for collisions, pathing, and otherwise. This data is never sent over the network.
+	brightness  int
+	modTime     uint16 // Last time this tile was updated.
 }
 
 // insertObject inserts the provided Object at the given index.
@@ -28,6 +30,8 @@ func (tile *Tile) insertObject(object ObjectI, index int) error {
 	// Update object's tile reference.
 	object.SetTile(tile)
 
+	tile.modTime++
+
 	return nil
 }
 
@@ -39,9 +43,11 @@ func (tile *Tile) removeObject(object ObjectI) error {
 			return nil
 		}
 	}
+	tile.modTime++
 	return errors.New("object to remove does not exist")
 }
 
+// GetObjects returns a slice of the tile's Object interfaces.
 func (tile *Tile) GetObjects() []ObjectI {
 	return tile.objects
 }

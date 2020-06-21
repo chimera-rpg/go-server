@@ -21,7 +21,9 @@ type OwnerPlayer struct {
 	ClientConnection clientConnectionI
 	target           *ObjectPC
 	currentMap       *Map
+	mapUpdateTime    uint8
 	view             [][][]TileView
+	knownIDs         map[ID]struct{}
 }
 
 // GetTarget returns the player's target object.
@@ -44,11 +46,6 @@ func (player *OwnerPlayer) GetCommandChannel() chan OwnerCommand {
 	return player.commandChannel
 }
 
-// SendCommand
-func (player *OwnerPlayer) SendCommand(cmd network.Command) error {
-	return player.ClientConnection.Send(cmd)
-}
-
 // GetMap gets the currentMap of the owner.
 func (player *OwnerPlayer) GetMap() *Map {
 	return player.currentMap
@@ -57,6 +54,7 @@ func (player *OwnerPlayer) GetMap() *Map {
 // SetMap sets the currentMap of the owner.
 func (player *OwnerPlayer) SetMap(m *Map) {
 	player.currentMap = m
+	player.CreateView()
 }
 
 // NewOwnerPlayer creates a Player from a given client connection.
@@ -64,25 +62,40 @@ func NewOwnerPlayer(cc clientConnectionI) *OwnerPlayer {
 	return &OwnerPlayer{
 		commandChannel:   make(chan OwnerCommand),
 		ClientConnection: cc,
+		knownIDs:         make(map[ID]struct{}),
 	}
 }
 
 // CreateView creates the initial view of the player.
 func (player *OwnerPlayer) CreateView() {
-	vw := 16 // assume 16 for now.
-	vh := 16 //
-	vd := 16 //
-	player.view = make([][][]TileView, vh)
-	for y := 0; y < len(player.view); y++ {
-		player.view[y] = make([][]TileView, vw)
-		for x := 0; x < len(player.view[y]); x++ {
-			player.view[y][x] = make([]TileView, vd)
+	gmap := player.GetMap()
+	if gmap == nil {
+		player.view = make([][][]TileView, 0)
+		return
+	}
+	player.view = make([][][]TileView, gmap.height)
+	for y := 0; y < gmap.height; y++ {
+		player.view[y] = make([][]TileView, gmap.width)
+		for x := 0; x < gmap.width; x++ {
+			player.view[y][x] = make([]TileView, gmap.depth)
 		}
 	}
 }
 
-// AcquireView gets the initial view of the player. This sends tile information equal to how far the owner's PC can see.
-func (player *OwnerPlayer) AcquireView() error {
+// CheckView checks the view around the player and calls any associated network functions to update the client.
+func (player *OwnerPlayer) CheckView() {
+	if player.mapUpdateTime == player.currentMap.updateTime {
+		return
+	}
+	// Map has changed in some way, so let's check our viewable tiles for updates.
+	player.checkVisibleTiles()
+
+	// Make sure we're in sync.
+	player.mapUpdateTime = player.currentMap.updateTime
+}
+
+// checkVisibleTiles gets the initial view of the player. This sends tile information equal to how far the owner's PC can see.
+func (player *OwnerPlayer) checkVisibleTiles() error {
 	gmap := player.GetMap()
 	// Get owner's viewport.
 	vw := 16 // assume 16 for now.
@@ -103,31 +116,50 @@ func (player *OwnerPlayer) AcquireView() error {
 		if sz = tile.z - vdh; sz < 0 {
 			sz = 0
 		}
-		if ey = tile.y + vhh; ey > gmap.height {
-			ey = gmap.height
+		if ey = tile.y + vhh; ey > len(player.view) {
+			ey = len(player.view)
 		}
-		if ex = tile.x + vwh; ex > gmap.width {
-			ex = gmap.width
+		if ex = tile.x + vwh; ex > len(player.view[0]) {
+			ex = len(player.view[0])
 		}
-		if ez = tile.z + vdh; ez > gmap.depth {
-			ez = gmap.depth
+		if ez = tile.z + vdh; ez > len(player.view[0][0]) {
+			ez = len(player.view[0][0])
 		}
 
 		for yi := sy; yi < ey; yi++ {
 			for xi := sx; xi < ex; xi++ {
 				for zi := sz; zi < ez; zi++ {
 					// TODO: Actually calculate which tiles are visible for the owner.
-					for _, o := range gmap.GetTile(yi, xi, zi).GetObjects() {
-						player.SendCommand(network.CommandObject{
-							ObjectID: o.GetID(),
-							Payload: network.CommandObjectPayloadCreate{
-								AnimationID: 0,
-								FaceID:      0,
-								Y:           uint32(yi),
-								X:           uint32(xi),
-								Z:           uint32(zi),
-							},
-						})
+					mapTile := gmap.GetTile(yi, xi, zi)
+					if mapTile.modTime == player.view[yi][xi][zi].modTime {
+						continue
+					}
+					// TODO: We probably just need to send a TileUpdate that contains an array of object IDs in a given tile. If the player doesn't know what the objectID is, we would send the create payload first.
+					player.view[yi][xi][zi].modTime = mapTile.modTime
+					for _, o := range mapTile.GetObjects() {
+						oID := o.GetID()
+						if _, isObjectKnown := player.knownIDs[oID]; !isObjectKnown {
+							player.ClientConnection.Send(network.CommandObject{
+								ObjectID: o.GetID(),
+								Payload: network.CommandObjectPayloadCreate{
+									AnimationID: 0,
+									FaceID:      0,
+									Y:           uint32(yi),
+									X:           uint32(xi),
+									Z:           uint32(zi),
+								},
+							})
+							player.knownIDs[oID] = struct{}{}
+						} else {
+							player.ClientConnection.Send(network.CommandObject{
+								ObjectID: o.GetID(),
+								Payload: network.CommandObjectPayloadMove{
+									Y: uint32(yi),
+									X: uint32(xi),
+									Z: uint32(zi),
+								},
+							})
+						}
 					}
 				}
 			}
@@ -150,6 +182,14 @@ func (player *OwnerPlayer) Update(delta int64) error {
 			done = true
 		}
 	}
+
+	return nil
+}
+
+// OnMapUpdate is called when the map is updated and the player should update its view and/or react.
+func (player *OwnerPlayer) OnMapUpdate(delta int64) error {
+	log.Println("checking owner map")
+	player.CheckView()
 
 	return nil
 }
