@@ -279,22 +279,17 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 					}))
 					continue
 				}
-				// TODO: We need to have the world instance handle creating a player owner and associated player object(from character). This should probably be done by either a channel or a mutex. Owner(s) in general should use channels for their communications, so that network messages can be handed over to Owners which the world can then process. Network Connection -> receives command request -> processes into an owner-compatible command -> sends it to the owner channel -> world processes it on next tick.
+
+				// Send a ChooseCharacter command to let the player know we have accepted the character.
+				c.Send(network.Command(network.CommandCharacter{
+					Type: network.ChooseCharacter,
+				}))
+
+				// Add the character to the world.
 				s.world.MessageChannel <- world.MessageAddClient{
 					Client:    c,
 					Character: character,
 				}
-				// s.world.addPlayerAndCharacter(c, character) // now we can c.GetOwner() <- NewData
-				// Create and set up owner corresponding to this connection.
-				//c.SetOwner(world.OwnerI(world.NewOwnerPlayer(c)))
-				// Create character object from its archetypes and parent it.
-				//c.GetOwner().SetTarget(world.NewObjectPC(&character.Archetype))
-
-				// Send a ChooseCharacter command to let the player know we have accepted the character.
-				fmt.Println("Letting connection know the character is logging in...")
-				c.Send(network.Command(network.CommandCharacter{
-					Type: network.ChooseCharacter,
-				}))
 
 				isWaiting = false
 				// Load a given character by name and spawn the character.
