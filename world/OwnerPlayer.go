@@ -138,26 +138,26 @@ func (player *OwnerPlayer) checkVisibleTiles() error {
 					if mapTile.modTime == player.view[yi][xi][zi].modTime {
 						continue
 					}
-					// NOTE: We could maintain a list of known objects on a tile in the player's tile view and send the difference instead. For large stacks of infrequently changing tiles, this would be more bandwidth efficient, though at the expense of server-side RAM and CPU time.
 					player.view[yi][xi][zi].modTime = mapTile.modTime
+					// NOTE: We could maintain a list of known objects on a tile in the player's tile view and send the difference instead. For large stacks of infrequently changing tiles, this would be more bandwidth efficient, though at the expense of server-side RAM and CPU time.
 					tileObjectIDs := make([]ID, len(mapTile.GetObjects()))
+					// Send any objects unknown to the client (and collect their IDs).
 					for i, o := range mapTile.GetObjects() {
 						oID := o.GetID()
 						if _, isObjectKnown := player.knownIDs[oID]; !isObjectKnown {
+							// Let the client know of the object(s). NOTE: We could send a collection of object creation commands so as to reduce TCP overhead for bulk updates.
 							player.ClientConnection.Send(network.CommandObject{
 								ObjectID: o.GetID(),
 								Payload: network.CommandObjectPayloadCreate{
 									AnimationID: 0,
 									FaceID:      0,
-									Y:           uint32(yi),
-									X:           uint32(xi),
-									Z:           uint32(zi),
 								},
 							})
 							player.knownIDs[oID] = struct{}{}
 						}
 						tileObjectIDs[i] = oID
 					}
+					// Update the client's perception of the given tile.
 					player.ClientConnection.Send(network.CommandTile{
 						X:         uint32(yi),
 						Y:         uint32(xi),
