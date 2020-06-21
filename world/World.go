@@ -209,17 +209,15 @@ func (world *World) addPlayerByConnection(conn clientConnectionI, character *dat
 
 func (world *World) removePlayerByConnection(conn clientConnectionI) {
 	if index := world.getExistingPlayerConnectionIndex(conn); index >= 0 {
-		// Free player object ID.
-		objectID := world.players[index].GetTarget().GetID()
-		world.objectIDs.free(objectID)
 		// TODO: Save ObjectPC to connection's associated Character data.
 		// Remove character object from its owning map.
 		if playerMap := world.players[index].GetMap(); playerMap != nil {
 			playerMap.RemoveOwner(world.players[index])
+			// Also delete object.
+			playerMap.DeleteObject(world, world.players[index].GetTarget())
 		}
 		// Remove from our slice.
 		world.players = append(world.players[:index], world.players[index+1:]...)
-		log.Printf("Removed player and PC(%d) from world.\n", objectID)
 	}
 }
 
