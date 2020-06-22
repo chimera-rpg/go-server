@@ -87,6 +87,15 @@ func (m *Manager) postProcessArchetype(archetype *Archetype) error {
 		archetype.FaceID = m.Strings.Acquire(archetype.Face)
 		archetype.Face = ""
 	}
+	for _, archname := range archetype.Archs {
+		targetID := m.Strings.Acquire(archname)
+		if _, err := m.GetArchetype(targetID); err != nil {
+			archetype.ArchIDs = append(archetype.ArchIDs, targetID)
+		} else {
+			return err
+		}
+		// TODO: We actually need to have a larger compilation step, where we examine all archetypes that seek to inherit from others and organize it based upon any order of inheritance. This would also need to handle checking for circular dependencies.
+	}
 	//archetype.Arch = archName
 	//archetype.ArchID = m.Strings.Acquire(archName)
 	for i := range archetype.Inventory {
