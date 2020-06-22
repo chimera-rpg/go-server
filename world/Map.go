@@ -14,6 +14,7 @@ type Map struct {
 	mapID        data.StringID
 	name         string
 	owners       []OwnerI
+	world        *World // I guess it is okay to reference the World.
 	playerCount  int
 	shouldSleep  bool
 	shouldExpire bool
@@ -40,6 +41,7 @@ func NewMap(world *World, name string) (*Map, error) {
 	}
 
 	gmap := &Map{
+		world: world,
 		mapID: gd.MapID,
 		name:  gd.Name,
 	}
@@ -53,7 +55,7 @@ func NewMap(world *World, name string) (*Map, error) {
 					gmap.tiles[y][x][z].y = y
 					gmap.tiles[y][x][z].x = x
 					gmap.tiles[y][x][z].z = z
-					object, err := gmap.CreateObjectFromArch(world, &gd.Tiles[y][x][z][a])
+					object, err := gmap.CreateObjectFromArch(&gd.Tiles[y][x][z][a])
 					if err != nil {
 						log.Print(err)
 						continue
@@ -139,11 +141,6 @@ func (gmap *Map) RemoveOwner(owner OwnerI) error {
 		return errors.New("RemoveOwner called on non-owning map")
 	}
 
-	// Remove owner's object from our map.
-	if tile := owner.GetTarget().GetTile(); tile != nil {
-		tile.removeObject(owner.GetTarget())
-	}
-
 	// Clear out map reference.
 	owner.SetMap(nil)
 
@@ -154,14 +151,16 @@ func (gmap *Map) RemoveOwner(owner OwnerI) error {
 			break
 		}
 	}
-	log.Println("Removed Owner Object")
+
+	// Remove object.
+	gmap.DeleteObject(owner.GetTarget(), false)
+
 	gmap.updateTime++
 	return nil
 }
 
 // CreateObjectFromArch will attempt to create an Object by an archetype, merging the result with the archetype's target Arch if possible.
-func (gmap *Map) CreateObjectFromArch(world *World, arch *data.Archetype) (o ObjectI, err error) {
-	//gm := world.data
+func (gmap *Map) CreateObjectFromArch(arch *data.Archetype) (o ObjectI, err error) {
 	switch arch.Type {
 	case data.ArchetypeFloor:
 		o = ObjectI(NewObjectFloor(arch))
@@ -175,7 +174,7 @@ func (gmap *Map) CreateObjectFromArch(world *World, arch *data.Archetype) (o Obj
 		gameobj := ObjectGeneric{
 			Object: Object{
 				Archetype: arch,
-				id:        world.objectIDs.acquire(),
+				id:        gmap.world.objectIDs.acquire(),
 			},
 		}
 		gameobj.value, _ = arch.Value.GetInt()
@@ -215,16 +214,18 @@ func (gmap *Map) PlaceObject(o ObjectI, y int, x int, z int) (err error) {
 	return
 }
 
-// DeleteObject deletes a given object.
-func (gmap *Map) DeleteObject(world *World, o ObjectI) (err error) {
+// DeleteObject deletes a given object. If shouldFree is true, the associated object ID is freed.
+func (gmap *Map) DeleteObject(o ObjectI, shouldFree bool) (err error) {
 	if o == nil {
 		return errors.New("Attempted to delete a nil object!")
 	}
 	if tile := o.GetTile(); tile != nil {
 		tile.removeObject(o)
 	}
-	world.objectIDs.free(o.GetID())
-	// TODO: Send CommandObjecPayloadDelete
+	if shouldFree {
+		gmap.world.objectIDs.free(o.GetID())
+	}
+
 	for _, owner := range gmap.owners {
 		owner.OnObjectDelete(o.GetID())
 	}
