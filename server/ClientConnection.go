@@ -314,13 +314,15 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 			continue
 		}
 		if shouldReturn {
+			log.Println("return")
 			return
 		}
-		// Handle "meta" netcommands
-		// Handle
-		/*switch t := cmd.(type) {
-		}*/
-		switch cmd.(type) {
+
+		switch t := cmd.(type) {
+		case network.CommandCmd:
+			log.Printf("Got cmd: %+v\n", t)
+		case network.CommandExtCmd:
+			log.Printf("Got extcmd: %+v\n", t)
 		default: // Boot the client if it sends anything else.
 			s.RemoveClientByID(c.GetID())
 			c.GetSocket().Close()
