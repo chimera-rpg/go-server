@@ -83,6 +83,10 @@ func (m *Manager) postProcessArchetype(archetype *Archetype) error {
 		archetype.AnimID = m.Strings.Acquire(archetype.Anim)
 		archetype.Anim = ""
 	}
+	if archetype.Face != "" {
+		archetype.FaceID = m.Strings.Acquire(archetype.Face)
+		archetype.Face = ""
+	}
 	//archetype.Arch = archName
 	//archetype.ArchID = m.Strings.Acquire(archName)
 	for i := range archetype.Inventory {
@@ -114,7 +118,9 @@ func (m *Manager) parseArchetypeFiles() error {
 	}
 	// Post-process our archetypes so they properly set up inheritance relationships.
 	for _, archetype := range m.archetypes {
-		m.postProcessArchetype(archetype)
+		if err := m.postProcessArchetype(archetype); err != nil {
+			log.Printf("Error while post-processing arch: %+v\n", err)
+		}
 	}
 	fmt.Printf("%+v\n", m.archetypes)
 
@@ -410,12 +416,6 @@ func (m *Manager) Setup(config *config.Config) error {
 	    log.Fatal(err)
 	    return err
 	  }*/
-	// Now we can load our archetypes into memory.
-	err = m.parseArchetypeFiles()
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
 	// Images
 	err = m.buildImagesMap()
 	if err != nil {
@@ -424,6 +424,12 @@ func (m *Manager) Setup(config *config.Config) error {
 	}
 	// Animations
 	err = m.parseAnimationFiles()
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	// Archetypes
+	err = m.parseArchetypeFiles()
 	if err != nil {
 		log.Fatal(err)
 		return err

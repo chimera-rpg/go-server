@@ -71,6 +71,8 @@ type Archetype struct {
 	Type        ArchetypeType    `yaml:"Type,omitempty"`
 	Anim        string           `yaml:"Anim,omitempty"`
 	AnimID      StringID         `yaml:"-"`
+	Face        string           `yaml:"Face,omitempty"`
+	FaceID      StringID         `yaml:"-"`
 	//
 	Value      StringExpression    `yaml:"Value,omitempty"`  // NumberExpression
 	Count      StringExpression    `yaml:"Count,omitempty"`  // NumberExpression
