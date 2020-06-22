@@ -163,13 +163,13 @@ func (gmap *Map) RemoveOwner(owner OwnerI) error {
 func (gmap *Map) CreateObjectFromArch(arch *data.Archetype) (o ObjectI, err error) {
 	switch arch.Type {
 	case data.ArchetypeFloor:
-		o = ObjectI(NewObjectFloor(arch))
+		o = NewObjectFloor(arch)
 	case data.ArchetypeWall:
-		o = ObjectI(NewObjectWall(arch))
+		o = NewObjectWall(arch)
 	case data.ArchetypeItem:
-		o = ObjectI(NewObjectItem(arch))
+		o = NewObjectItem(arch)
 	case data.ArchetypeNPC:
-		o = ObjectI(NewObjectNPC(arch))
+		o = NewObjectNPC(arch)
 	default:
 		gameobj := ObjectGeneric{
 			Object: Object{
@@ -181,7 +181,7 @@ func (gmap *Map) CreateObjectFromArch(arch *data.Archetype) (o ObjectI, err erro
 		gameobj.count, _ = arch.Count.GetInt()
 		gameobj.name, _ = arch.Name.GetString()
 
-		o = ObjectI(&gameobj)
+		o = &gameobj
 	}
 
 	// TODO: Create/Merge Archetype properties!
