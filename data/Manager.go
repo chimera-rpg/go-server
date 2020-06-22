@@ -90,11 +90,10 @@ func (m *Manager) postProcessArchetype(archetype *Archetype) error {
 	for _, archname := range archetype.Archs {
 		targetID := m.Strings.Acquire(archname)
 		if _, err := m.GetArchetype(targetID); err != nil {
-			archetype.ArchIDs = append(archetype.ArchIDs, targetID)
-		} else {
 			return err
 		}
-		// TODO: We actually need to have a larger compilation step, where we examine all archetypes that seek to inherit from others and organize it based upon any order of inheritance. This would also need to handle checking for circular dependencies.
+		archetype.ArchIDs = append(archetype.ArchIDs, targetID)
+		archetype.Archs = nil
 	}
 	//archetype.Arch = archName
 	//archetype.ArchID = m.Strings.Acquire(archName)
@@ -103,6 +102,38 @@ func (m *Manager) postProcessArchetype(archetype *Archetype) error {
 			return err
 		}
 	}
+	return nil
+}
+
+func (m *Manager) resolveArchetype(archetype *Archetype) error {
+	resolved := make(map[StringID]struct{})
+	unresolved := make(map[StringID]struct{})
+
+	if err := m.dependencyResolveArchetype(archetype, resolved, unresolved); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *Manager) dependencyResolveArchetype(archetype *Archetype, resolved, unresolved map[StringID]struct{}) error {
+	unresolved[archetype.SelfID] = struct{}{}
+	for _, depID := range archetype.ArchIDs {
+		depArch, err := m.GetArchetype(depID)
+		if err != nil {
+			return err
+		}
+		if _, ok := resolved[depID]; !ok {
+			if _, ok := unresolved[depID]; ok {
+				return errors.New(fmt.Sprintf("circular dependency between %s and %s", m.Strings.Lookup(archetype.SelfID), m.Strings.Lookup(depID)))
+			}
+			if err := m.dependencyResolveArchetype(depArch, resolved, unresolved); err != nil {
+				return err
+			}
+		}
+	}
+	resolved[archetype.SelfID] = struct{}{}
+	delete(unresolved, archetype.SelfID)
+
 	return nil
 }
 
@@ -129,6 +160,11 @@ func (m *Manager) parseArchetypeFiles() error {
 	for _, archetype := range m.archetypes {
 		if err := m.postProcessArchetype(archetype); err != nil {
 			log.Printf("Error while post-processing arch: %+v\n", err)
+		}
+	}
+	for _, archetype := range m.archetypes {
+		if err := m.resolveArchetype(archetype); err != nil {
+			log.Printf("Err while resolving arche: %+v\n", err)
 		}
 	}
 	fmt.Printf("%+v\n", m.archetypes)
@@ -176,7 +212,7 @@ func (m *Manager) buildSpeciesArchetypes() int {
 }
 
 // GetArchetype gets the given archetype by id if it exists.
-func (m *Manager) GetArchetype(archID FileID) (archetype *Archetype, err error) {
+func (m *Manager) GetArchetype(archID StringID) (archetype *Archetype, err error) {
 	if _, ok := m.archetypes[archID]; ok {
 		return m.archetypes[archID], nil
 	}
