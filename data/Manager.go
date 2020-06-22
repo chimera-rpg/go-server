@@ -154,20 +154,19 @@ func (m *Manager) parseArchetypeFiles() error {
 		return nil
 	})
 	if err != nil {
-		log.Printf("Error walking the path %s: %v\n", m.archetypesPath, err)
+		return err
 	}
 	// Post-process our archetypes so they properly set up inheritance relationships.
 	for _, archetype := range m.archetypes {
 		if err := m.postProcessArchetype(archetype); err != nil {
-			log.Printf("Error while post-processing arch: %+v\n", err)
+			return err
 		}
 	}
 	for _, archetype := range m.archetypes {
 		if err := m.resolveArchetype(archetype); err != nil {
-			log.Printf("Err while resolving arche: %+v\n", err)
+			return err
 		}
 	}
-	fmt.Printf("%+v\n", m.archetypes)
 
 	log.Printf("%d archetypes loaded.\n", len(m.archetypes))
 	log.Printf("%d Genera.", m.buildGeneraArchetypes())
