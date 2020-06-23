@@ -14,6 +14,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/chimera-rpg/go-server/config"
+	"github.com/imdario/mergo"
 )
 
 // Manager is the controlling type for accessing archetypes, maps, player
@@ -52,6 +53,7 @@ type objectVariable struct {
 	value string
 }
 
+// parse, process, compile
 func (m *Manager) parseArchetypeFile(filepath string) error {
 	r, err := ioutil.ReadFile(filepath)
 	if err != nil {
@@ -71,7 +73,7 @@ func (m *Manager) parseArchetypeFile(filepath string) error {
 	return nil
 }
 
-func (m *Manager) postProcessArchetype(archetype *Archetype) error {
+func (m *Manager) processArchetype(archetype *Archetype) error {
 	if archetype.Arch != "" {
 		inheritArch, err := m.GetArchetypeByName(archetype.Arch)
 		if err != nil {
@@ -98,10 +100,44 @@ func (m *Manager) postProcessArchetype(archetype *Archetype) error {
 	//archetype.Arch = archName
 	//archetype.ArchID = m.Strings.Acquire(archName)
 	for i := range archetype.Inventory {
-		if err := m.postProcessArchetype(&archetype.Inventory[i]); err != nil {
+		if err := m.processArchetype(&archetype.Inventory[i]); err != nil {
 			return err
 		}
 	}
+	return nil
+}
+
+func (m *Manager) compileArchetype(archetype *Archetype) error {
+	// Bail early if already compiled.
+	if archetype.isCompiled {
+		return nil
+	}
+
+	// Ensure there are no circular deps.
+	err := m.resolveArchetype(archetype)
+	if err != nil {
+		return err
+	}
+
+	// Ensure deps are all compiled and inherit linearly.
+	log.Printf("compiling deps: %+v\n", archetype.ArchIDs)
+	for _, depID := range archetype.ArchIDs {
+		if depArch, err := m.GetArchetype(depID); err != nil {
+			return err
+		} else {
+			if err := m.compileArchetype(depArch); err != nil {
+				return err
+			}
+			log.Printf("merging these: %+v AND %+v\n", archetype, depArch)
+			if err := mergo.Merge(archetype, depArch, mergo.WithTransformers(StringExpressionTransformer{})); err != nil {
+				return err
+			}
+			log.Printf("Result: %+v\n", archetype)
+		}
+	}
+
+	archetype.isCompiled = true
+
 	return nil
 }
 
@@ -158,7 +194,7 @@ func (m *Manager) parseArchetypeFiles() error {
 	}
 	// Post-process our archetypes so they properly set up inheritance relationships.
 	for _, archetype := range m.archetypes {
-		if err := m.postProcessArchetype(archetype); err != nil {
+		if err := m.processArchetype(archetype); err != nil {
 			return err
 		}
 	}
@@ -166,6 +202,12 @@ func (m *Manager) parseArchetypeFiles() error {
 		if err := m.resolveArchetype(archetype); err != nil {
 			return err
 		}
+	}
+	for _, archetype := range m.archetypes {
+		if err := m.compileArchetype(archetype); err != nil {
+			return err
+		}
+		log.Printf("%+v\n", archetype)
 	}
 
 	log.Printf("%d archetypes loaded.\n", len(m.archetypes))
@@ -336,7 +378,7 @@ func (m *Manager) parseMapFile(filepath string) error {
 				for z := range v.Tiles[y][x] {
 					for i := range v.Tiles[y][x][z] {
 						// We also post-process our tiles so as to allow for XTREME custom archs in maps!
-						if err := m.postProcessArchetype(&v.Tiles[y][x][z][i]); err != nil {
+						if err := m.processArchetype(&v.Tiles[y][x][z][i]); err != nil {
 							return err
 						} else {
 							log.Printf("%+v\n", v.Tiles[y][x][z][i])

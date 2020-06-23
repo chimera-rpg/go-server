@@ -1,10 +1,37 @@
 package data
 
-import "strconv"
+import (
+	"reflect"
+	"strconv"
+)
 
 type StringExpression struct {
 	src    string
 	result string
+}
+
+// StrinngExpressionTransformer is the mergo transformer struct.
+type StringExpressionTransformer struct{}
+
+// Transformer checks if a StringExpression is empty, and if so, to replace it with the contents of another.
+func (t StringExpressionTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Value) error {
+	if typ == reflect.TypeOf(StringExpression{}) {
+		return func(dst, src reflect.Value) error {
+			if dst.CanSet() {
+				isZero := dst.MethodByName("IsZero")
+				result := isZero.Call([]reflect.Value{})
+				if result[0].Bool() {
+					dst.Set(src)
+				}
+			}
+			return nil
+		}
+	}
+	return nil
+}
+
+func (exp StringExpression) IsZero() bool {
+	return exp.src == ""
 }
 
 func (exp *StringExpression) UnmarshalYAML(unmarshal func(interface{}) error) error {

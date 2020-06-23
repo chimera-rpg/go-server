@@ -81,6 +81,8 @@ type Archetype struct {
 	Weight     StringExpression    `yaml:"Weight,omitempty"` // NumberExpression
 	Properties map[string]Variable `yaml:"Properties,omitempty"`
 	Inventory  []Archetype         `yaml:"Inventory,omitempty"`
+	//
+	isCompiled bool `yaml:"-"`
 }
 
 // NewArchetype creates a new, blank archetype.
