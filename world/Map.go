@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-server/data"
 )
 
@@ -162,13 +163,13 @@ func (gmap *Map) RemoveOwner(owner OwnerI) error {
 // CreateObjectFromArch will attempt to create an Object by an archetype, merging the result with the archetype's target Arch if possible.
 func (gmap *Map) CreateObjectFromArch(arch *data.Archetype) (o ObjectI, err error) {
 	switch arch.Type {
-	case data.ArchetypeFloor:
+	case cdata.ArchetypeFloor:
 		o = NewObjectFloor(arch)
-	case data.ArchetypeWall:
+	case cdata.ArchetypeWall:
 		o = NewObjectWall(arch)
-	case data.ArchetypeItem:
+	case cdata.ArchetypeItem:
 		o = NewObjectItem(arch)
-	case data.ArchetypeNPC:
+	case cdata.ArchetypeNPC:
 		o = NewObjectNPC(arch)
 	default:
 		gameobj := ObjectGeneric{

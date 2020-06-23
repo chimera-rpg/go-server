@@ -1,6 +1,9 @@
 package world
 
-import "github.com/chimera-rpg/go-server/data"
+import (
+	cdata "github.com/chimera-rpg/go-common/data"
+	"github.com/chimera-rpg/go-server/data"
+)
 
 // ObjectI is the basic interface for Object access.
 type ObjectI interface {
@@ -12,5 +15,5 @@ type ObjectI interface {
 	setArchetype(*data.Archetype)
 	GetArchetype() *data.Archetype
 	update(int)
-	getType() data.ArchetypeType
+	getType() cdata.ArchetypeType
 }

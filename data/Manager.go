@@ -13,6 +13,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-server/config"
 	"github.com/imdario/mergo"
 )
@@ -232,7 +233,7 @@ func (m *Manager) parseArchetypeFiles() error {
 func (m *Manager) buildPCArchetypes() int {
 	oldCount := len(m.pcArchetypes)
 	for _, v := range m.archetypes {
-		if v.Type == ArchetypePC {
+		if v.Type == cdata.ArchetypePC {
 			m.pcArchetypes = append(m.pcArchetypes, v)
 		}
 	}
@@ -242,7 +243,7 @@ func (m *Manager) buildPCArchetypes() int {
 func (m *Manager) buildGeneraArchetypes() int {
 	oldCount := len(m.generaArchetypes)
 	for _, v := range m.archetypes {
-		if v.Type == ArchetypeGenus {
+		if v.Type == cdata.ArchetypeGenus {
 			m.generaArchetypes = append(m.generaArchetypes, v)
 		}
 	}
@@ -252,7 +253,7 @@ func (m *Manager) buildGeneraArchetypes() int {
 func (m *Manager) buildSpeciesArchetypes() int {
 	oldCount := len(m.speciesArchetypes)
 	for _, v := range m.archetypes {
-		if v.Type == ArchetypeSpecies {
+		if v.Type == cdata.ArchetypeSpecies {
 			m.speciesArchetypes = append(m.speciesArchetypes, v)
 		}
 	}

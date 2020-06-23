@@ -1,6 +1,7 @@
 package world
 
 import (
+	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-server/data"
 )
 
@@ -40,6 +41,6 @@ func (o *ObjectFloor) update(d int) {
 }
 
 // getType returns the Archetype type.
-func (o *ObjectFloor) getType() data.ArchetypeType {
-	return data.ArchetypeFloor
+func (o *ObjectFloor) getType() cdata.ArchetypeType {
+	return cdata.ArchetypeFloor
 }
