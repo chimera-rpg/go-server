@@ -324,12 +324,13 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 		case network.CommandAnimation:
 			// If the client has already requested this animation, boot it. NOTE: It would be better to limit requests first rather than immediately booting -- as well as to warn the player that it should stop requesting.
 			if _, alreadyRequested := c.requestedAnimationIDs[t.AnimationID]; alreadyRequested {
+				log.Printf("Kicking client due to multiple animation request\n")
 				s.RemoveClientByID(c.GetID())
 				c.GetSocket().Close()
 				return
 			}
 			c.requestedAnimationIDs[t.AnimationID] = struct{}{}
-			if anim, err := s.dataManager.GetAnimation(t.AnimationID); err != nil {
+			if anim, err := s.dataManager.GetAnimation(t.AnimationID); err == nil {
 				// This feels a bit heavy to convert our server animation data to our network animation data.
 				faces := make(map[uint32][]network.AnimationFrame)
 				for key, face := range anim.Faces {
