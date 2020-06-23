@@ -6,7 +6,7 @@ import (
 )
 
 // ArchetypeType is our identifier for the different... archetype types.
-type ArchetypeType int
+type ArchetypeType uint8
 
 // These are the our Archetype types.
 const (
@@ -54,6 +54,11 @@ func (atype *ArchetypeType) UnmarshalYAML(unmarshal func(interface{}) error) err
 		return fmt.Errorf("Unknown Type '%s'", value)
 	}
 	return nil
+}
+
+// AsUint8 returns ArchetypeType as a uint8... this seems odd.
+func (atype ArchetypeType) AsUint8() uint8 {
+	return uint8(atype)
 }
 
 // TODO: Should most Archetype properties be either StringExpression or NumberExpression? These would be string and int based types that can pull properties from their owning Archetype during Object creation. They likely should be a postfix-structured stack that can be passed some sort of context stack that contains the target Object and/or Archetype. We could also just have them as strings until they are instantized into an Object.

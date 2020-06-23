@@ -151,6 +151,7 @@ func (player *OwnerPlayer) checkVisibleTiles() error {
 								player.ClientConnection.Send(network.CommandObject{
 									ObjectID: o.GetID(),
 									Payload: network.CommandObjectPayloadCreate{
+										TypeID:      o.getType().AsUint8(),
 										AnimationID: oArch.AnimID,
 										FaceID:      oArch.FaceID,
 									},
