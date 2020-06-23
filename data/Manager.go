@@ -565,6 +565,13 @@ func (m *Manager) GetString(name string) StringID {
 	return m.Strings.Acquire(name)
 }
 
+func (m *Manager) GetAnimation(animID StringID) (*Animation, error) {
+	if _, ok := m.animations[animID]; ok {
+		return m.animations[animID], nil
+	}
+	return nil, errors.New("Animation does not exist")
+}
+
 // GetAnimationFrame returns the AnimationFrame for an animation ID, its face ID, and an entry index.
 func (m *Manager) GetAnimationFrame(animID StringID, faceID StringID, index int) AnimationFrame {
 	if anim, ok := m.animations[animID]; ok {
