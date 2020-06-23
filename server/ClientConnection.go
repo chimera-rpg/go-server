@@ -14,9 +14,10 @@ import (
 // network connection.
 type ClientConnection struct {
 	network.Connection
-	id    int
-	Owner world.OwnerI
-	user  *data.User
+	id                    int
+	Owner                 world.OwnerI
+	user                  *data.User
+	requestedAnimationIDs map[uint32]struct{}
 }
 
 // GetSocket returns the connection's socket.
@@ -33,7 +34,8 @@ func (c *ClientConnection) GetID() int {
 func NewClientConnection(conn net.Conn, id int) *ClientConnection {
 	network.RegisterCommands()
 	cc := ClientConnection{
-		id: id,
+		id:                    id,
+		requestedAnimationIDs: make(map[uint32]struct{}),
 	}
 	cc.SetConn(conn)
 	return &cc
@@ -319,6 +321,39 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 		}
 
 		switch t := cmd.(type) {
+		case network.CommandAnimation:
+			// If the client has already requested this animation, boot it. NOTE: It would be better to limit requests first rather than immediately booting -- as well as to warn the player that it should stop requesting.
+			if _, alreadyRequested := c.requestedAnimationIDs[t.AnimationID]; alreadyRequested {
+				s.RemoveClientByID(c.GetID())
+				c.GetSocket().Close()
+				return
+			}
+			c.requestedAnimationIDs[t.AnimationID] = struct{}{}
+			if anim, err := s.dataManager.GetAnimation(t.AnimationID); err != nil {
+				// This feels a bit heavy to convert our server animation data to our network animation data.
+				faces := make(map[uint32][]network.AnimationFrame)
+				for key, face := range anim.Faces {
+					faces[key] = make([]network.AnimationFrame, len(face))
+					for frameIndex, frame := range face {
+						faces[key][frameIndex] = network.AnimationFrame{
+							ImageID: frame.ImageID,
+							Time:    frame.Time,
+						}
+					}
+				}
+
+				c.Send(network.CommandAnimation{
+					AnimationID: t.AnimationID,
+					Faces:       faces,
+				})
+			} else {
+				// Animation does not exist. Send client bogus data.
+				c.Send(network.CommandAnimation{
+					AnimationID: t.AnimationID,
+				})
+			}
+		case network.CommandGraphics:
+			log.Printf("Got graphics request: %+v\n", t)
 		case network.CommandCmd:
 			log.Printf("Got cmd: %+v\n", t)
 		case network.CommandExtCmd:
