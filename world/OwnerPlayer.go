@@ -169,8 +169,8 @@ func (player *OwnerPlayer) checkVisibleTiles() error {
 					}
 					// Update the client's perception of the given tile.
 					player.ClientConnection.Send(network.CommandTile{
-						X:         uint32(yi),
-						Y:         uint32(xi),
+						Y:         uint32(yi),
+						X:         uint32(xi),
 						Z:         uint32(zi),
 						ObjectIDs: tileObjectIDs,
 					})
