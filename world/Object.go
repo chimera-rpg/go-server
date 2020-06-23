@@ -46,3 +46,8 @@ func (o *Object) GetTile() *Tile {
 func (o *Object) GetID() ID {
 	return o.id
 }
+
+// GetArchetype gets the object's underlying archetype.
+func (o *Object) GetArchetype() *data.Archetype {
+	return o.Archetype
+}

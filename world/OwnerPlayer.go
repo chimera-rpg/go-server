@@ -146,13 +146,21 @@ func (player *OwnerPlayer) checkVisibleTiles() error {
 						oID := o.GetID()
 						if _, isObjectKnown := player.knownIDs[oID]; !isObjectKnown {
 							// Let the client know of the object(s). NOTE: We could send a collection of object creation commands so as to reduce TCP overhead for bulk updates.
-							player.ClientConnection.Send(network.CommandObject{
-								ObjectID: o.GetID(),
-								Payload: network.CommandObjectPayloadCreate{
-									AnimationID: 0,
-									FaceID:      0,
-								},
-							})
+							oArch := o.GetArchetype()
+							if oArch != nil {
+								player.ClientConnection.Send(network.CommandObject{
+									ObjectID: o.GetID(),
+									Payload: network.CommandObjectPayloadCreate{
+										AnimationID: oArch.AnimID,
+										FaceID:      oArch.FaceID,
+									},
+								})
+							} else {
+								player.ClientConnection.Send(network.CommandObject{
+									ObjectID: o.GetID(),
+									Payload:  network.CommandObjectPayloadCreate{},
+								})
+							}
 							player.knownIDs[oID] = struct{}{}
 						}
 						tileObjectIDs[i] = oID

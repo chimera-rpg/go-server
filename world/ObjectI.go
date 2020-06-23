@@ -10,6 +10,7 @@ type ObjectI interface {
 	GetTile() *Tile
 	SetTile(*Tile)
 	setArchetype(*data.Archetype)
+	GetArchetype() *data.Archetype
 	update(int)
 	getType() data.ArchetypeType
 }
