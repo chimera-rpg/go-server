@@ -1,10 +1,7 @@
 package world
 
 import (
-	"log"
-
 	"github.com/chimera-rpg/go-server/data"
-	"github.com/imdario/mergo"
 )
 
 // ObjectFloor represents a floor type object.
@@ -27,7 +24,7 @@ func NewObjectFloor(a *data.Archetype) (o *ObjectFloor) {
 
 func (o *ObjectFloor) setArchetype(targetArch *data.Archetype) {
 	// First inherit from another Archetype if ArchID is set.
-	baseArch := data.NewArchetype()
+	/*baseArch := data.NewArchetype()
 	for targetArch != nil {
 		if err := mergo.Merge(&baseArch, targetArch); err != nil {
 			log.Fatal("o no")
@@ -35,7 +32,7 @@ func (o *ObjectFloor) setArchetype(targetArch *data.Archetype) {
 		targetArch = targetArch.InheritArch
 	}
 
-	o.name, _ = targetArch.Name.GetString()
+	o.name, _ = targetArch.Name.GetString()*/
 }
 
 // update updates the floor.

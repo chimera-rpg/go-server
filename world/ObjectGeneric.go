@@ -1,10 +1,7 @@
 package world
 
 import (
-	"log"
-
 	"github.com/chimera-rpg/go-server/data"
-	"github.com/imdario/mergo"
 )
 
 // ObjectGeneric represents generic objects that have no defined type.
@@ -21,13 +18,13 @@ type ObjectGeneric struct {
 
 func (o *ObjectGeneric) setArchetype(targetArch *data.Archetype) {
 	// First inherit from another Archetype if ArchID is set.
-	baseArch := data.NewArchetype()
+	/*baseArch := data.NewArchetype()
 	for targetArch != nil {
 		if err := mergo.Merge(&baseArch, targetArch); err != nil {
 			log.Fatal("o no")
 		}
 		targetArch = targetArch.InheritArch
-	}
+	}*/
 }
 
 func (o *ObjectGeneric) update(d int) {

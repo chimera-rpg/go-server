@@ -1,10 +1,7 @@
 package world
 
 import (
-	"log"
-
 	"github.com/chimera-rpg/go-server/data"
-	"github.com/imdario/mergo"
 )
 
 // ObjectWall represents walls within the game.
@@ -30,7 +27,7 @@ func NewObjectWall(a *data.Archetype) (o *ObjectWall) {
 
 func (o *ObjectWall) setArchetype(targetArch *data.Archetype) {
 	// First inherit from another Archetype if ArchID is set.
-	mutatedArch := data.NewArchetype()
+	/*mutatedArch := data.NewArchetype()
 	for targetArch != nil {
 		if err := mergo.Merge(&mutatedArch, targetArch); err != nil {
 			log.Fatal("o no")
@@ -38,7 +35,7 @@ func (o *ObjectWall) setArchetype(targetArch *data.Archetype) {
 		targetArch = targetArch.InheritArch
 	}
 
-	o.name, _ = mutatedArch.Name.GetString()
+	o.name, _ = mutatedArch.Name.GetString()*/
 }
 
 func (o *ObjectWall) update(d int) {

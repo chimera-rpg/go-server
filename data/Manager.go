@@ -74,13 +74,6 @@ func (m *Manager) parseArchetypeFile(filepath string) error {
 }
 
 func (m *Manager) processArchetype(archetype *Archetype) error {
-	if archetype.Arch != "" {
-		inheritArch, err := m.GetArchetypeByName(archetype.Arch)
-		if err != nil {
-			return err
-		}
-		archetype.InheritArch = inheritArch
-	}
 	if archetype.Anim != "" {
 		archetype.AnimID = m.Strings.Acquire(archetype.Anim)
 		archetype.Anim = ""
@@ -89,16 +82,23 @@ func (m *Manager) processArchetype(archetype *Archetype) error {
 		archetype.FaceID = m.Strings.Acquire(archetype.Face)
 		archetype.Face = ""
 	}
+	// Add Arch to Archs if defined.
+	if archetype.Arch != "" {
+		archetype.Archs = append(archetype.Archs, archetype.Arch)
+		archetype.Arch = ""
+	}
+
+	// Convert Archs into ArchIDs
 	for _, archname := range archetype.Archs {
 		targetID := m.Strings.Acquire(archname)
 		if _, err := m.GetArchetype(targetID); err != nil {
 			return err
 		}
 		archetype.ArchIDs = append(archetype.ArchIDs, targetID)
-		archetype.Archs = nil
 	}
-	//archetype.Arch = archName
-	//archetype.ArchID = m.Strings.Acquire(archName)
+	archetype.Archs = nil
+
+	// Process Inventory.
 	for i := range archetype.Inventory {
 		if err := m.processArchetype(&archetype.Inventory[i]); err != nil {
 			return err
@@ -133,6 +133,13 @@ func (m *Manager) compileArchetype(archetype *Archetype) error {
 				return err
 			}
 			log.Printf("Result: %+v\n", archetype)
+		}
+	}
+
+	// Ensure inventory is also compiled.
+	for i := range archetype.Inventory {
+		if err := m.compileArchetype(&archetype.Inventory[i]); err != nil {
+			return err
 		}
 	}
 
@@ -377,12 +384,14 @@ func (m *Manager) parseMapFile(filepath string) error {
 			for x := range v.Tiles[y] {
 				for z := range v.Tiles[y][x] {
 					for i := range v.Tiles[y][x][z] {
-						// We also post-process our tiles so as to allow for XTREME custom archs in maps!
+						// We also process and compile our tiles so as to allow for XTREME custom archs in maps!
 						if err := m.processArchetype(&v.Tiles[y][x][z][i]); err != nil {
 							return err
-						} else {
-							log.Printf("%+v\n", v.Tiles[y][x][z][i])
 						}
+						if err := m.compileArchetype(&v.Tiles[y][x][z][i]); err != nil {
+							return err
+						}
+						log.Printf("%+v\n", v.Tiles[y][x][z][i])
 					}
 				}
 			}

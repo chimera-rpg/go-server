@@ -61,13 +61,12 @@ func (atype *ArchetypeType) UnmarshalYAML(unmarshal func(interface{}) error) err
 // Archetype represents a collection of data that should be used for the
 // creation of Objects.
 type Archetype struct {
-	ArchID      StringID         `yaml:"-"` // Archetype ID used for generating objects and inheriting from.
-	ArchIDs     []StringID       `yaml:"-"`
-	Archs       []string         `yaml:"Archs,omitempty"` // Archetypes to inherit from.
-	Arch        string           `yaml:"Arch,omitempty"`  // Archetype to inherit from. During post-parsing this is used to acquire and set the ArchID for inventory archetypes.
-	InheritArch *Archetype       `yaml:"-"`
-	SelfID      StringID         `yaml:"-"`              // The Archetype's own SelfID
-	Name        StringExpression `yaml:"Name,omitempty"` // StringExpression
+	ArchID  StringID         `yaml:"-"` // Archetype ID used for generating objects and inheriting from.
+	ArchIDs []StringID       `yaml:"-"`
+	Archs   []string         `yaml:"Archs,omitempty"` // Archetypes to inherit from.
+	Arch    string           `yaml:"Arch,omitempty"`  // Archetype to inherit from. During post-parsing this is used to acquire and set the ArchID for inventory archetypes.
+	SelfID  StringID         `yaml:"-"`               // The Archetype's own SelfID
+	Name    StringExpression `yaml:"Name,omitempty"`  // StringExpression
 	//Name string
 	Description StringExpression `yaml:"Description,omitempty"` // StringExpression
 	Type        ArchetypeType    `yaml:"Type,omitempty"`
