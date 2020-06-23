@@ -58,6 +58,7 @@ func (player *OwnerPlayer) SetMap(m *Map) {
 	if m != nil {
 		player.ClientConnection.Send(network.CommandMap{
 			Name:   m.name,
+			MapID:  m.mapID,
 			Height: m.height,
 			Width:  m.width,
 			Depth:  m.depth,
