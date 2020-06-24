@@ -1,6 +1,8 @@
 package data
 
 import (
+	"errors"
+	"fmt"
 	"hash/crc32"
 	"io/ioutil"
 )
@@ -35,6 +37,15 @@ func (f *FileMap) BuildCRC(id FileID, filepath string) (uint32, error) {
 	f.Checksums[id] = crc32.Checksum(r, fileMapTable)
 
 	return f.Checksums[id], nil
+}
+
+// GetBytes returns the bytes corresponding to a FileID.
+func (f *FileMap) GetBytes(id FileID) (bytes []byte, err error) {
+	if p, ok := f.Paths[id]; ok {
+		return ioutil.ReadFile(p)
+	}
+	err = errors.New(fmt.Sprintf("non-existent file id \"%d\" requested", id))
+	return
 }
 
 // NewFileMap returns a constructed FileMap.
