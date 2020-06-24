@@ -584,6 +584,11 @@ func (m *Manager) GetAnimationFrame(animID StringID, faceID StringID, index int)
 	return AnimationFrame{0, 0}
 }
 
+// GetImageData returns the image bytes associated with the provided image ID.
+func (m *Manager) GetImageData(imageID StringID) ([]byte, error) {
+	return m.imageFileMap.GetBytes(imageID)
+}
+
 /*func (m *Manager) createObject(which string) World.GameObject {
   if val, ok := m.templates[string]; ok {
   }
