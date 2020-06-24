@@ -18,6 +18,7 @@ type ClientConnection struct {
 	Owner                 world.OwnerI
 	user                  *data.User
 	requestedAnimationIDs map[uint32]struct{}
+	requestedImageIDs     map[uint32]struct{}
 }
 
 // GetSocket returns the connection's socket.
@@ -36,6 +37,7 @@ func NewClientConnection(conn net.Conn, id int) *ClientConnection {
 	cc := ClientConnection{
 		id:                    id,
 		requestedAnimationIDs: make(map[uint32]struct{}),
+		requestedImageIDs:     make(map[uint32]struct{}),
 	}
 	cc.SetConn(conn)
 	return &cc
@@ -354,7 +356,27 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 				})
 			}
 		case network.CommandGraphics:
-			log.Printf("Got graphics request: %+v\n", t)
+			if _, alreadyRequested := c.requestedImageIDs[t.GraphicsID]; alreadyRequested {
+				log.Printf("Kicking client due to multiple graphics request\n")
+				s.RemoveClientByID(c.GetID())
+				c.GetSocket().Close()
+				return
+			}
+			c.requestedImageIDs[t.GraphicsID] = struct{}{}
+			if imageData, err := s.dataManager.GetImageData(t.GraphicsID); err == nil {
+				c.Send(network.CommandGraphics{
+					Type:       network.Set,
+					GraphicsID: t.GraphicsID,
+					DataType:   network.GraphicsPng, // For now...
+					Data:       imageData,
+				})
+			} else {
+				// Let client know that no such graphics exists.
+				c.Send(network.CommandGraphics{
+					Type:       network.Nokay,
+					GraphicsID: t.GraphicsID,
+				})
+			}
 		case network.CommandCmd:
 			log.Printf("Got cmd: %+v\n", t)
 		case network.CommandExtCmd:
