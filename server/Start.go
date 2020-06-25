@@ -18,7 +18,10 @@ func (server *GameServer) Start() (err error) {
 	}
 	go server.handleClientConnections()
 	go server.handleClientAcceptions()
-	log.Printf("Listening on %s\n", server.config.Address)
+	log.WithFields(log.Fields{
+		"Address": server.config.Address,
+		"secure":  false,
+	}).Print("Listening")
 	return nil
 }
 
@@ -40,6 +43,10 @@ func (server *GameServer) SecureStart() (err error) {
 	}
 	go server.handleClientConnections()
 	go server.handleClientAcceptions()
-	log.Printf("Securely listening on %s\n", server.config.Address)
+	log.WithFields(log.Fields{
+		"Address": server.config.Address,
+		"secure":  true,
+	}).Print("Securely listening")
+
 	return nil
 }
