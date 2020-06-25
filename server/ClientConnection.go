@@ -19,6 +19,7 @@ type ClientConnection struct {
 	user                  *data.User
 	requestedAnimationIDs map[uint32]struct{}
 	requestedImageIDs     map[uint32]struct{}
+	log                   *log.Entry
 }
 
 // GetSocket returns the connection's socket.
@@ -40,6 +41,10 @@ func NewClientConnection(conn net.Conn, id int) *ClientConnection {
 		requestedImageIDs:     make(map[uint32]struct{}),
 	}
 	cc.SetConn(conn)
+	cc.log = log.WithFields(log.Fields{
+		"ID":      cc.id,
+		"Address": cc.GetSocket().RemoteAddr().String(),
+	})
 	return &cc
 }
 
@@ -58,13 +63,10 @@ func (c *ClientConnection) Receive(s *GameServer, cmd *network.Command) (isHandl
 	case network.CommandBasic:
 		if t.Type == network.Cya {
 			if err := s.cleanupConnection(c); err != nil {
-				log.Print(err)
+				c.log.Print(err)
 			}
 			c.GetSocket().Close()
-			log.WithFields(log.Fields{
-				"Address": c.GetSocket().RemoteAddr().String(),
-				"ID":      c.GetID(),
-			}).Println("Client left faithfully.")
+			c.log.Println("Client left faithfully.")
 			isHandled = true
 			shouldReturn = true
 		}
@@ -78,11 +80,8 @@ func (c *ClientConnection) OnExplode(s *GameServer) {
 	if r := recover(); r != nil {
 		s.cleanupConnection(c)
 		c.GetSocket().Close()
-		log.Print(r.(error))
-		log.WithFields(log.Fields{
-			"Address": c.GetSocket().RemoteAddr().String(),
-			"ID":      c.GetID(),
-		}).Errorln("Client exploded, removing.")
+		c.log.Print(r.(error))
+		c.log.Errorln("Client exploded, removing.")
 	}
 }
 
@@ -165,10 +164,7 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 				}
 			}
 		default: // Boot the client if it sends anything else.
-			log.WithFields(log.Fields{
-				"Address": c.GetSocket().RemoteAddr().String(),
-				"ID":      c.GetID(),
-			}).Warnln("Client sent bad data, kicking.")
+			c.log.Warnln("Client sent bad data, kicking.")
 
 			s.cleanupConnection(c)
 			c.GetSocket().Close()
@@ -199,19 +195,13 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 			if t.Type == network.QueryCharacters {
 				isWaiting = false
 			} else {
-				log.WithFields(log.Fields{
-					"Address": c.GetSocket().RemoteAddr().String(),
-					"ID":      c.GetID(),
-				}).Warnln("Client sent bad data, kicking.")
+				c.log.Warnln("Client sent bad data, kicking.")
 				s.cleanupConnection(c)
 				c.GetSocket().Close()
 				return
 			}
 		default:
-			log.WithFields(log.Fields{
-				"Address": c.GetSocket().RemoteAddr().String(),
-				"ID":      c.GetID(),
-			}).Warnln("Client sent bad data, kicking.")
+			c.log.Warnln("Client sent bad data, kicking.")
 			s.cleanupConnection(c)
 			c.GetSocket().Close()
 			return
@@ -333,7 +323,6 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 			continue
 		}
 		if shouldReturn {
-			log.Println("return")
 			return
 		}
 
@@ -341,10 +330,7 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 		case network.CommandAnimation:
 			// If the client has already requested this animation, boot it. NOTE: It would be better to limit requests first rather than immediately booting -- as well as to warn the player that it should stop requesting.
 			if _, alreadyRequested := c.requestedAnimationIDs[t.AnimationID]; alreadyRequested {
-				log.WithFields(log.Fields{
-					"Address": c.GetSocket().RemoteAddr().String(),
-					"ID":      c.GetID(),
-				}).Warnln("Kicking client due to multiple animation request")
+				c.log.Warnln("Kicking client due to multiple animation request")
 				s.RemoveClientByID(c.GetID())
 				c.GetSocket().Close()
 				return
@@ -375,10 +361,7 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 			}
 		case network.CommandGraphics:
 			if _, alreadyRequested := c.requestedImageIDs[t.GraphicsID]; alreadyRequested {
-				log.WithFields(log.Fields{
-					"Address": c.GetSocket().RemoteAddr().String(),
-					"ID":      c.GetID(),
-				}).Warnln("Kicking client due to multiple graphics request")
+				c.log.Warnln("Kicking client due to multiple graphics request")
 
 				s.RemoveClientByID(c.GetID())
 				c.GetSocket().Close()
@@ -400,14 +383,11 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 				})
 			}
 		case network.CommandCmd:
-			log.Printf("Got cmd: %+v\n", t)
+			c.log.Printf("Got cmd: %+v\n", t)
 		case network.CommandExtCmd:
-			log.Printf("Got extcmd: %+v\n", t)
+			c.log.Printf("Got extcmd: %+v\n", t)
 		default: // Boot the client if it sends anything else.
-			log.WithFields(log.Fields{
-				"Address": c.GetSocket().RemoteAddr().String(),
-				"ID":      c.GetID(),
-			}).Warnln("Client sent bad data, kicking")
+			c.log.Warnln("Client sent bad data, kicking")
 			s.RemoveClientByID(c.GetID())
 			c.GetSocket().Close()
 		}
