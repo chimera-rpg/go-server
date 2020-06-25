@@ -162,6 +162,10 @@ func (gmap *Map) RemoveOwner(owner OwnerI) error {
 
 // CreateObjectFromArch will attempt to create an Object by an archetype, merging the result with the archetype's target Arch if possible.
 func (gmap *Map) CreateObjectFromArch(arch *data.Archetype) (o ObjectI, err error) {
+	// Ensure archetype is compiled.
+	err = gmap.world.data.CompileArchetype(arch)
+
+	// Create our object.
 	switch arch.Type {
 	case cdata.ArchetypeFloor:
 		o = NewObjectFloor(arch)
