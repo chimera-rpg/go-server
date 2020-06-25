@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -97,6 +98,7 @@ func main() {
 		}
 	}()
 	// Create and initialize our prompt.
+	fmt.Println("Entering prompt. Issue \"help\" for commands.")
 	var prompt Prompt
 	prompt.Init()
 	prompt.Capture()
