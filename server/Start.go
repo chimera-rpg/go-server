@@ -2,7 +2,7 @@ package server
 
 import (
 	"crypto/tls"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net"
 	"path"
 )

@@ -2,8 +2,8 @@ package data
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 	"sync"
@@ -59,12 +59,12 @@ func (m *Manager) writeUser(u *User) (err error) {
 
 	var bytes []byte
 	if bytes, err = yaml.Marshal(u); err != nil {
-		log.Print(err)
+		log.Errorln(err)
 		err = &userError{err: err.Error()}
 		return
 	}
 	if err = ioutil.WriteFile(filePath, bytes, 0644); err != nil {
-		log.Print(err)
+		log.Errorln(err)
 		err = &userError{err: err.Error()}
 		return
 	}
@@ -101,7 +101,9 @@ func (m *Manager) CreateUser(user string, pass string, email string) (err error)
 // loadUser attempts to load a given User from disk and add it to
 // the loadedUsers field in Manager.
 func (m *Manager) loadUser(user string) (u *User, err error) {
-	log.Printf("Loading user %s\n", user)
+	log.WithFields(log.Fields{
+		"user": user,
+	}).Println("Loading user")
 	var exists bool
 	var bytes []byte
 	filePath := path.Join(m.usersPath, user+".user.yaml")

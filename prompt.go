@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"io"
-	"log"
 	"os"
 	"sync"
 )
@@ -56,11 +56,11 @@ func (p *Prompt) Capture() {
 	// Store os and log destinations
 	p.stdout = os.Stdout
 	p.stderr = os.Stderr
-	p.logOutput = log.Writer()
+	// p.logOutput = log.StandardLogger().Writer()
 	// Replace os and log output
 	os.Stdout = p.stdoutWriter
 	os.Stderr = p.stderrWriter
-	log.SetOutput(p.logWriter)
+	log.SetOutput(p.stdoutWriter)
 }
 
 func (p *Prompt) Uncapture() {
@@ -69,14 +69,14 @@ func (p *Prompt) Uncapture() {
 	// Restore os and log destinations
 	os.Stdout = p.stdout
 	os.Stderr = p.stderr
-	log.SetOutput(p.logOutput)
+	log.SetOutput(p.stdout)
 
 	// Copy any held data to stdout/stderr.
 	outC := make(chan struct{})
 	go func() {
 		io.Copy(p.stdout, p.stdoutReader)
 		io.Copy(p.stderr, p.stderrReader)
-		io.Copy(log.Writer(), p.logReader)
+		io.Copy(log.StandardLogger().Writer(), p.logReader)
 		outC <- struct{}{}
 	}()
 	p.stdoutWriter.Close()

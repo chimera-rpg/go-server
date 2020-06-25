@@ -1,7 +1,7 @@
 package world
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 	"sync"
 	"time"
 
@@ -106,7 +106,6 @@ func New() *World {
 
 // LoadMap loads and returns a Map identified by the passed string.
 func (world *World) LoadMap(name string) (*Map, error) {
-	log.Printf("Attempting to load map '%s'\n", name)
 	mapIndex, isActive := world.isMapLoaded(name)
 	if mapIndex >= 0 {
 		if !isActive {
@@ -118,6 +117,10 @@ func (world *World) LoadMap(name string) (*Map, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.WithFields(log.Fields{
+		"name": name,
+	}).Println("Loaded map")
+
 	world.addMap(gmap)
 
 	return gmap, nil
@@ -125,10 +128,12 @@ func (world *World) LoadMap(name string) (*Map, error) {
 
 // addMap adds the provided Map to the active maps slice.
 func (world *World) addMap(gm *Map) {
-	log.Printf("Added map '%s' to active maps\n", gm.name)
 	world.activeMapsMutex.Lock()
 	defer world.activeMapsMutex.Unlock()
 	world.activeMaps = append(world.activeMaps, gm)
+	log.WithFields(log.Fields{
+		"name": gm.name,
+	}).Println("Added map to active maps")
 }
 
 // activateMap activates and returns an inactive map given by its index.
@@ -139,7 +144,9 @@ func (world *World) activateMap(inactiveIndex int) *Map {
 	defer world.inactiveMapsMutex.Unlock()
 
 	if inactiveIndex > len(world.inactiveMaps) {
-		log.Printf("inactive map '%d' out of bounds.\n", inactiveIndex)
+		log.WithFields(log.Fields{
+			"index": inactiveIndex,
+		}).Warnln("inactive map out of bounds")
 		return nil
 	}
 	world.activeMaps = append(world.activeMaps, world.inactiveMaps[inactiveIndex])
@@ -155,7 +162,9 @@ func (world *World) inactivateMap(activeIndex int) *Map {
 	defer world.activeMapsMutex.Unlock()
 
 	if activeIndex > len(world.activeMaps) {
-		log.Printf("active map '%d' out of bounds.\n", activeIndex)
+		log.WithFields(log.Fields{
+			"index": activeIndex,
+		}).Warnln("active map out of bounds")
 		return nil
 	}
 	world.inactiveMaps = append(world.inactiveMaps, world.activeMaps[activeIndex])
@@ -195,14 +204,19 @@ func (world *World) addPlayerByConnection(conn clientConnectionI, character *dat
 		if gmap, err := world.LoadMap(character.SaveInfo.Map); err == nil {
 			gmap.AddOwner(player, character.SaveInfo.Y, character.SaveInfo.X, character.SaveInfo.Z)
 		} else {
-			log.Println("Could not load character's map, using default")
+			log.WithFields(log.Fields{
+				"name": character.SaveInfo.Map,
+			}).Warnln("Could not load character's map, falling back to default")
 			if gmap, err := world.LoadMap("Chamber of Origins"); err == nil {
 				gmap.AddOwner(player, 0, 1, 1)
 			} else {
 				return err
 			}
 		}
-		log.Printf("Added player and PC(%d) to world.\n", pc.id)
+		log.WithFields(log.Fields{
+			"ID": conn.GetID(),
+			"PC": pc.id,
+		}).Println("Added player to world.")
 	}
 	return nil
 }

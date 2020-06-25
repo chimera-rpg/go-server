@@ -1,7 +1,7 @@
 package server
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 )
 
 // Update runs update for the server world.
@@ -14,7 +14,7 @@ func (server *GameServer) handleClientAcceptions() {
 	for {
 		conn, err := server.listener.Accept()
 		if err != nil {
-			log.Print("Error accepting: ", err.Error())
+			log.Errorln(err.Error())
 		} else {
 			server.connectedClientsMutex.Lock()
 			clientID := server.acquireClientID()
@@ -28,7 +28,10 @@ func (server *GameServer) handleClientConnections() {
 	for {
 		clientConnection := <-server.clientConnections
 		// Connected
-		log.Print("New Client: ", clientConnection.GetSocket().RemoteAddr(), " as ", clientConnection.GetID())
+		log.WithFields(log.Fields{
+			"Address": clientConnection.GetSocket().RemoteAddr(),
+			"ID":      clientConnection.GetID(),
+		}).Println("New client")
 		//
 		server.connectedClientsMutex.Lock()
 		server.connectedClients[clientConnection.GetID()] = clientConnection

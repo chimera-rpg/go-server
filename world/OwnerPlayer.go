@@ -4,7 +4,7 @@ import (
 	"github.com/chimera-rpg/go-common/network"
 
 	"fmt"
-	"log"
+	log "github.com/sirupsen/logrus"
 )
 
 type clientConnectionI interface {
