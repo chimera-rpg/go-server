@@ -108,7 +108,8 @@ func (m *Manager) processArchetype(archetype *Archetype) error {
 	return nil
 }
 
-func (m *Manager) compileArchetype(archetype *Archetype) error {
+// CompileArchetype compiles a given archetype if it has not been compiled yet. This handles dependency resolution and will throw if an archetype has circular dependencies.
+func (m *Manager) CompileArchetype(archetype *Archetype) error {
 	// Bail early if already compiled.
 	if archetype.isCompiled {
 		return nil
@@ -121,25 +122,22 @@ func (m *Manager) compileArchetype(archetype *Archetype) error {
 	}
 
 	// Ensure deps are all compiled and inherit linearly.
-	log.Printf("compiling deps: %+v\n", archetype.ArchIDs)
 	for _, depID := range archetype.ArchIDs {
 		if depArch, err := m.GetArchetype(depID); err != nil {
 			return err
 		} else {
-			if err := m.compileArchetype(depArch); err != nil {
+			if err := m.CompileArchetype(depArch); err != nil {
 				return err
 			}
-			log.Printf("merging these: %+v AND %+v\n", archetype, depArch)
 			if err := mergo.Merge(archetype, depArch, mergo.WithTransformers(StringExpressionTransformer{})); err != nil {
 				return err
 			}
-			log.Printf("Result: %+v\n", archetype)
 		}
 	}
 
 	// Ensure inventory is also compiled.
 	for i := range archetype.Inventory {
-		if err := m.compileArchetype(&archetype.Inventory[i]); err != nil {
+		if err := m.CompileArchetype(&archetype.Inventory[i]); err != nil {
 			return err
 		}
 	}
@@ -212,7 +210,7 @@ func (m *Manager) parseArchetypeFiles() error {
 		}
 	}
 	for _, archetype := range m.archetypes {
-		if err := m.compileArchetype(archetype); err != nil {
+		if err := m.CompileArchetype(archetype); err != nil {
 			return err
 		}
 		log.Printf("%+v\n", archetype)
@@ -389,7 +387,7 @@ func (m *Manager) parseMapFile(filepath string) error {
 						if err := m.processArchetype(&v.Tiles[y][x][z][i]); err != nil {
 							return err
 						}
-						if err := m.compileArchetype(&v.Tiles[y][x][z][i]); err != nil {
+						if err := m.CompileArchetype(&v.Tiles[y][x][z][i]); err != nil {
 							return err
 						}
 						log.Printf("%+v\n", v.Tiles[y][x][z][i])
