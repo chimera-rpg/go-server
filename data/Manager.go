@@ -180,7 +180,10 @@ func (m *Manager) dependencyResolveArchetype(archetype *Archetype, resolved, unr
 }
 
 func (m *Manager) parseArchetypeFiles() error {
-	log.Print("Archetypes: Loading...")
+	l := log.WithFields(log.Fields{
+		"path": m.archetypesPath,
+	})
+	l.Print("Archetypes: Loading...")
 	err := filepath.Walk(m.archetypesPath, func(filepath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -213,18 +216,19 @@ func (m *Manager) parseArchetypeFiles() error {
 		if err := m.CompileArchetype(archetype); err != nil {
 			return err
 		}
-		log.Printf("%+v\n", archetype)
 	}
 
-	log.Printf("%d archetypes loaded.\n", len(m.archetypes))
-	log.Printf("%d Genera.", m.buildGeneraArchetypes())
-	log.Printf("%d Species.", m.buildSpeciesArchetypes())
-	log.Printf("%d PCs.", m.buildPCArchetypes())
-	for _, v := range m.pcArchetypes {
-		name, _ := v.Name.Get()
-		log.Printf("%s ", name)
-	}
-	log.Print("Archetypes: Done!")
+	m.buildGeneraArchetypes()
+	m.buildSpeciesArchetypes()
+	m.buildPCArchetypes()
+
+	l.WithFields(log.Fields{
+		"Total":   len(m.archetypes),
+		"Genera":  len(m.generaArchetypes),
+		"Species": len(m.speciesArchetypes),
+		"PCs":     len(m.pcArchetypes),
+	}).Println("Archetypes: Done!")
+
 	return nil
 }
 
@@ -276,7 +280,10 @@ func (m *Manager) GetArchetypeByName(name string) (archetype *Archetype, err err
 }
 
 func (m *Manager) parseAnimationFiles() error {
-	log.Print("Animations: Loading...")
+	l := log.WithFields(log.Fields{
+		"path": m.archetypesPath,
+	})
+	l.Print("Animations: Loading...")
 	err := filepath.Walk(m.archetypesPath, func(filepath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -292,11 +299,12 @@ func (m *Manager) parseAnimationFiles() error {
 		return nil
 	})
 	if err != nil {
-		log.Printf("Error walking the path %s: %v\n", m.archetypesPath, err)
+		l.Error("Error walking the path", err)
 	}
-	log.Printf("%d animations loaded.\n", len(m.animations))
 
-	log.Print("Animations: Done!")
+	l.WithFields(log.Fields{
+		"count": len(m.animations),
+	}).Print("Animations: Done!")
 	return nil
 }
 
@@ -339,7 +347,10 @@ func (m *Manager) parseAnimationFile(filepath string) error {
 }
 
 func (m *Manager) buildImagesMap() error {
-	log.Print("imageFileMap: Loading...")
+	l := log.WithFields(log.Fields{
+		"path": m.archetypesPath,
+	})
+	l.Print("imageFileMap: Loading...")
 	err := filepath.Walk(m.archetypesPath, func(filepath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -348,8 +359,7 @@ func (m *Manager) buildImagesMap() error {
 			if path.Ext(filepath) == ".png" {
 				shortpath := filepath[len(m.archetypesPath)+1:]
 				id := m.Strings.Acquire(shortpath)
-				crc, err := m.imageFileMap.BuildCRC(id, filepath)
-				log.Printf("%s(%d) = %d\n", shortpath, id, crc)
+				_, err := m.imageFileMap.BuildCRC(id, filepath)
 
 				if err != nil {
 					return err
@@ -359,10 +369,12 @@ func (m *Manager) buildImagesMap() error {
 		return nil
 	})
 	if err != nil {
-		log.Printf("Error walking the path %s: %v\n", m.archetypesPath, err)
+		l.Error("Error walking the path", err)
 		return err
 	}
-	log.Print("imageFileMap: Done!")
+	l.WithFields(log.Fields{
+		"count": len(m.imageFileMap.Paths),
+	}).Print("imageFileMap: Done!")
 	return nil
 }
 
@@ -376,7 +388,6 @@ func (m *Manager) parseMapFile(filepath string) error {
 	if err = yaml.Unmarshal(r, &maps); err != nil {
 		return err
 	}
-	log.Printf("%+v\n", maps)
 	for k, v := range maps {
 		// Acquire our ArchIDs for Tiles
 		for y := range v.Tiles {
@@ -390,21 +401,23 @@ func (m *Manager) parseMapFile(filepath string) error {
 						if err := m.CompileArchetype(&v.Tiles[y][x][z][i]); err != nil {
 							return err
 						}
-						log.Printf("%+v\n", v.Tiles[y][x][z][i])
 					}
 				}
 			}
 		}
 		m.maps[k] = &v
 		m.maps[k].MapID = m.Strings.Acquire(k)
-		log.Printf("%+v\n", v)
 	}
 
 	return nil
 }
 
 func (m *Manager) parseMapFiles() error {
-	log.Printf("Maps: Loading from \"%s\"...\n", m.mapsPath)
+	l := log.WithFields(log.Fields{
+		"path": m.mapsPath,
+	})
+
+	l.Print("Maps: Loading...")
 	err := filepath.Walk(m.mapsPath, func(filepath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -420,10 +433,11 @@ func (m *Manager) parseMapFiles() error {
 		return nil
 	})
 	if err != nil {
-		log.Printf("Error walking the path %s: %v\n", m.mapsPath, err)
+		l.Errorln(err)
 	}
-	log.Printf("%d maps loaded.", len(m.maps))
-	log.Print("Maps: Done!")
+	l.WithFields(log.Fields{
+		"count": len(m.maps),
+	}).Println("Maps: Done!")
 	return nil
 }
 
