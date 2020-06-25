@@ -383,9 +383,13 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 				})
 			}
 		case network.CommandCmd:
-			c.log.Printf("Got cmd: %+v\n", t)
+			c.log.WithFields(log.Fields{
+				"cmd": t,
+			}).Print("CommandCmd")
 		case network.CommandExtCmd:
-			c.log.Printf("Got extcmd: %+v\n", t)
+			c.log.WithFields(log.Fields{
+				"cmd": t,
+			}).Print("CommandExtCmd")
 		default: // Boot the client if it sends anything else.
 			c.log.Warnln("Client sent bad data, kicking")
 			s.RemoveClientByID(c.GetID())
