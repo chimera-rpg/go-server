@@ -17,7 +17,6 @@ import (
 
 func main() {
 	log.Print("Starting Chimera (golang)")
-
 	// Copied from data/Manager.go
 	// Get the parent dir of command; should resolve like /path/bin/server -> /path/
 	dir, err := filepath.Abs(os.Args[0])
@@ -97,5 +96,10 @@ func main() {
 			lastTime = currentEnd
 		}
 	}()
+	// Create and initialize our prompt.
+	var prompt Prompt
+	prompt.Init()
+	prompt.Capture()
+	go prompt.ShowPrompt()
 	<-s.End
 }
