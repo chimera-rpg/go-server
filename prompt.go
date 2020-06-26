@@ -2,11 +2,15 @@ package main
 
 import (
 	"bufio"
+	"encoding/csv"
 	"errors"
 	"fmt"
+	"github.com/chimera-rpg/go-server/server"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"os"
+	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -22,9 +26,11 @@ type Prompt struct {
 	logOutput    io.Writer
 	logWriter    *os.File
 	logReader    *os.File
+	gameServer   *server.GameServer
 }
 
-func (p *Prompt) Init() (err error) {
+func (p *Prompt) Init(s *server.GameServer) (err error) {
+	p.gameServer = s
 	p.stdout = os.Stdout
 	p.stderr = os.Stderr
 	p.inputScanner = bufio.NewScanner(os.Stdin)
@@ -94,22 +100,56 @@ func (p *Prompt) ShowPrompt() {
 	}
 }
 
-func (p *Prompt) handleCommand(c string, args ...string) error {
-	if c == "log" {
+func (p *Prompt) handleCommand(c string) error {
+	r := csv.NewReader(strings.NewReader(c))
+	r.Comma = ' '
+	args, err := r.Read()
+	if err != nil {
+		return err
+	}
+	if len(args) == 0 {
+		p.ShowPrompt()
+		return nil
+	}
+
+	if args[0] == "log" {
 		p.Uncapture()
 		fmt.Println("Outputting logs. Press Enter to re-open console.")
 		p.inputScanner.Scan()
 		p.Capture()
 		p.ShowPrompt()
-	} else if c == "help" {
+	} else if args[0] == "help" {
 		fmt.Fprintf(p.stdout, "\"log\" to show log output, \"quit\" to quit\n")
 		p.ShowPrompt()
-	} else if c == "quit" {
-		os.Exit(0)
-	} else if c == "" {
+	} else if args[0] == "lookup" {
+		if len(args) != 3 {
+			fmt.Fprint(p.stdout, "Usage: lookup string <stringID>\n")
+		} else {
+			if args[1] == "string" {
+				u, err := strconv.ParseUint(args[2], 10, 32)
+				if err != nil {
+					fmt.Fprintf(p.stdout, err.Error())
+				} else {
+					str := p.gameServer.GetDataManager().Strings.Lookup(uint32(u))
+					fmt.Fprintf(p.stdout, "%d => \"%s\"\n", uint32(u), str)
+				}
+			}
+		}
 		p.ShowPrompt()
+	} else if args[0] == "dump" {
+		if len(args) != 3 {
+			fmt.Fprintf(p.stdout, "Usage: dump map \"<map name>\"\n")
+		} else {
+			if args[1] == "map" {
+				m := p.gameServer.GetWorld().GetMap(args[2])
+				fmt.Fprintf(p.stdout, "%+v\n", m)
+			}
+		}
+		p.ShowPrompt()
+	} else if args[0] == "quit" {
+		os.Exit(0)
 	} else {
-		return errors.New(fmt.Sprintf("unknown command \"%s\"", c))
+		return errors.New(fmt.Sprintf("unknown command \"%s\"", args[0]))
 	}
 	return nil
 }
