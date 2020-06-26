@@ -32,6 +32,11 @@ func (c *ClientConnection) GetID() int {
 	return c.id
 }
 
+// GetUser returns the client's user.
+func (c *ClientConnection) GetUser() *data.User {
+	return c.user
+}
+
 // NewClientConnection sets up a new ClientConnection.
 func NewClientConnection(conn net.Conn, id int) *ClientConnection {
 	network.RegisterCommands()
