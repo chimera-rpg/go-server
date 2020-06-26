@@ -123,7 +123,7 @@ func (p *Prompt) handleCommand(c string) error {
 		p.ShowPrompt()
 	} else if args[0] == "lookup" {
 		if len(args) != 3 {
-			fmt.Fprint(p.stdout, "Usage:\n\tlookup string <stringID>\n\tlookup map \"<name>\"\n\tlookup object <objectID>\n\tlookup archetype <stringID>|<archetype name>\n\tlookup animation <stringID>|<animation name>\n")
+			fmt.Fprint(p.stdout, "Usage:\n\tlookup string <stringID>\n\tlookup map \"<name>\"\n\tlookup object <objectID>\n\tlookup archetype <stringID>|\"<archetype name>\"\n\tlookup animation <stringID>|\"<animation name>\"\n")
 		} else {
 			if args[1] == "string" {
 				u, err := strconv.ParseUint(args[2], 10, 32)
