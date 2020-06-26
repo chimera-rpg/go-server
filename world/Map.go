@@ -5,7 +5,6 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 
-	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-server/data"
 )
 
@@ -56,7 +55,7 @@ func NewMap(world *World, name string) (*Map, error) {
 					gmap.tiles[y][x][z].y = y
 					gmap.tiles[y][x][z].x = x
 					gmap.tiles[y][x][z].z = z
-					object, err := gmap.CreateObjectFromArch(&gd.Tiles[y][x][z][a])
+					object, err := world.CreateObjectFromArch(&gd.Tiles[y][x][z][a])
 					if err != nil {
 						log.Print(err)
 						continue
@@ -91,6 +90,9 @@ func (gmap *Map) sizeMap(height int, width int, depth int) error {
 		gmap.tiles[y] = make([][]Tile, width)
 		for x := range gmap.tiles[y] {
 			gmap.tiles[y][x] = make([]Tile, depth)
+			for z := range gmap.tiles[y][x] {
+				gmap.tiles[y][x][z].gameMap = gmap
+			}
 		}
 	}
 	gmap.width = width
@@ -169,43 +171,10 @@ func (gmap *Map) RemoveOwner(owner OwnerI) error {
 	}
 
 	// Remove object.
-	gmap.DeleteObject(owner.GetTarget(), false)
+	gmap.world.DeleteObject(owner.GetTarget(), false)
 
 	gmap.updateTime++
 	return nil
-}
-
-// CreateObjectFromArch will attempt to create an Object by an archetype, merging the result with the archetype's target Arch if possible.
-func (gmap *Map) CreateObjectFromArch(arch *data.Archetype) (o ObjectI, err error) {
-	// Ensure archetype is compiled.
-	err = gmap.world.data.CompileArchetype(arch)
-
-	// Create our object.
-	switch arch.Type {
-	case cdata.ArchetypeFloor:
-		o = NewObjectFloor(arch)
-	case cdata.ArchetypeWall:
-		o = NewObjectWall(arch)
-	case cdata.ArchetypeItem:
-		o = NewObjectItem(arch)
-	case cdata.ArchetypeNPC:
-		o = NewObjectNPC(arch)
-	default:
-		gameobj := ObjectGeneric{
-			Object: Object{
-				Archetype: arch,
-				id:        gmap.world.objectIDs.acquire(),
-			},
-		}
-		gameobj.value, _ = arch.Value.GetInt()
-		gameobj.count, _ = arch.Count.GetInt()
-		gameobj.name, _ = arch.Name.GetString()
-
-		o = &gameobj
-	}
-
-	// TODO: Create/Merge Archetype properties!
-	return
 }
 
 // GetTile returns a pointer to the given tile.
@@ -231,24 +200,5 @@ func (gmap *Map) PlaceObject(o ObjectI, y int, x int, z int) (err error) {
 	}
 	tile.insertObject(o, -1)
 	gmap.updateTime++
-	return
-}
-
-// DeleteObject deletes a given object. If shouldFree is true, the associated object ID is freed.
-func (gmap *Map) DeleteObject(o ObjectI, shouldFree bool) (err error) {
-	if o == nil {
-		return errors.New("Attempted to delete a nil object!")
-	}
-	if tile := o.GetTile(); tile != nil {
-		tile.removeObject(o)
-	}
-	if shouldFree {
-		gmap.world.objectIDs.free(o.GetID())
-	}
-
-	for _, owner := range gmap.owners {
-		owner.OnObjectDelete(o.GetID())
-	}
-
 	return
 }

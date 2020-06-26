@@ -42,6 +42,11 @@ func (o *Object) GetTile() *Tile {
 	return o.tile
 }
 
+// SetID sets the objects' id. This should _only_ be called by World during object creation.
+func (o *Object) SetID(id ID) {
+	o.id = id
+}
+
 // GetID gets the object's id.
 func (o *Object) GetID() ID {
 	return o.id

@@ -9,6 +9,7 @@ import (
 type ObjectI interface {
 	GetID() ID
 	GetOwner() OwnerI
+	SetID(ID)
 	SetOwner(OwnerI)
 	GetTile() *Tile
 	SetTile(*Tile)

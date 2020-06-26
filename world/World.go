@@ -5,6 +5,8 @@ import (
 	"sync"
 	"time"
 
+	"errors"
+	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-server/data"
 )
 
@@ -17,6 +19,7 @@ type World struct {
 	inactiveMapsMutex sync.Mutex
 	players           []*OwnerPlayer
 	objectIDs         IDMap
+	objects           map[ID]ObjectI // global objects reference.
 	MessageChannel    chan MessageI
 }
 
@@ -244,7 +247,7 @@ func (world *World) removePlayerByConnection(conn clientConnectionI) {
 		// Remove owner from map -- this also deletes the character object.
 		if playerMap := world.players[index].GetMap(); playerMap != nil {
 			playerMap.RemoveOwner(world.players[index])
-			playerMap.DeleteObject(world.players[index].GetTarget(), true)
+			world.DeleteObject(world.players[index].GetTarget(), true)
 		}
 		// Remove from our slice.
 		world.players = append(world.players[:index], world.players[index+1:]...)
@@ -258,4 +261,58 @@ func (world *World) getExistingPlayerConnectionIndex(conn clientConnectionI) int
 		}
 	}
 	return -1
+}
+
+// CreateObjectFromArch will attempt to create an Object by an archetype, merging the result with the archetype's target Arch if possible.
+func (w *World) CreateObjectFromArch(arch *data.Archetype) (o ObjectI, err error) {
+	// Ensure archetype is compiled.
+	err = w.data.CompileArchetype(arch)
+
+	// Create our object.
+	switch arch.Type {
+	case cdata.ArchetypeFloor:
+		o = NewObjectFloor(arch)
+	case cdata.ArchetypeWall:
+		o = NewObjectWall(arch)
+	case cdata.ArchetypeItem:
+		o = NewObjectItem(arch)
+	case cdata.ArchetypeNPC:
+		o = NewObjectNPC(arch)
+	default:
+		gameobj := ObjectGeneric{
+			Object: Object{
+				Archetype: arch,
+			},
+		}
+		gameobj.value, _ = arch.Value.GetInt()
+		gameobj.count, _ = arch.Count.GetInt()
+		gameobj.name, _ = arch.Name.GetString()
+
+		o = &gameobj
+	}
+	o.SetID(w.objectIDs.acquire())
+
+	// TODO: Create/Merge Archetype properties!
+	return
+}
+
+// DeleteObject deletes a given object. If shouldFree is true, the associated object ID is freed.
+func (w *World) DeleteObject(o ObjectI, shouldFree bool) (err error) {
+	if o == nil {
+		return errors.New("Attempted to delete a nil object!")
+	}
+	if tile := o.GetTile(); tile != nil {
+		tile.removeObject(o)
+		if m := tile.GetMap(); m != nil {
+			for _, owner := range m.owners {
+				owner.OnObjectDelete(o.GetID())
+			}
+		}
+	}
+	if shouldFree {
+		w.objectIDs.free(o.GetID())
+		delete(w.objects, o.GetID())
+	}
+
+	return
 }
