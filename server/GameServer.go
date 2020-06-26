@@ -80,3 +80,13 @@ func (s *GameServer) cleanupConnection(c *ClientConnection) (err error) {
 
 	return
 }
+
+// GetDataManager returns the server's data manager.
+func (s *GameServer) GetDataManager() *data.Manager {
+	return &s.dataManager
+}
+
+// GetWorld returns the server's world.
+func (s *GameServer) GetWorld() *world.World {
+	return &s.world
+}
