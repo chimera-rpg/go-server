@@ -324,3 +324,28 @@ func (w *World) DeleteObject(o ObjectI, shouldFree bool) (err error) {
 func (w *World) GetObject(oID ID) ObjectI {
 	return w.objects[oID]
 }
+
+// GetPlayers returns a slice of all active players.
+func (w *World) GetPlayers() []*OwnerPlayer {
+	return w.players
+}
+
+// GetPlayerByName returns a player by their owning user name.
+func (w *World) GetPlayerByUsername(name string) *OwnerPlayer {
+	for _, p := range w.players {
+		if p.ClientConnection.GetUser().Username == name {
+			return p
+		}
+	}
+	return nil
+}
+
+// GetPlayerByObjectID returns a player by their object id.
+func (w *World) GetPlayerByObjectID(oID ID) *OwnerPlayer {
+	for _, p := range w.players {
+		if p.target.id == oID {
+			return p
+		}
+	}
+	return nil
+}
