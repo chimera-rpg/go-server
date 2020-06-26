@@ -119,7 +119,7 @@ func (p *Prompt) handleCommand(c string) error {
 		p.Capture()
 		p.ShowPrompt()
 	} else if args[0] == "help" {
-		fmt.Fprintf(p.stdout, "\"log\" to show log output, \"quit\" to quit\n")
+		fmt.Fprintf(p.stdout, "\tlog\tshow log output\n\tlookup\tlookup information\n\tdump\tdump a map or object\n\tquit\tshutdown and close\n")
 		p.ShowPrompt()
 	} else if args[0] == "lookup" {
 		if len(args) != 3 {
@@ -138,11 +138,19 @@ func (p *Prompt) handleCommand(c string) error {
 		p.ShowPrompt()
 	} else if args[0] == "dump" {
 		if len(args) != 3 {
-			fmt.Fprintf(p.stdout, "Usage: dump map \"<map name>\"\n")
+			fmt.Fprintf(p.stdout, "Usage: dump map \"<map name>\"\n\tdump object <ID>\n")
 		} else {
 			if args[1] == "map" {
 				m := p.gameServer.GetWorld().GetMap(args[2])
 				fmt.Fprintf(p.stdout, "%+v\n", m)
+			} else if args[1] == "object" {
+				u, err := strconv.ParseUint(args[2], 10, 32)
+				if err != nil {
+					fmt.Fprintf(p.stdout, err.Error())
+				} else {
+					o := p.gameServer.GetWorld().GetObject(uint32(u))
+					fmt.Fprintf(p.stdout, "%d => %+v\n", u, o)
+				}
 			}
 		}
 		p.ShowPrompt()
