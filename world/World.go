@@ -126,6 +126,20 @@ func (world *World) LoadMap(name string) (*Map, error) {
 	return gmap, nil
 }
 
+// GetMap returns the a loaded map. If the map has not been loaded, this returns nil.
+func (world *World) GetMap(name string) *Map {
+	mapIndex, isActive := world.isMapLoaded(name)
+	if mapIndex == -1 {
+		return nil
+	}
+	if isActive {
+		return world.activeMaps[mapIndex]
+	} else {
+		return world.inactiveMaps[mapIndex]
+	}
+	return nil
+}
+
 // addMap adds the provided Map to the active maps slice.
 func (world *World) addMap(gm *Map) {
 	world.activeMapsMutex.Lock()
@@ -219,7 +233,7 @@ func (world *World) addPlayerByConnection(conn clientConnectionI, character *dat
 		log.WithFields(log.Fields{
 			"ID": conn.GetID(),
 			"PC": pc.id,
-		}).Println("Added player to world.")
+		}).Debugln("Added player to world.")
 	}
 	return nil
 }
