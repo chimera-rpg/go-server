@@ -119,11 +119,11 @@ func (p *Prompt) handleCommand(c string) error {
 		p.Capture()
 		p.ShowPrompt()
 	} else if args[0] == "help" {
-		fmt.Fprintf(p.stdout, "\tlog\tshow log output\n\tlookup\tlookup information\n\tquit\tshutdown and close\n")
+		fmt.Fprintf(p.stdout, "\tlog\tshow log output\n\tplayers\tlist players\n\tlookup\tlookup information\n\tquit\tshutdown and close\n")
 		p.ShowPrompt()
 	} else if args[0] == "lookup" {
 		if len(args) != 3 {
-			fmt.Fprint(p.stdout, "Usage:\n\tlookup string <stringID>\n\tlookup map \"<name>\"\n\tlookup object <objectID>\n\tlookup archetype <stringID>|\"<archetype name>\"\n\tlookup animation <stringID>|\"<animation name>\"\n")
+			fmt.Fprint(p.stdout, "Usage:\n\tlookup string <stringID>\n\tlookup map \"<name>\"\n\tlookup object <objectID>\n\tlookup archetype <stringID>|\"<archetype name>\"\n\tlookup animation <stringID>|\"<animation name>\"\n\tlookup player <objectID|\"<username>\"\n")
 		} else {
 			if args[1] == "string" {
 				u, err := strconv.ParseUint(args[2], 10, 32)
@@ -162,9 +162,20 @@ func (p *Prompt) handleCommand(c string) error {
 					anim, _ := p.gameServer.GetDataManager().GetAnimation(uint32(u))
 					fmt.Fprintf(p.stdout, "%d => %+v\n", u, anim)
 				}
-
+			} else if args[1] == "player" {
+				u, err := strconv.ParseUint(args[2], 10, 32)
+				if err != nil {
+					player := p.gameServer.GetWorld().GetPlayerByUsername(args[2])
+					fmt.Fprintf(p.stdout, "%s => %+v\n", args[2], player)
+				} else {
+					player := p.gameServer.GetWorld().GetPlayerByObjectID(uint32(u))
+					fmt.Fprintf(p.stdout, "%d => %+v\n", uint32(u), player)
+				}
 			}
 		}
+		p.ShowPrompt()
+	} else if args[0] == "players" {
+		fmt.Fprintf(p.stdout, "%+v\n", p.gameServer.GetWorld().GetPlayers())
 		p.ShowPrompt()
 	} else if args[0] == "quit" {
 		os.Exit(0)
