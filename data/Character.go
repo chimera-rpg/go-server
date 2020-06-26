@@ -1,18 +1,10 @@
 package data
 
-// Character represents a player character. It is largely just
-// an Archetype...? Maybe it should just be that? What about
-// race and class? Hmm.
-// Perhaps Character should be: Archetype, RaceArchetype, ClassArchetype,
-// all of which are built upon one another?
+// Character represents a player character.
 type Character struct {
-	Name          string     `yaml:"Name"`
-	Archetype     Archetype  `yaml:"Archetype"`
-	RaceArchetype *Archetype `yaml:"-"`
-	SaveInfo      SaveInfo   `yaml:"SaveInfo"`
-	//Race          string `yaml:"Race"`
-	//Class         string `yaml:"Class"`
-	//	ClassArchetype *Archetype
+	Name      string    `yaml:"Name"`
+	Archetype Archetype `yaml:"Archetype"`
+	SaveInfo  SaveInfo  `yaml:"SaveInfo"`
 }
 
 type SaveInfo struct {
