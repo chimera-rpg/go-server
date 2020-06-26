@@ -123,7 +123,7 @@ func (p *Prompt) handleCommand(c string) error {
 		p.ShowPrompt()
 	} else if args[0] == "lookup" {
 		if len(args) != 3 {
-			fmt.Fprint(p.stdout, "Usage:\n\tlookup string <stringID>\n\tlookup map \"<name>\"\n\tlookup object <objectID>\n\tlookup archetype <archetypeID>|<archetype name>\n")
+			fmt.Fprint(p.stdout, "Usage:\n\tlookup string <stringID>\n\tlookup map \"<name>\"\n\tlookup object <objectID>\n\tlookup archetype <stringID>|<archetype name>\n\tlookup animation <stringID>|<animation name>\n")
 		} else {
 			if args[1] == "string" {
 				u, err := strconv.ParseUint(args[2], 10, 32)
@@ -153,6 +153,16 @@ func (p *Prompt) handleCommand(c string) error {
 					arch, _ := p.gameServer.GetDataManager().GetArchetype(uint32(u))
 					fmt.Fprintf(p.stdout, "%d => %+v\n", u, arch)
 				}
+			} else if args[1] == "animation" {
+				u, err := strconv.ParseUint(args[2], 10, 32)
+				if err != nil {
+					anim, _ := p.gameServer.GetDataManager().GetAnimationByName(args[2])
+					fmt.Fprintf(p.stdout, "\"%s\" => %+v\n", args[2], anim)
+				} else {
+					anim, _ := p.gameServer.GetDataManager().GetAnimation(uint32(u))
+					fmt.Fprintf(p.stdout, "%d => %+v\n", u, anim)
+				}
+
 			}
 		}
 		p.ShowPrompt()
