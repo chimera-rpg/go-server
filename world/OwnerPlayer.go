@@ -2,12 +2,14 @@ package world
 
 import (
 	"github.com/chimera-rpg/go-common/network"
+	"github.com/chimera-rpg/go-server/data"
 
 	"fmt"
 	log "github.com/sirupsen/logrus"
 )
 
 type clientConnectionI interface {
+	GetUser() *data.User
 	SetOwner(p OwnerI)
 	GetOwner() OwnerI
 	Send(network.Command) error
