@@ -14,9 +14,9 @@ import (
 type Map struct {
 	mapID        data.StringID
 	name         string
+	playerCount  int
 	owners       []OwnerI
 	world        *World // I guess it is okay to reference the World.
-	playerCount  int
 	shouldSleep  bool
 	shouldExpire bool
 	lifeTime     int64 // Time in ms of how long this map has been alive
@@ -67,6 +67,21 @@ func NewMap(world *World, name string) (*Map, error) {
 		}
 	}
 	return gmap, nil
+}
+
+// Stringer for dumping maps.
+func (gmap *Map) String() string {
+	var oIDs []uint32
+	for y := range gmap.tiles {
+		for x := range gmap.tiles[y] {
+			for z := range gmap.tiles[y][x] {
+				for _, o := range gmap.tiles[y][x][z].objects {
+					oIDs = append(oIDs, o.GetID())
+				}
+			}
+		}
+	}
+	return fmt.Sprintf("{name: \"%s\", height: %d, width: %d, depth: %d, owners: %d, objects: %v}", gmap.name, gmap.height, gmap.width, gmap.depth, len(gmap.owners), oIDs)
 }
 
 // sizeMaps resizes the map according to the given height, width, and depth.
