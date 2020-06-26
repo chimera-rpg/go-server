@@ -17,6 +17,7 @@ import (
 )
 
 func main() {
+	log.SetLevel(log.DebugLevel)
 	log.Print("Starting Chimera (golang)")
 	// Copied from data/Manager.go
 	// Get the parent dir of command; should resolve like /path/bin/server -> /path/
@@ -100,7 +101,7 @@ func main() {
 	// Create and initialize our prompt.
 	fmt.Println("Entering prompt. Issue \"help\" for commands.")
 	var prompt Prompt
-	prompt.Init()
+	prompt.Init(s)
 	prompt.Capture()
 	go prompt.ShowPrompt()
 	<-s.End
