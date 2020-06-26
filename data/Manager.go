@@ -74,7 +74,8 @@ func (m *Manager) parseArchetypeFile(filepath string) error {
 	return nil
 }
 
-func (m *Manager) processArchetype(archetype *Archetype) error {
+// ProcessArchetype converts certain fields of an Archetype into optimized versions. This converts Anim, Face, Arch, and Archs to their ID representation. This also processes any Inventory archetypes.
+func (m *Manager) ProcessArchetype(archetype *Archetype) error {
 	if archetype.Anim != "" {
 		archetype.AnimID = m.Strings.Acquire(archetype.Anim)
 		archetype.Anim = ""
@@ -101,7 +102,7 @@ func (m *Manager) processArchetype(archetype *Archetype) error {
 
 	// Process Inventory.
 	for i := range archetype.Inventory {
-		if err := m.processArchetype(&archetype.Inventory[i]); err != nil {
+		if err := m.ProcessArchetype(&archetype.Inventory[i]); err != nil {
 			return err
 		}
 	}
@@ -203,7 +204,7 @@ func (m *Manager) parseArchetypeFiles() error {
 	}
 	// Post-process our archetypes so they properly set up inheritance relationships.
 	for _, archetype := range m.archetypes {
-		if err := m.processArchetype(archetype); err != nil {
+		if err := m.ProcessArchetype(archetype); err != nil {
 			return err
 		}
 	}
@@ -395,7 +396,7 @@ func (m *Manager) parseMapFile(filepath string) error {
 				for z := range v.Tiles[y][x] {
 					for i := range v.Tiles[y][x][z] {
 						// We also process and compile our tiles so as to allow for XTREME custom archs in maps!
-						if err := m.processArchetype(&v.Tiles[y][x][z][i]); err != nil {
+						if err := m.ProcessArchetype(&v.Tiles[y][x][z][i]); err != nil {
 							return err
 						}
 						if err := m.CompileArchetype(&v.Tiles[y][x][z][i]); err != nil {
