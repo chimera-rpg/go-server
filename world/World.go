@@ -29,6 +29,7 @@ func (world *World) Setup(data *data.Manager) error {
 	world.MessageChannel = make(chan MessageI)
 	world.data = data
 	world.players = make([]*OwnerPlayer, 0)
+	world.objects = make(map[ID]ObjectI)
 	world.LoadMap("Chamber of Origins")
 	// FIXME: Create a temporary dummy map
 	// Create a timer for doing cleanup.
@@ -217,6 +218,7 @@ func (world *World) addPlayerByConnection(conn clientConnectionI, character *dat
 		// Create character object.
 		pc := NewObjectPCFromCharacter(character)
 		pc.id = world.objectIDs.acquire()
+		world.objects[pc.id] = pc
 		player.SetTarget(pc)
 		// Add player to the world's record of players.
 		world.players = append(world.players, player)
@@ -291,6 +293,7 @@ func (w *World) CreateObjectFromArch(arch *data.Archetype) (o ObjectI, err error
 		o = &gameobj
 	}
 	o.SetID(w.objectIDs.acquire())
+	w.objects[o.GetID()] = o
 
 	// TODO: Create/Merge Archetype properties!
 	return
@@ -315,4 +318,9 @@ func (w *World) DeleteObject(o ObjectI, shouldFree bool) (err error) {
 	}
 
 	return
+}
+
+// GetObject gets an ObjectI if it exists.
+func (w *World) GetObject(oID ID) ObjectI {
+	return w.objects[oID]
 }
