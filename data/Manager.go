@@ -30,7 +30,7 @@ type Manager struct {
 	//musicPath string
 	//soundPath string
 	mapsPath         string
-	animationsConfig cdata.AnimationsConfig
+	AnimationsConfig cdata.AnimationsConfig
 	archetypes       map[StringID]*Archetype // Full Map of archetypes.
 	//animations map[string]*Animation // Full Map of animations.
 	animations map[StringID]*Animation // ID to Animation map
@@ -539,7 +539,7 @@ func (m *Manager) Setup(config *config.Config) error {
 	if err != nil {
 		return err
 	}
-	if err = yaml.Unmarshal(r, &m.animationsConfig); err != nil {
+	if err = yaml.Unmarshal(r, &m.AnimationsConfig); err != nil {
 		return err
 	}
 	// Read animation files
