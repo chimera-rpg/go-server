@@ -107,9 +107,9 @@ func (c *ClientConnection) HandleHandshake(s *GameServer) {
 		panic(fmt.Errorf("Client version mismatch, expected %d, got %d", network.Version, hs.Version))
 	}
 
-	c.Send(network.Command(network.CommandBasic{
-		Type:   network.Okay,
-		String: "HAY",
+	// Send Features
+	c.Send(network.Command(network.CommandFeatures{
+		AnimationsConfig: s.dataManager.AnimationsConfig,
 	}))
 	c.HandleLogin(s)
 }
