@@ -29,8 +29,9 @@ type Manager struct {
 	usersMutex     sync.Mutex
 	//musicPath string
 	//soundPath string
-	mapsPath   string
-	archetypes map[StringID]*Archetype // Full Map of archetypes.
+	mapsPath         string
+	animationsConfig cdata.AnimationsConfig
+	archetypes       map[StringID]*Archetype // Full Map of archetypes.
 	//animations map[string]*Animation // Full Map of animations.
 	animations map[StringID]*Animation // ID to Animation map
 	// Hmm... almost map[uint32]*Archetype... with CRC id
@@ -532,6 +533,16 @@ func (m *Manager) Setup(config *config.Config) error {
 		return err
 	}
 	// Animations
+	// Read animations config
+	animationsConfigPath := path.Join(m.archetypesPath, "config.yaml")
+	r, err := ioutil.ReadFile(animationsConfigPath)
+	if err != nil {
+		return err
+	}
+	if err = yaml.Unmarshal(r, &m.animationsConfig); err != nil {
+		return err
+	}
+	// Read animation files
 	err = m.parseAnimationFiles()
 	if err != nil {
 		log.Fatal(err)
