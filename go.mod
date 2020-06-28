@@ -2,7 +2,7 @@ module github.com/chimera-rpg/go-server
 
 require (
 	github.com/c-bata/go-prompt v0.2.3
-	github.com/chimera-rpg/go-common v0.0.0-20200623064237-c91c2e1d31ba
+	github.com/chimera-rpg/go-common v0.0.0-20200628222522-57eb43f02907
 	github.com/eczarny/lexer v0.0.0-20141213044152-5fcb9a5b73e7
 	github.com/imdario/mergo v0.3.8
 	github.com/mattn/go-runewidth v0.0.9 // indirect
