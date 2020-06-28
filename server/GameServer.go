@@ -38,7 +38,9 @@ func New() *GameServer {
 
 // Setup sets up the server for use.
 func (s *GameServer) Setup(cfg *config.Config) error {
-	s.dataManager.Setup(cfg)
+	if err := s.dataManager.Setup(cfg); err != nil {
+		return err
+	}
 	s.world.Setup(&s.dataManager)
 
 	// Load in our configuration
