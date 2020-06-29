@@ -202,3 +202,57 @@ func (gmap *Map) PlaceObject(o ObjectI, y int, x int, z int) (err error) {
 	gmap.updateTime++
 	return
 }
+
+//
+func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int) (bool, error) {
+	if o == nil {
+		return false, errors.New("Attempted to move a nil object!")
+	}
+	// Get object's current root tile.
+	tile := o.GetTile()
+	if tile == nil {
+		return false, errors.New("Attempted to place object out of bounds!")
+	}
+	// Get our origin.
+	oY, oX, oZ := tile.y, tile.x, tile.z
+	// Get our object's height, width, and depth.
+	h, w, d := 1, 1, 1
+	a := o.GetArchetype()
+	if a != nil {
+		h = int(a.Height)
+		w = int(a.Width)
+		d = int(a.Depth)
+	}
+	var targetTiles []*Tile
+	// Check each potential move position.
+	h = 1 // FIXME: Our map isn't tall enuf
+	for sY := 0; sY < h; sY++ {
+		tY := oY + sY + yDir
+		for sX := 0; sX < w; sX++ {
+			tX := oX + sX + xDir
+			for sZ := 0; sZ < d; sZ++ {
+				tZ := oZ + sZ + zDir
+				if tT := gmap.GetTile(tY, tX, tZ); tT != nil {
+					targetTiles = append(targetTiles, tT)
+				} else {
+					// out of bounds.
+					return false, errors.New("Out of bounds!")
+				}
+			}
+		}
+	}
+	if len(targetTiles) == 0 {
+		// Bizarre...
+		return false, errors.New("Somehow no tiles could be targeted")
+	}
+	// If we got here then the move ended up being valid, so let's update our tiles.
+	targetTiles[0].insertObject(o, -1)
+	/*
+		for _, tT := range targetTiles {
+			tT.CheckObjects(func(tO ObjectI) bool {})
+		}
+	*/
+	// TODO: Update each target Tile's objectParts to contain our object.
+	gmap.updateTime++
+	return true, nil
+}
