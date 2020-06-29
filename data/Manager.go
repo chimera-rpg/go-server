@@ -91,6 +91,16 @@ func (m *Manager) ProcessArchetype(archetype *Archetype) error {
 		archetype.Arch = ""
 	}
 
+	if archetype.Height == 0 {
+		archetype.Height = 1
+	}
+	if archetype.Width == 0 {
+		archetype.Width = 1
+	}
+	if archetype.Depth == 0 {
+		archetype.Depth = 1
+	}
+
 	// Convert Archs into ArchIDs
 	for _, archname := range archetype.Archs {
 		targetID := m.Strings.Acquire(archname)

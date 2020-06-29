@@ -157,6 +157,9 @@ func (player *OwnerPlayer) checkVisibleTiles() error {
 										TypeID:      o.getType().AsUint8(),
 										AnimationID: oArch.AnimID,
 										FaceID:      oArch.FaceID,
+										Height:      oArch.Height,
+										Width:       oArch.Width,
+										Depth:       oArch.Depth,
 									},
 								})
 							} else {
