@@ -212,6 +212,7 @@ func (world *World) isMapLoaded(name string) (mapIndex int, isActive bool) {
 func (world *World) addPlayerByConnection(conn clientConnectionI, character *data.Character) error {
 	if index := world.getExistingPlayerConnectionIndex(conn); index == -1 {
 		player := NewOwnerPlayer(conn)
+		conn.SetOwner(player)
 		// Process and compile the character's Archetype so it inherits properly.
 		world.data.ProcessArchetype(&character.Archetype)
 		world.data.CompileArchetype(&character.Archetype)
