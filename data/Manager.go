@@ -3,13 +3,14 @@ package data
 import (
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 
 	"gopkg.in/yaml.v2"
 
@@ -364,15 +365,15 @@ func (m *Manager) buildImagesMap() error {
 		"path": m.archetypesPath,
 	})
 	l.Print("imageFileMap: Loading...")
-	err := filepath.Walk(m.archetypesPath, func(filepath string, info os.FileInfo, err error) error {
+	err := filepath.Walk(m.archetypesPath, func(fpath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 		if !info.IsDir() {
-			if path.Ext(filepath) == ".png" {
-				shortpath := filepath[len(m.archetypesPath)+1:]
+			if path.Ext(fpath) == ".png" {
+				shortpath := filepath.ToSlash(fpath[len(m.archetypesPath)+1:])
 				id := m.Strings.Acquire(shortpath)
-				_, err := m.imageFileMap.BuildCRC(id, filepath)
+				_, err := m.imageFileMap.BuildCRC(id, fpath)
 
 				if err != nil {
 					return err
