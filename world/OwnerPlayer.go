@@ -193,9 +193,15 @@ func (player *OwnerPlayer) Update(delta int64) error {
 	done := false
 	for !done {
 		select {
-		case pcmd, _ := <-player.commandChannel:
-			fmt.Printf("Got owner command: %+v\n", pcmd)
-			// Read commands
+		case ocmd, _ := <-player.commandChannel:
+			switch c := ocmd.(type) {
+			case OwnerMoveCommand:
+				if ok, err := player.currentMap.MoveObject(player.target, c.Y, c.X, c.Z); !ok {
+					log.Printf("%+v\n", err)
+				}
+			default:
+				fmt.Printf("Got unhandled owner command: %+v\n", ocmd)
+			}
 		default:
 			done = true
 		}
