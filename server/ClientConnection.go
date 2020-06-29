@@ -391,6 +391,24 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 			c.log.WithFields(log.Fields{
 				"cmd": t,
 			}).Print("CommandCmd")
+			switch t.Cmd {
+			case network.North:
+				c.Owner.GetCommandChannel() <- world.OwnerMoveCommand{Z: -1}
+			case network.South:
+				c.Owner.GetCommandChannel() <- world.OwnerMoveCommand{Z: 1}
+			case network.East:
+				c.Owner.GetCommandChannel() <- world.OwnerMoveCommand{X: 1}
+			case network.West:
+				c.Owner.GetCommandChannel() <- world.OwnerMoveCommand{X: -1}
+			case network.Northeast:
+				c.Owner.GetCommandChannel() <- world.OwnerMoveCommand{X: 1, Z: -1}
+			case network.Northwest:
+				c.Owner.GetCommandChannel() <- world.OwnerMoveCommand{X: -1, Z: -1}
+			case network.Southeast:
+				c.Owner.GetCommandChannel() <- world.OwnerMoveCommand{X: 1, Z: 1}
+			case network.Southwest:
+				c.Owner.GetCommandChannel() <- world.OwnerMoveCommand{X: -1, Z: 1}
+			}
 		case network.CommandExtCmd:
 			c.log.WithFields(log.Fields{
 				"cmd": t,
