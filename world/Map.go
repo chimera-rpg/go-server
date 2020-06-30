@@ -60,7 +60,10 @@ func NewMap(world *World, name string) (*Map, error) {
 						log.Print(err)
 						continue
 					}
-					gmap.tiles[y][x][z].insertObject(object, -1)
+					err = gmap.PlaceObject(object, y, x, z)
+					if err != nil {
+						log.Warn(err)
+					}
 				}
 			}
 		}
