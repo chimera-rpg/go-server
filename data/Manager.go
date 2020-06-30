@@ -63,14 +63,14 @@ func (m *Manager) parseArchetypeFile(filepath string) error {
 		return err
 	}
 
-	archetypesMap := make(map[string]Archetype)
+	archetypesMap := make(map[string]*Archetype)
 
 	if err = yaml.Unmarshal(r, &archetypesMap); err != nil {
 		return err
 	}
 	for k, archetype := range archetypesMap {
 		archID := m.Strings.Acquire(k)
-		m.archetypes[archID] = &archetype
+		m.archetypes[archID] = archetype
 		m.archetypes[archID].SelfID = archID
 	}
 	return nil
@@ -397,7 +397,7 @@ func (m *Manager) parseMapFile(filepath string) error {
 	if err != nil {
 		return err
 	}
-	maps := make(map[string]Map)
+	maps := make(map[string]*Map)
 
 	if err = yaml.Unmarshal(r, &maps); err != nil {
 		return err
@@ -419,7 +419,7 @@ func (m *Manager) parseMapFile(filepath string) error {
 				}
 			}
 		}
-		m.maps[k] = &v
+		m.maps[k] = v
 		m.maps[k].MapID = m.Strings.Acquire(k)
 	}
 
