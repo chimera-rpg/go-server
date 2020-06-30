@@ -5,16 +5,16 @@ import (
 	"github.com/chimera-rpg/go-server/data"
 )
 
-// ObjectFloor represents a floor type object.
-type ObjectFloor struct {
+// ObjectTile represents a tile type object.
+type ObjectTile struct {
 	Object
 	name string
 	slow int
 }
 
-// NewObjectFloor creates a floor object from the given archetype.
-func NewObjectFloor(a *data.Archetype) (o *ObjectFloor) {
-	o = &ObjectFloor{
+// NewObjectTile creates a floor object from the given archetype.
+func NewObjectTile(a *data.Archetype) (o *ObjectTile) {
+	o = &ObjectTile{
 		Object: Object{Archetype: a},
 	}
 
@@ -23,7 +23,7 @@ func NewObjectFloor(a *data.Archetype) (o *ObjectFloor) {
 	return
 }
 
-func (o *ObjectFloor) setArchetype(targetArch *data.Archetype) {
+func (o *ObjectTile) setArchetype(targetArch *data.Archetype) {
 	// First inherit from another Archetype if ArchID is set.
 	/*baseArch := data.NewArchetype()
 	for targetArch != nil {
@@ -37,10 +37,10 @@ func (o *ObjectFloor) setArchetype(targetArch *data.Archetype) {
 }
 
 // update updates the floor.
-func (o *ObjectFloor) update(d int) {
+func (o *ObjectTile) update(d int) {
 }
 
 // getType returns the Archetype type.
-func (o *ObjectFloor) getType() cdata.ArchetypeType {
-	return cdata.ArchetypeFloor
+func (o *ObjectTile) getType() cdata.ArchetypeType {
+	return cdata.ArchetypeTile
 }

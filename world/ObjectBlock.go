@@ -5,17 +5,17 @@ import (
 	"github.com/chimera-rpg/go-server/data"
 )
 
-// ObjectWall represents walls within the game.
-type ObjectWall struct {
+// ObjectBlock represents walls within the game.
+type ObjectBlock struct {
 	Object
 	//
 	name  string
 	maxHp int
 }
 
-// NewObjectWall returns an ObjectWall from the given Archetype.
-func NewObjectWall(a *data.Archetype) (o *ObjectWall) {
-	o = &ObjectWall{
+// NewObjectBlock returns an ObjectBlock from the given Archetype.
+func NewObjectBlock(a *data.Archetype) (o *ObjectBlock) {
+	o = &ObjectBlock{
 		Object: Object{
 			Archetype: a,
 		},
@@ -26,7 +26,7 @@ func NewObjectWall(a *data.Archetype) (o *ObjectWall) {
 	return
 }
 
-func (o *ObjectWall) setArchetype(targetArch *data.Archetype) {
+func (o *ObjectBlock) setArchetype(targetArch *data.Archetype) {
 	// First inherit from another Archetype if ArchID is set.
 	/*mutatedArch := data.NewArchetype()
 	for targetArch != nil {
@@ -39,9 +39,9 @@ func (o *ObjectWall) setArchetype(targetArch *data.Archetype) {
 	o.name, _ = mutatedArch.Name.GetString()*/
 }
 
-func (o *ObjectWall) update(d int) {
+func (o *ObjectBlock) update(d int) {
 }
 
-func (o *ObjectWall) getType() cdata.ArchetypeType {
-	return cdata.ArchetypeWall
+func (o *ObjectBlock) getType() cdata.ArchetypeType {
+	return cdata.ArchetypeBlock
 }

@@ -273,10 +273,10 @@ func (w *World) CreateObjectFromArch(arch *data.Archetype) (o ObjectI, err error
 
 	// Create our object.
 	switch arch.Type {
-	case cdata.ArchetypeFloor:
-		o = NewObjectFloor(arch)
-	case cdata.ArchetypeWall:
-		o = NewObjectWall(arch)
+	case cdata.ArchetypeTile:
+		o = NewObjectTile(arch)
+	case cdata.ArchetypeBlock:
+		o = NewObjectBlock(arch)
 	case cdata.ArchetypeItem:
 		o = NewObjectItem(arch)
 	case cdata.ArchetypeNPC:
