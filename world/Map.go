@@ -194,24 +194,89 @@ func (gmap *Map) PlaceObject(o ObjectI, y int, x int, z int) (err error) {
 	if o == nil {
 		return errors.New("Attempted to place a nil object!")
 	}
+
 	tile := gmap.GetTile(y, x, z)
 	if tile == nil {
 		return errors.New("Attempted to place object out of bounds!")
 	}
 	tile.insertObject(o, -1)
+
+	tiles, _, err := gmap.GetObjectPartTiles(o, 0, 0, 0)
+	for _, t := range tiles {
+		t.insertObjectPart(o, -1)
+	}
+
 	gmap.updateTime++
 	return
 }
 
-//
+// RemoveObject removes the given object from the map.
+func (gmap *Map) RemoveObject(o ObjectI) (err error) {
+	if o == nil {
+		return errors.New("Attempted to remove a nil object!")
+	}
+
+	tile := o.GetTile()
+	if tile != nil {
+		tile.removeObject(o)
+	}
+
+	tiles, _, err := gmap.GetObjectPartTiles(o, 0, 0, 0)
+	for _, t := range tiles {
+		t.removeObjectPart(o)
+	}
+
+	for _, owner := range gmap.owners {
+		owner.OnObjectDelete(o.GetID())
+	}
+
+	//gmap.updateTime++
+	return
+}
+
+// MoveObject attempts to move the given object from its current position by a relative coordinate adjustment.
 func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int) (bool, error) {
 	if o == nil {
 		return false, errors.New("Attempted to move a nil object!")
 	}
+
+	oldTiles, targetTiles, err := gmap.GetObjectPartTiles(o, yDir, xDir, zDir)
+	if err != nil {
+		return false, err
+	}
+
+	if len(targetTiles) == 0 {
+		// Bizarre...
+		return false, errors.New("Somehow no tiles could be targeted")
+	}
+	// Check for collision validity.
+	/*
+		for _, tT := range targetTiles {
+			tT.CheckObjects(func(tO ObjectI) bool {})
+		}
+	*/
+	// If we got here then the move ended up being valid, so let's update our tiles.
+	// First we clear collisions from old intersection tiles.
+	for _, t := range oldTiles {
+		t.removeObjectPart(o)
+	}
+	// Second we add collisions to new intersection tiles.
+	for _, t := range targetTiles {
+		t.insertObjectPart(o, -1)
+	}
+	// Add the object to the main tile.
+	targetTiles[0].insertObject(o, -1)
+	gmap.updateTime++
+	return true, nil
+}
+
+// GetObjectPartTiles returns two arrays for Tiles that a given object intersects with. If all directions are zero, then targetTiles will be empty.
+func (gmap *Map) GetObjectPartTiles(o ObjectI, yDir, xDir, zDir int) (currentTiles, targetTiles []*Tile, err error) {
 	// Get object's current root tile.
 	tile := o.GetTile()
 	if tile == nil {
-		return false, errors.New("Attempted to place object out of bounds!")
+		err = errors.New("Attempted to place object out of bounds!")
+		return
 	}
 	// Get our origin.
 	oY, oX, oZ := tile.y, tile.x, tile.z
@@ -223,36 +288,34 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int) (bool, error) {
 		w = int(a.Width)
 		d = int(a.Depth)
 	}
-	var targetTiles []*Tile
 	// Check each potential move position.
 	h = 1 // FIXME: Our map isn't tall enuf
+	//
+	getTargets := yDir != 0 || xDir == 0 || zDir == 0
+	// Iterate through our box.
 	for sY := 0; sY < h; sY++ {
-		tY := oY + sY + yDir
+		olY := oY + sY
+		tY := olY + yDir
 		for sX := 0; sX < w; sX++ {
-			tX := oX + sX + xDir
+			olX := oX + sX
+			tX := olX + xDir
 			for sZ := 0; sZ < d; sZ++ {
-				tZ := oZ + sZ + zDir
-				if tT := gmap.GetTile(tY, tX, tZ); tT != nil {
-					targetTiles = append(targetTiles, tT)
-				} else {
-					// out of bounds.
-					return false, errors.New("Out of bounds!")
+				olZ := oZ + sZ
+				tZ := olZ + zDir
+				if getTargets {
+					if tT := gmap.GetTile(tY, tX, tZ); tT != nil {
+						targetTiles = append(targetTiles, tT)
+					} else {
+						// out of bounds.
+						err = errors.New("Out of bounds!")
+						return
+					}
+				}
+				if oT := gmap.GetTile(olY, olX, olZ); oT != nil {
+					currentTiles = append(currentTiles, oT)
 				}
 			}
 		}
 	}
-	if len(targetTiles) == 0 {
-		// Bizarre...
-		return false, errors.New("Somehow no tiles could be targeted")
-	}
-	// If we got here then the move ended up being valid, so let's update our tiles.
-	targetTiles[0].insertObject(o, -1)
-	/*
-		for _, tT := range targetTiles {
-			tT.CheckObjects(func(tO ObjectI) bool {})
-		}
-	*/
-	// TODO: Update each target Tile's objectParts to contain our object.
-	gmap.updateTime++
-	return true, nil
+	return
 }

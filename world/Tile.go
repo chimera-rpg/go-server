@@ -37,15 +37,53 @@ func (tile *Tile) insertObject(object ObjectI, index int) error {
 }
 
 func (tile *Tile) removeObject(object ObjectI) error {
-	for i := range tile.objects {
-		if tile.objects[i] == object {
-			tile.objects = append(tile.objects[:i], tile.objects[i+1:]...)
-			object.SetTile(nil)
-			tile.modTime++
-			return nil
-		}
+	i := tile.getObjectIndex(object)
+	if i >= 0 {
+		tile.objects = append(tile.objects[:i], tile.objects[i+1:]...)
+		object.SetTile(nil)
+		tile.modTime++
+		return nil
 	}
 	return errors.New("object to remove does not exist")
+}
+
+func (tile *Tile) insertObjectPart(object ObjectI, index int) {
+	if index == -1 {
+		index = len(tile.objectParts)
+	}
+	if index == -1 {
+		index = 0
+	}
+
+	if existingIndex := tile.getObjectPartIndex(object); existingIndex == -1 {
+		tile.objectParts = append(tile.objectParts[:index], append([]ObjectI{object}, tile.objectParts[index:]...)...)
+	}
+}
+
+// removeObjectPart removes a collision object reference.
+func (tile *Tile) removeObjectPart(object ObjectI) {
+	i := tile.getObjectPartIndex(object)
+	if i >= 0 {
+		tile.objectParts = append(tile.objectParts[:i], tile.objectParts[i+1:]...)
+	}
+}
+
+func (tile *Tile) getObjectPartIndex(object ObjectI) int {
+	for i := range tile.objectParts {
+		if tile.objectParts[i] == object {
+			return i
+		}
+	}
+	return -1
+}
+
+func (tile *Tile) getObjectIndex(object ObjectI) int {
+	for i := range tile.objects {
+		if tile.objects[i] == object {
+			return i
+		}
+	}
+	return -1
 }
 
 // GetObjects returns a slice of the tile's Object interfaces.
@@ -56,4 +94,13 @@ func (tile *Tile) GetObjects() []ObjectI {
 // GetMap returns the owning map of the Tile.
 func (tile *Tile) GetMap() *Map {
 	return tile.gameMap
+}
+
+func (tile *Tile) CheckObjects(f func(ObjectI) bool) bool {
+	for _, o := range tile.objects {
+		if f(o) {
+			return true
+		}
+	}
+	return false
 }

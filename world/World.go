@@ -306,11 +306,8 @@ func (w *World) DeleteObject(o ObjectI, shouldFree bool) (err error) {
 		return errors.New("Attempted to delete a nil object!")
 	}
 	if tile := o.GetTile(); tile != nil {
-		tile.removeObject(o)
 		if m := tile.GetMap(); m != nil {
-			for _, owner := range m.owners {
-				owner.OnObjectDelete(o.GetID())
-			}
+			err = m.RemoveObject(o)
 		}
 	}
 	if shouldFree {
