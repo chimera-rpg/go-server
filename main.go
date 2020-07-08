@@ -41,8 +41,6 @@ func main() {
 		TLSKey:     "server.key",
 		TLSCert:    "server.crt",
 		Tickrate:   16,
-		TileWidth:  16,
-		TileHeight: 16,
 	}
 	// Load in our configuration.
 	log.Printf("Attempting to load config from \"%s\"\n", cfgPath)

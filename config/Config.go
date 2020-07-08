@@ -6,6 +6,4 @@ type Config struct {
 	TLSKey     string `yaml:"tlsKey,omitempty"`
 	TLSCert    string `yaml:"tlsCert,omitempty"`
 	Tickrate   int    `yaml:"tickrate,omitempty"`
-	TileWidth  int    `yaml:"tileWidth,omitempty"`
-	TileHeight int    `yaml:"tileHeight,omitempty"`
 }
