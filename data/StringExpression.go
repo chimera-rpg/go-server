@@ -10,6 +10,13 @@ type StringExpression struct {
 	result string
 }
 
+// NewStringExpression returns a new StringExpression from a provided string.
+func NewStringExpression(src string) StringExpression {
+	return StringExpression{
+		src: src,
+	}
+}
+
 // StrinngExpressionTransformer is the mergo transformer struct.
 type StringExpressionTransformer struct{}
 
