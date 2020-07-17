@@ -67,3 +67,11 @@ func (arch *Archetype) setProperty(key string, value interface{}) {
 		arch.Properties[key] = Bool(v)
 	}
 }
+
+func (arch *Archetype) IsCompiled() bool {
+	return arch.isCompiled
+}
+
+func (arch *Archetype) SetCompiled(b bool) {
+	arch.isCompiled = b
+}
