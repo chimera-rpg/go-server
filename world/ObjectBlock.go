@@ -9,13 +9,15 @@ import (
 type ObjectBlock struct {
 	Object
 	//
-	name  string
-	maxHp int
+	blocking cdata.MatterType
+	name     string
+	maxHp    int
 }
 
 // NewObjectBlock returns an ObjectBlock from the given Archetype.
 func NewObjectBlock(a *data.Archetype) (o *ObjectBlock) {
 	o = &ObjectBlock{
+		blocking: a.Blocking,
 		Object: Object{
 			Archetype: a,
 		},
