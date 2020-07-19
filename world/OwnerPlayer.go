@@ -5,6 +5,7 @@ import (
 	"github.com/chimera-rpg/go-server/data"
 
 	"fmt"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -197,7 +198,7 @@ func (player *OwnerPlayer) Update(delta int64) error {
 			switch c := ocmd.(type) {
 			case OwnerMoveCommand:
 				if ok, err := player.currentMap.MoveObject(player.target, c.Y, c.X, c.Z); !ok {
-					log.Printf("%+v\n", err)
+					log.Warn(err)
 				}
 			default:
 				fmt.Printf("Got unhandled owner command: %+v\n", ocmd)

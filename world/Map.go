@@ -3,6 +3,7 @@ package world
 import (
 	"errors"
 	"fmt"
+
 	log "github.com/sirupsen/logrus"
 
 	"github.com/chimera-rpg/go-server/data"
@@ -57,12 +58,12 @@ func NewMap(world *World, name string) (*Map, error) {
 					gmap.tiles[y][x][z].z = z
 					object, err := world.CreateObjectFromArch(&gd.Tiles[y][x][z][a])
 					if err != nil {
-						log.Print(err)
+						log.Warn("CreateObjectFromArch", err)
 						continue
 					}
 					err = gmap.PlaceObject(object, y, x, z)
 					if err != nil {
-						log.Warn(err)
+						log.Warn("PlaceObject", err)
 					}
 				}
 			}
@@ -292,9 +293,7 @@ func (gmap *Map) GetObjectPartTiles(o ObjectI, yDir, xDir, zDir int) (currentTil
 		d = int(a.Depth)
 	}
 	// Check each potential move position.
-	h = 1 // FIXME: Our map isn't tall enuf
-	//
-	getTargets := yDir != 0 || xDir == 0 || zDir == 0
+	getTargets := yDir != 0 || xDir != 0 || zDir != 0
 	// Iterate through our box.
 	for sY := 0; sY < h; sY++ {
 		olY := oY + sY
@@ -303,7 +302,7 @@ func (gmap *Map) GetObjectPartTiles(o ObjectI, yDir, xDir, zDir int) (currentTil
 			olX := oX + sX
 			tX := olX + xDir
 			for sZ := 0; sZ < d; sZ++ {
-				olZ := oZ + sZ
+				olZ := oZ - sZ
 				tZ := olZ + zDir
 				if getTargets {
 					if tT := gmap.GetTile(tY, tX, tZ); tT != nil {

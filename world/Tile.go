@@ -26,7 +26,11 @@ func (tile *Tile) insertObject(object ObjectI, index int) error {
 		object.GetTile().removeObject(object)
 	}
 
-	tile.objects = append(tile.objects[:index], append([]ObjectI{object}, tile.objects[index:]...)...)
+	if len(tile.objects) == 0 {
+		tile.objects = append(tile.objects, object)
+	} else {
+		tile.objects = append(tile.objects[:index], append([]ObjectI{object}, tile.objects[index:]...)...)
+	}
 
 	// Update object's tile reference.
 	object.SetTile(tile)
@@ -56,7 +60,11 @@ func (tile *Tile) insertObjectPart(object ObjectI, index int) {
 	}
 
 	if existingIndex := tile.getObjectPartIndex(object); existingIndex == -1 {
-		tile.objectParts = append(tile.objectParts[:index], append([]ObjectI{object}, tile.objectParts[index:]...)...)
+		if len(tile.objectParts) == 0 {
+			tile.objectParts = append(tile.objectParts, object)
+		} else {
+			tile.objectParts = append(tile.objectParts[:index], append([]ObjectI{object}, tile.objectParts[index:]...)...)
+		}
 	}
 }
 
