@@ -53,9 +53,6 @@ func NewMap(world *World, name string) (*Map, error) {
 		for x := range gd.Tiles[y] {
 			for z := range gd.Tiles[y][x] {
 				for a := range gd.Tiles[y][x][z] {
-					gmap.tiles[y][x][z].y = y
-					gmap.tiles[y][x][z].x = x
-					gmap.tiles[y][x][z].z = z
 					object, err := world.CreateObjectFromArch(&gd.Tiles[y][x][z][a])
 					if err != nil {
 						log.Warn("CreateObjectFromArch", err)
@@ -95,7 +92,12 @@ func (gmap *Map) sizeMap(height int, width int, depth int) error {
 		for x := range gmap.tiles[y] {
 			gmap.tiles[y][x] = make([]Tile, depth)
 			for z := range gmap.tiles[y][x] {
-				gmap.tiles[y][x][z].gameMap = gmap
+				gmap.tiles[y][x][z] = Tile{
+					gameMap: gmap,
+					y:       y,
+					x:       x,
+					z:       z,
+				}
 			}
 		}
 	}
