@@ -25,6 +25,7 @@ type Archetype struct {
 	Height      uint8               `yaml:"Height,omitempty"`
 	Width       uint8               `yaml:"Width,omitempty"`
 	Depth       uint8               `yaml:"Depth,omitempty"`
+	Matter      cdata.MatterType    `yaml:"Matter,omitempty"`
 	//
 	Value      StringExpression    `yaml:"Value,omitempty"`  // NumberExpression
 	Count      StringExpression    `yaml:"Count,omitempty"`  // NumberExpression
