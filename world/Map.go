@@ -256,11 +256,27 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int) (bool, error) {
 		return false, errors.New("Somehow no tiles could be targeted")
 	}
 	// Check for collision validity.
-	/*
-		for _, tT := range targetTiles {
-			tT.CheckObjects(func(tO ObjectI) bool {})
+	matter := o.GetArchetype().Matter
+	isBlocked := false
+	for _, tT := range targetTiles {
+		for _, tO := range tT.objects {
+			switch tO := tO.(type) {
+			case *ObjectBlock:
+				// Check if the target object blocks our matter.
+				if tO.blocking.Is(matter) {
+					isBlocked = true
+				}
+			case *ObjectPC:
+				// TODO: Check for aggression and possibly attack.
+			case *ObjectNPC:
+				// TODO: Check for aggression and possibly attack.
+			}
 		}
-	*/
+	}
+	// Return if our pathing is blocked.
+	if isBlocked {
+		return false, nil
+	}
 	// If we got here then the move ended up being valid, so let's update our tiles.
 	// First we clear collisions from old intersection tiles.
 	for _, t := range oldTiles {
@@ -306,6 +322,7 @@ func (gmap *Map) GetObjectPartTiles(o ObjectI, yDir, xDir, zDir int) (currentTil
 			for sZ := 0; sZ < d; sZ++ {
 				olZ := oZ - sZ
 				tZ := olZ + zDir
+				// TODO: Only get targets as deep as the move operation!
 				if getTargets {
 					if tT := gmap.GetTile(tY, tX, tZ); tT != nil {
 						targetTiles = append(targetTiles, tT)
