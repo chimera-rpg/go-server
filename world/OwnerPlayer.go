@@ -106,9 +106,9 @@ func (player *OwnerPlayer) CheckView() {
 func (player *OwnerPlayer) checkVisibleTiles() error {
 	gmap := player.GetMap()
 	// Get owner's viewport.
-	vw := 16 // assume 16 for now.
-	vh := 16 //
-	vd := 16 //
+	vw := 8 // assume 16 for now.
+	vh := 8 //
+	vd := 8 //
 	vwh := vw / 2
 	vhh := vh / 2
 	vdh := vd / 2
@@ -197,7 +197,7 @@ func (player *OwnerPlayer) Update(delta int64) error {
 		case ocmd, _ := <-player.commandChannel:
 			switch c := ocmd.(type) {
 			case OwnerMoveCommand:
-				if ok, err := player.currentMap.MoveObject(player.target, c.Y, c.X, c.Z); !ok {
+				if _, err := player.currentMap.MoveObject(player.target, c.Y, c.X, c.Z); err != nil {
 					log.Warn(err)
 				}
 			default:
