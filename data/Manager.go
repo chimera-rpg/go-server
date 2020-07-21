@@ -145,17 +145,6 @@ func (m *Manager) CompileArchetype(archetype *Archetype) error {
 		}
 	}
 
-	// Hmm.
-	if archetype.Height == 0 {
-		archetype.Height = 1
-	}
-	if archetype.Width == 0 {
-		archetype.Width = 1
-	}
-	if archetype.Depth == 0 {
-		archetype.Depth = 1
-	}
-
 	archetype.isCompiled = true
 
 	return nil
