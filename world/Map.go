@@ -245,6 +245,7 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int) (bool, error) {
 	if o == nil {
 		return false, errors.New("Attempted to move a nil object!")
 	}
+	// TODO: Some sort of CanMove flag, as things such as falling, paralysis, or otherwise should prevent movement. This might be handled in the calling function, such as the Owner.
 
 	oldTiles, targetTiles, err := gmap.GetObjectPartTiles(o, yDir, xDir, zDir)
 	if err != nil {
@@ -255,27 +256,42 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int) (bool, error) {
 		// Bizarre...
 		return false, errors.New("Somehow no tiles could be targeted")
 	}
-	// Check for collision validity.
-	matter := o.GetArchetype().Matter
-	isBlocked := false
-	for _, tT := range targetTiles {
-		for _, tO := range tT.objects {
-			switch tO := tO.(type) {
-			case *ObjectBlock:
-				// Check if the target object blocks our matter.
-				if tO.blocking.Is(matter) {
-					isBlocked = true
+
+	doTilesBlock := func(targetTiles []*Tile) bool {
+		isBlocked := false
+		matter := o.GetArchetype().Matter
+		for _, tT := range targetTiles {
+			for _, tO := range tT.objects {
+				switch tO := tO.(type) {
+				case *ObjectBlock:
+					// Check if the target object blocks our matter.
+					if tO.blocking.Is(matter) {
+						isBlocked = true
+					}
+					/*case *ObjectPC:
+						// TODO: Check for aggression and possibly attack.
+					case *ObjectNPC:
+						// TODO: Check for aggression and possibly attack.*/
 				}
-			case *ObjectPC:
-				// TODO: Check for aggression and possibly attack.
-			case *ObjectNPC:
-				// TODO: Check for aggression and possibly attack.
 			}
 		}
+		return isBlocked
 	}
-	// Return if our pathing is blocked.
-	if isBlocked {
-		return false, nil
+
+	// If it is blocked, check if a vertical move would solve it (if we aren't already moving vertical) -- this is for stepping up 1 unit blocks.
+	if doTilesBlock(targetTiles) && yDir == 0 {
+		_, targetUpTiles, err := gmap.GetObjectPartTiles(o, yDir+1, xDir, zDir)
+		if !doTilesBlock(targetUpTiles) && err == nil {
+			targetTiles = targetUpTiles
+		} else {
+			return false, nil
+		}
+	}
+	// Check if we should be falling.
+	// FIXME: Just do an X thru Z check of o.Y + yDir-1 and see if there are any blocking tiles. If none are detected, increase some sort of falling incrementor. NOTE: This should be implemented elsewhere, such as the map's update func.
+	_, fallingTiles, err := gmap.GetObjectPartTiles(o, yDir-1, xDir, zDir)
+	if !doTilesBlock(fallingTiles) && err == nil {
+		targetTiles = fallingTiles
 	}
 	// If we got here then the move ended up being valid, so let's update our tiles.
 	// First we clear collisions from old intersection tiles.
