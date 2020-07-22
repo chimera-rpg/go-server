@@ -302,12 +302,6 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int) (bool, error) {
 			return false, nil
 		}
 	}
-	// Check if we should be falling.
-	// FIXME: Just do an X thru Z check of o.Y + yDir-1 and see if there are any blocking tiles. If none are detected, increase some sort of falling incrementor. NOTE: This should be implemented elsewhere, such as the map's update func.
-	_, fallingTiles, err := gmap.GetObjectPartTiles(o, yDir-1, xDir, zDir)
-	if !doTilesBlock(fallingTiles) && err == nil {
-		targetTiles = fallingTiles
-	}
 	// If we got here then the move ended up being valid, so let's update our tiles.
 	// First we clear collisions from old intersection tiles.
 	for _, t := range oldTiles {
@@ -319,6 +313,7 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int) (bool, error) {
 	}
 	// Add the object to the main tile.
 	targetTiles[0].insertObject(o, -1)
+	o.SetMoved(true)
 	gmap.updateTime++
 	return true, nil
 }
