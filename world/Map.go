@@ -12,25 +12,25 @@ import (
 // Map is a live instance of a map that contains and updates all objects
 // and tiles within it.
 type Map struct {
-	mapID        data.StringID
-	name         string
-	playerCount  int
-	owners       []OwnerI
-	world        *World // I guess it is okay to reference the World.
-	shouldSleep  bool
-	shouldExpire bool
-	lifeTime     int64 // Time in ms of how long this map has been alive
-	north        *Map
-	east         *Map
-	south        *Map
-	west         *Map
-	tiles        [][][]Tile
-	activeTiles  []*Tile
-	objects      []ObjectI
-	width        int
-	height       int
-	depth        int
-	updateTime   uint8 // Whenever this is updated, owners will check their surroundings for updates.
+	mapID         data.StringID
+	name          string
+	playerCount   int
+	owners        []OwnerI
+	world         *World // I guess it is okay to reference the World.
+	shouldSleep   bool
+	shouldExpire  bool
+	lifeTime      int64 // Time in ms of how long this map has been alive
+	north         *Map
+	east          *Map
+	south         *Map
+	west          *Map
+	tiles         [][][]Tile
+	activeTiles   []*Tile
+	activeObjects map[ID]ObjectI
+	width         int
+	height        int
+	depth         int
+	updateTime    uint8 // Whenever this is updated, owners will check their surroundings for updates.
 }
 
 // NewMap loads the given map file from the data manager.
@@ -42,9 +42,10 @@ func NewMap(world *World, name string) (*Map, error) {
 	}
 
 	gmap := &Map{
-		world: world,
-		mapID: gd.MapID,
-		name:  gd.Name,
+		world:         world,
+		mapID:         gd.MapID,
+		name:          gd.Name,
+		activeObjects: make(map[ID]ObjectI),
 	}
 	gmap.owners = make([]OwnerI, 0)
 	// Size map and populate it with the data tiles
@@ -114,6 +115,10 @@ func (gmap *Map) Update(gm *World, delta int64) error {
 
 	for _, owner := range gmap.owners {
 		owner.OnMapUpdate(delta)
+	}
+
+	for _, object := range gmap.activeObjects {
+		object.update(delta)
 	}
 
 	for i := range gmap.activeTiles {
@@ -212,6 +217,14 @@ func (gmap *Map) PlaceObject(o ObjectI, y int, x int, z int) (err error) {
 		t.insertObjectPart(o, -1)
 	}
 
+	// Add object types that need to update per tick.
+	switch o.(type) {
+	case *ObjectPC:
+		gmap.activeObjects[o.GetID()] = o
+	case *ObjectNPC:
+		gmap.activeObjects[o.GetID()] = o
+	}
+
 	gmap.updateTime++
 	return
 }
@@ -235,6 +248,8 @@ func (gmap *Map) RemoveObject(o ObjectI) (err error) {
 	for _, owner := range gmap.owners {
 		owner.OnObjectDelete(o.GetID())
 	}
+
+	delete(gmap.activeObjects, o.GetID())
 
 	//gmap.updateTime++
 	return
