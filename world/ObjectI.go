@@ -15,6 +15,6 @@ type ObjectI interface {
 	SetTile(*Tile)
 	setArchetype(*data.Archetype)
 	GetArchetype() *data.Archetype
-	update(int)
+	update(int64)
 	getType() cdata.ArchetypeType
 }

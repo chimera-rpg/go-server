@@ -57,7 +57,7 @@ func (o *ObjectPC) setArchetype(targetArch *data.Archetype) {
 	o.name, _ = mutatedArch.Name.GetString()*/
 }
 
-func (o *ObjectPC) update(d int) {
+func (o *ObjectPC) update(d int64) {
 }
 
 func (o *ObjectPC) getType() cdata.ArchetypeType {

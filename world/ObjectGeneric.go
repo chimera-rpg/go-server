@@ -28,7 +28,7 @@ func (o *ObjectGeneric) setArchetype(targetArch *data.Archetype) {
 	}*/
 }
 
-func (o *ObjectGeneric) update(d int) {
+func (o *ObjectGeneric) update(d int64) {
 }
 
 func (o *ObjectGeneric) getType() cdata.ArchetypeType {

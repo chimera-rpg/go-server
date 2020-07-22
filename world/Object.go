@@ -18,7 +18,7 @@ type Object struct {
 }
 
 // update updates the given object.
-func (o *Object) update(d int) {
+func (o *Object) update(d int64) {
 }
 
 // GetOwner returns the owning object.
