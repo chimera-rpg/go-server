@@ -197,8 +197,10 @@ func (player *OwnerPlayer) Update(delta int64) error {
 		case ocmd, _ := <-player.commandChannel:
 			switch c := ocmd.(type) {
 			case OwnerMoveCommand:
-				if _, err := player.currentMap.MoveObject(player.target, c.Y, c.X, c.Z); err != nil {
-					log.Warn(err)
+				if player.target.canMove {
+					if _, err := player.currentMap.MoveObject(player.target, c.Y, c.X, c.Z); err != nil {
+						log.Warn(err)
+					}
 				}
 			default:
 				fmt.Printf("Got unhandled owner command: %+v\n", ocmd)
