@@ -36,11 +36,11 @@ func main() {
 
 	// Setup our default configuration.
 	cfg := config.Config{
-		Address:    ":1337",
-		UseTLS:     true,
-		TLSKey:     "server.key",
-		TLSCert:    "server.crt",
-		Tickrate:   16,
+		Address:  ":1337",
+		UseTLS:   true,
+		TLSKey:   "server.key",
+		TLSCert:  "server.crt",
+		Tickrate: 16,
 	}
 	// Load in our configuration.
 	log.Printf("Attempting to load config from \"%s\"\n", cfgPath)
@@ -90,7 +90,7 @@ func main() {
 		for currentTime := range ticker.C {
 			timeSinceLastFrame := currentTime.Sub(lastTime)
 
-			s.Update(int64(timeSinceLastFrame) / 100000)
+			s.Update(int64(timeSinceLastFrame.Microseconds()))
 
 			currentEnd := time.Now()
 			//current_elapsed := currentEnd.Sub(currentTime)
