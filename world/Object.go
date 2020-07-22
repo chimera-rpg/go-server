@@ -4,6 +4,11 @@ import (
 	"github.com/chimera-rpg/go-server/data"
 )
 
+// Some object states...
+const (
+	FallingState int64 = 1 << iota
+)
+
 // Object is the base type that should be used as an embeded struct in
 // all game Objects.
 type Object struct {
@@ -15,6 +20,8 @@ type Object struct {
 	owner  OwnerI
 	//
 	inventory ObjectI
+	state     int64
+	hasMoved  bool
 }
 
 // update updates the given object.
@@ -40,6 +47,11 @@ func (o *Object) SetTile(tile *Tile) {
 // GetTile gets the tile where the object is contained.
 func (o *Object) GetTile() *Tile {
 	return o.tile
+}
+
+// SetMoved
+func (o *Object) SetMoved(b bool) {
+	o.hasMoved = b
 }
 
 // SetID sets the objects' id. This should _only_ be called by World during object creation.

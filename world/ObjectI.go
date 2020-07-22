@@ -11,6 +11,7 @@ type ObjectI interface {
 	GetOwner() OwnerI
 	SetID(ID)
 	SetOwner(OwnerI)
+	SetMoved(bool)
 	GetTile() *Tile
 	SetTile(*Tile)
 	setArchetype(*data.Archetype)
