@@ -1,10 +1,11 @@
 package world
 
 import (
-	cdata "github.com/chimera-rpg/go-common/data"
-	"github.com/chimera-rpg/go-server/data"
 	"reflect"
 	"time"
+
+	cdata "github.com/chimera-rpg/go-common/data"
+	"github.com/chimera-rpg/go-server/data"
 )
 
 // Object is the base type that should be used as an embeded struct in
@@ -92,4 +93,9 @@ func (o *Object) HasStatus(t StatusI) bool {
 		}
 	}
 	return false
+}
+
+func (o *Object) ResolveEvent(e EventI) bool {
+	// Do nothing per default.
+	return true
 }

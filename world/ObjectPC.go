@@ -1,9 +1,11 @@
 package world
 
 import (
+	"fmt"
+	"time"
+
 	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-server/data"
-	"time"
 )
 
 // ObjectPC represents player characters.
@@ -90,6 +92,24 @@ func (o *ObjectPC) update(delta time.Duration) {
 	}
 	//
 	o.Object.update(delta)
+}
+
+func (o *ObjectPC) AddStatus(s StatusI) {
+	s.SetTarget(o)
+	o.statuses = append(o.statuses, s)
+}
+
+func (o *ObjectPC) ResolveEvent(e EventI) bool {
+	// TODO: Send event messages to the owner.
+	switch e := e.(type) {
+	case EventFall:
+		fmt.Println("You begin to fall...")
+		return true
+	case EventFell:
+		fmt.Println(e)
+		return true
+	}
+	return false
 }
 
 func (o *ObjectPC) getType() cdata.ArchetypeType {

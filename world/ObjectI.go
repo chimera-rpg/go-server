@@ -1,9 +1,10 @@
 package world
 
 import (
+	"time"
+
 	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-server/data"
-	"time"
 )
 
 // ObjectI is the basic interface for Object access.
@@ -21,4 +22,5 @@ type ObjectI interface {
 	getType() cdata.ArchetypeType
 	AddStatus(StatusI)
 	HasStatus(StatusI) bool
+	ResolveEvent(EventI) bool
 }
