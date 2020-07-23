@@ -75,7 +75,7 @@ func (world *World) cleanupMaps() {
 }
 
 // Update processes updates for each player then updates each map as necessary.
-func (world *World) Update(delta int64) error {
+func (world *World) Update(delta time.Duration) error {
 	// Process world event channel.
 	select {
 	case msg := <-world.MessageChannel:

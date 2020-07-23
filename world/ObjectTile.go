@@ -36,10 +36,6 @@ func (o *ObjectTile) setArchetype(targetArch *data.Archetype) {
 	o.name, _ = targetArch.Name.GetString()*/
 }
 
-// update updates the floor.
-func (o *ObjectTile) update(d int64) {
-}
-
 // getType returns the Archetype type.
 func (o *ObjectTile) getType() cdata.ArchetypeType {
 	return cdata.ArchetypeTile

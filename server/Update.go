@@ -2,10 +2,11 @@ package server
 
 import (
 	log "github.com/sirupsen/logrus"
+	"time"
 )
 
 // Update runs update for the server world.
-func (server *GameServer) Update(delta int64) error {
+func (server *GameServer) Update(delta time.Duration) error {
 	server.world.Update(delta)
 	return nil
 }

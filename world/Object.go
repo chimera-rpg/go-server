@@ -1,12 +1,10 @@
 package world
 
 import (
+	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-server/data"
-)
-
-// Some object states...
-const (
-	FallingState int64 = 1 << iota
+	"reflect"
+	"time"
 )
 
 // Object is the base type that should be used as an embeded struct in
@@ -19,13 +17,20 @@ type Object struct {
 	parent ObjectI
 	owner  OwnerI
 	//
+	statuses  []StatusI
 	inventory ObjectI
-	state     int64
 	hasMoved  bool
 }
 
 // update updates the given object.
-func (o *Object) update(d int64) {
+func (o *Object) update(delta time.Duration) {
+	for i := 0; i < len(o.statuses); i++ {
+		o.statuses[i].update(delta)
+		if o.statuses[i].ShouldRemove() {
+			o.statuses = append(o.statuses[:i], o.statuses[i+1:]...)
+			i--
+		}
+	}
 }
 
 // GetOwner returns the owning object.
@@ -64,7 +69,27 @@ func (o *Object) GetID() ID {
 	return o.id
 }
 
+func (o *Object) setArchetype(targetArch *data.Archetype) {
+}
+
 // GetArchetype gets the object's underlying archetype.
 func (o *Object) GetArchetype() *data.Archetype {
 	return o.Archetype
+}
+func (o *Object) getType() cdata.ArchetypeType {
+	return cdata.ArchetypeUnknown
+}
+
+func (o *Object) AddStatus(s StatusI) {
+	s.SetTarget(o)
+	o.statuses = append(o.statuses, s)
+}
+
+func (o *Object) HasStatus(t StatusI) bool {
+	for _, s := range o.statuses {
+		if reflect.TypeOf(s) == reflect.TypeOf(t) {
+			return true
+		}
+	}
+	return false
 }

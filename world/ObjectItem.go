@@ -39,9 +39,6 @@ func (o *ObjectItem) setArchetype(targetArch *data.Archetype) {
 	o.name, _ = targetArch.Name.GetString()*/
 }
 
-func (o *ObjectItem) update(d int64) {
-}
-
 func (o *ObjectItem) getType() cdata.ArchetypeType {
 	return cdata.ArchetypeItem
 }

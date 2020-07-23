@@ -90,7 +90,7 @@ func main() {
 		for currentTime := range ticker.C {
 			timeSinceLastFrame := currentTime.Sub(lastTime)
 
-			s.Update(int64(timeSinceLastFrame.Microseconds()))
+			s.Update(timeSinceLastFrame)
 
 			currentEnd := time.Now()
 			//current_elapsed := currentEnd.Sub(currentTime)

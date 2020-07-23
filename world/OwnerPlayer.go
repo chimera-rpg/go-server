@@ -5,6 +5,7 @@ import (
 	"github.com/chimera-rpg/go-server/data"
 
 	"fmt"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -189,7 +190,7 @@ func (player *OwnerPlayer) checkVisibleTiles() error {
 }
 
 // Update does something.?
-func (player *OwnerPlayer) Update(delta int64) error {
+func (player *OwnerPlayer) Update(delta time.Duration) error {
 	// I guess here is where we'd have some sort of "handleCommandQueue" functionality.
 	done := false
 	for !done {
@@ -197,10 +198,8 @@ func (player *OwnerPlayer) Update(delta int64) error {
 		case ocmd, _ := <-player.commandChannel:
 			switch c := ocmd.(type) {
 			case OwnerMoveCommand:
-				if player.target.canMove {
-					if _, err := player.currentMap.MoveObject(player.target, c.Y, c.X, c.Z); err != nil {
-						log.Warn(err)
-					}
+				if _, err := player.currentMap.MoveObject(player.target, c.Y, c.X, c.Z, false); err != nil {
+					log.Warn(err)
 				}
 			default:
 				fmt.Printf("Got unhandled owner command: %+v\n", ocmd)
@@ -214,7 +213,7 @@ func (player *OwnerPlayer) Update(delta int64) error {
 }
 
 // OnMapUpdate is called when the map is updated and the player should update its view and/or react.
-func (player *OwnerPlayer) OnMapUpdate(delta int64) error {
+func (player *OwnerPlayer) OnMapUpdate(delta time.Duration) error {
 	if player.mapUpdateTime == player.currentMap.updateTime {
 		return nil
 	}

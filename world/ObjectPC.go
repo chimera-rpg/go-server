@@ -3,6 +3,7 @@ package world
 import (
 	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-server/data"
+	"time"
 )
 
 // ObjectPC represents player characters.
@@ -18,8 +19,6 @@ type ObjectPC struct {
 	mapUpdateTime uint8 // Corresponds to the map's updateTime -- if they are out of sync then the player will sample its view space.
 	resistance    AttackTypes
 	abilityScores AbilityScores
-	canMove       bool
-	fallTimer     int64
 }
 
 // NewObjectPC creates a new ObjectPC from the given archetype.
@@ -28,7 +27,6 @@ func NewObjectPC(a *data.Archetype) (o *ObjectPC) {
 		Object: Object{
 			Archetype: a,
 		},
-		canMove: true,
 	}
 
 	//o.setArchetype(a)
@@ -42,8 +40,7 @@ func NewObjectPCFromCharacter(c *data.Character) (o *ObjectPC) {
 		Object: Object{
 			Archetype: &c.Archetype,
 		},
-		name:    c.Name,
-		canMove: true,
+		name: c.Name,
 	}
 	return
 }
@@ -61,7 +58,7 @@ func (o *ObjectPC) setArchetype(targetArch *data.Archetype) {
 	o.name, _ = mutatedArch.Name.GetString()*/
 }
 
-func (o *ObjectPC) update(delta int64) {
+func (o *ObjectPC) update(delta time.Duration) {
 	doTilesBlock := func(targetTiles []*Tile) bool {
 		isBlocked := false
 		matter := o.GetArchetype().Matter
@@ -79,39 +76,20 @@ func (o *ObjectPC) update(delta int64) {
 		return isBlocked
 	}
 
-	// Handle if we are falling or should be falling.
-	if o.state&FallingState != 0 {
-		o.fallTimer += delta
-		if o.fallTimer >= 18867 { // roughly 53 meters / second
-			o.fallTimer -= 18867
-			m := o.tile.gameMap
-			if m != nil {
-				_, fallingTiles, err := m.GetObjectPartTiles(o, -1, 0, 0)
-
-				if doTilesBlock(fallingTiles) && err == nil {
-					o.canMove = true
-					o.state = o.state &^ FallingState
-				} else {
-					if _, err := m.MoveObject(o, -1, 0, 0); err != nil {
-						o.canMove = true
-					}
-				}
-			}
-		}
-	}
-	if o.hasMoved {
+	// Add a falling timer if we've moved and should fall.
+	var s *StatusFalling
+	if o.hasMoved && !o.HasStatus(s) {
 		m := o.tile.gameMap
 		if m != nil {
 			_, fallingTiles, err := m.GetObjectPartTiles(o, -1, 0, 0)
 
 			if !doTilesBlock(fallingTiles) && err == nil {
-				o.fallTimer = 0
-				o.state |= FallingState
-				o.canMove = false
+				o.AddStatus(&StatusFalling{})
 			}
 		}
-		o.hasMoved = false
 	}
+	//
+	o.Object.update(delta)
 }
 
 func (o *ObjectPC) getType() cdata.ArchetypeType {

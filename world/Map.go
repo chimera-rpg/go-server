@@ -3,6 +3,7 @@ package world
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -19,7 +20,7 @@ type Map struct {
 	world         *World // I guess it is okay to reference the World.
 	shouldSleep   bool
 	shouldExpire  bool
-	lifeTime      int64 // Time in ms of how long this map has been alive
+	lifeTime      time.Duration // Time in us of how long this map has been alive
 	north         *Map
 	east          *Map
 	south         *Map
@@ -110,7 +111,7 @@ func (gmap *Map) sizeMap(height int, width int, depth int) error {
 }
 
 // Update updates all active tiles and objects within the map.
-func (gmap *Map) Update(gm *World, delta int64) error {
+func (gmap *Map) Update(gm *World, delta time.Duration) error {
 	gmap.lifeTime += delta
 
 	for _, owner := range gmap.owners {
@@ -256,9 +257,16 @@ func (gmap *Map) RemoveObject(o ObjectI) (err error) {
 }
 
 // MoveObject attempts to move the given object from its current position by a relative coordinate adjustment.
-func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int) (bool, error) {
+func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, error) {
 	if o == nil {
 		return false, errors.New("Attempted to move a nil object!")
+	}
+
+	if !force {
+		var fall *StatusFalling
+		if o.HasStatus(fall) {
+			return false, nil
+		}
 	}
 	// TODO: Some sort of CanMove flag, as things such as falling, paralysis, or otherwise should prevent movement. This might be handled in the calling function, such as the Owner.
 
@@ -313,8 +321,8 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int) (bool, error) {
 	}
 	// Add the object to the main tile.
 	targetTiles[0].insertObject(o, -1)
-	o.SetMoved(true)
 	gmap.updateTime++
+	o.SetMoved(true)
 	return true, nil
 }
 
