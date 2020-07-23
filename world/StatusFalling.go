@@ -44,6 +44,9 @@ func (s *StatusFalling) update(delta time.Duration) {
 			_, fallingTiles, err := m.GetObjectPartTiles(s.target, -1, 0, 0)
 
 			if doTilesBlock(fallingTiles) && err == nil {
+				s.target.ResolveEvent(EventFell{
+					distance: int(s.elapsed / fallRate),
+				})
 				// TODO: Let target know how far they fell so they can account for damage. This should likely only report if greater than 2 units or so.
 				s.shouldRemove = true
 				return
