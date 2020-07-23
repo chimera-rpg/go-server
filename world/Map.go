@@ -302,12 +302,23 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 	}
 
 	// If it is blocked, check if a vertical move would solve it (if we aren't already moving vertical) -- this is for stepping up 1 unit blocks.
-	if doTilesBlock(targetTiles) && yDir == 0 {
-		_, targetUpTiles, err := gmap.GetObjectPartTiles(o, yDir+1, xDir, zDir)
-		if !doTilesBlock(targetUpTiles) && err == nil {
-			targetTiles = targetUpTiles
+	if yDir == 0 {
+		if doTilesBlock(targetTiles) {
+			_, targetUpTiles, err := gmap.GetObjectPartTiles(o, yDir+1, xDir, zDir)
+			if !doTilesBlock(targetUpTiles) && err == nil {
+				targetTiles = targetUpTiles
+			} else {
+				return false, nil
+			}
 		} else {
-			return false, nil
+			// Check if we have to step down.
+			_, targetDownTiles, err := gmap.GetObjectPartTiles(o, yDir-1, xDir, zDir)
+			if !doTilesBlock(targetDownTiles) && err == nil {
+				_, targetStepTiles, err := gmap.GetObjectPartTiles(o, yDir-2, xDir, zDir)
+				if doTilesBlock(targetStepTiles) && err == nil {
+					targetTiles = targetDownTiles
+				}
+			}
 		}
 	}
 	// If we got here then the move ended up being valid, so let's update our tiles.
