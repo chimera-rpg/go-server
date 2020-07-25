@@ -9,15 +9,15 @@ import (
 type ObjectNPC struct {
 	Object
 	//
-	name          string
-	maxHp         int
-	level         int
-	race          string
-	count         int
-	value         int
-	resistance    AttackTypes
-	abilityScores AbilityScores
-	skills        []ObjectSkill
+	name       string
+	maxHp      int
+	level      int
+	race       string
+	count      int
+	value      int
+	resistance AttackTypes
+	attributes data.Attributes
+	skills     []ObjectSkill
 }
 
 // NewObjectNPC creates a new ObjectNPC from the given archetype.
