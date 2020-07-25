@@ -17,6 +17,7 @@ type ObjectNPC struct {
 	value         int
 	resistance    AttackTypes
 	abilityScores AbilityScores
+	skills        []ObjectSkill
 }
 
 // NewObjectNPC creates a new ObjectNPC from the given archetype.

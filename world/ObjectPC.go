@@ -21,6 +21,7 @@ type ObjectPC struct {
 	mapUpdateTime uint8 // Corresponds to the map's updateTime -- if they are out of sync then the player will sample its view space.
 	resistance    AttackTypes
 	abilityScores AbilityScores
+	skills        []ObjectSkill
 }
 
 // NewObjectPC creates a new ObjectPC from the given archetype.
