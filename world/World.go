@@ -281,6 +281,12 @@ func (w *World) CreateObjectFromArch(arch *data.Archetype) (o ObjectI, err error
 		o = NewObjectItem(arch)
 	case cdata.ArchetypeNPC:
 		o = NewObjectNPC(arch)
+	case cdata.ArchetypeArmor:
+		o = NewObjectArmor(arch)
+	case cdata.ArchetypeShield:
+		o = NewObjectShield(arch)
+	case cdata.ArchetypeWeapon:
+		o = NewObjectWeapon(arch)
 	default:
 		gameobj := ObjectGeneric{
 			Object: Object{
