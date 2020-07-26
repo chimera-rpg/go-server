@@ -34,6 +34,7 @@ type Archetype struct {
 	Properties map[string]Variable `yaml:"Properties,omitempty"`
 	Inventory  []Archetype         `yaml:"Inventory,omitempty"`
 	Skills     []Archetype         `yaml:"Skills,omitempty"`
+	Armor      Armor               `yaml:"Armor,omitempty"`
 	Attributes struct {
 		Physical Attributes `yaml:"Physical,omitempty"`
 		Arcane   Attributes `yaml:"Arcane,omitempty"`
