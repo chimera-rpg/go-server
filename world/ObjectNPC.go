@@ -17,6 +17,7 @@ type ObjectNPC struct {
 	value      int
 	resistance AttackTypes
 	attributes data.Attributes
+	armors     data.Armors
 	skills     []ObjectSkill
 }
 

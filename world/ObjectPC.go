@@ -21,6 +21,7 @@ type ObjectPC struct {
 	mapUpdateTime uint8 // Corresponds to the map's updateTime -- if they are out of sync then the player will sample its view space.
 	resistance    AttackTypes
 	attributes    data.Attributes
+	armors        data.Armors
 	skills        []ObjectSkill
 }
 
