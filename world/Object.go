@@ -19,7 +19,7 @@ type Object struct {
 	owner  OwnerI
 	//
 	statuses  []StatusI
-	inventory ObjectI
+	inventory []ObjectI
 	hasMoved  bool
 }
 

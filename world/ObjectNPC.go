@@ -9,16 +9,17 @@ import (
 type ObjectNPC struct {
 	Object
 	//
-	name       string
-	maxHp      int
-	level      int
-	race       string
-	count      int
-	value      int
-	resistance AttackTypes
-	attributes data.Attributes
-	armors     data.Armors
-	skills     []ObjectSkill
+	name        string
+	maxHp       int
+	level       int
+	race        string
+	count       int
+	value       int
+	resistances data.AttackTypes
+	attacktypes data.AttackTypes
+	attributes  data.Attributes
+	skills      []ObjectSkill
+	equipment   ObjectI // Equipment is all equipped inventory items.
 }
 
 // NewObjectNPC creates a new ObjectNPC from the given archetype.

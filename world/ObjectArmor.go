@@ -8,9 +8,9 @@ import (
 // ObjectArmor represents a skill.
 type ObjectArmor struct {
 	Object
-	name    string
-	damaged float32 // How damaged the armor is.
-	armors  data.Armors
+	name        string
+	damaged     float32 // How damaged the armor is.
+	resistances data.AttackTypes
 }
 
 // NewObjectArmor creates a skill object from the given archetype.

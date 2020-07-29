@@ -8,15 +8,17 @@ import (
 // ObjectWeapon represents a skill.
 type ObjectWeapon struct {
 	Object
-	name    string
-	damaged float32 // How damaged the weapon is.
+	name        string
+	damaged     float32 // How damaged the weapon is.
+	attackTypes data.AttackTypes
 	// TODO: attack types
 }
 
 // NewObjectWeapon creates a skill object from the given archetype.
 func NewObjectWeapon(a *data.Archetype) (o *ObjectWeapon) {
 	o = &ObjectWeapon{
-		Object: Object{Archetype: a},
+		Object:      Object{Archetype: a},
+		attackTypes: a.AttackTypes,
 	}
 
 	//o.setArchetype(a)

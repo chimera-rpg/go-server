@@ -1,6 +1,7 @@
 package world
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -19,10 +20,11 @@ type ObjectPC struct {
 	count         int
 	value         int
 	mapUpdateTime uint8 // Corresponds to the map's updateTime -- if they are out of sync then the player will sample its view space.
-	resistance    AttackTypes
+	resistances   data.AttackTypes
+	attacktypes   data.AttackTypes
 	attributes    data.Attributes
-	armors        data.Armors
 	skills        []ObjectSkill
+	equipment     []ObjectI // Equipment is all equipped inventory items.
 }
 
 // NewObjectPC creates a new ObjectPC from the given archetype.
@@ -114,6 +116,29 @@ func (o *ObjectPC) ResolveEvent(e EventI) bool {
 	return false
 }
 
+func (o *ObjectPC) RollAttack(w *ObjectWeapon) (a Attacks) {
+	//
+	return a
+}
+
 func (o *ObjectPC) getType() cdata.ArchetypeType {
 	return cdata.ArchetypeNPC
+}
+
+func (o *ObjectPC) EquipItem(ob ObjectI) error {
+	// Ensure we are only equipping from our inventory.
+	index := -1
+	for i, v := range o.inventory {
+		if v == o {
+			index = i
+			break
+		}
+	}
+	if index == -1 {
+		return errors.New("object does not exist in inventory")
+	}
+
+	o.equipment = append(o.equipment, o.inventory[index])
+	o.inventory = append(o.inventory[:index], o.inventory[index+1:]...)
+	return nil
 }
