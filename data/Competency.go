@@ -2,6 +2,8 @@ package data
 
 import "fmt"
 
+type Competency float32
+
 type CompetencyType uint32
 
 const (
