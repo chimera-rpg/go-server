@@ -279,7 +279,9 @@ func (w *World) CreateObjectFromArch(arch *data.Archetype) (o ObjectI, err error
 		o = NewObjectBlock(arch)
 	case cdata.ArchetypeItem:
 		o = NewObjectItem(arch)
-	case cdata.ArchetypeCharacter:
+	case cdata.ArchetypePC:
+		o = NewObjectCharacter(arch)
+	case cdata.ArchetypeNPC:
 		o = NewObjectCharacter(arch)
 	case cdata.ArchetypeArmor:
 		o = NewObjectArmor(arch)

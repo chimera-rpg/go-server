@@ -122,7 +122,7 @@ func (o *ObjectCharacter) RollAttack(w *ObjectWeapon) (a Attacks) {
 }
 
 func (o *ObjectCharacter) getType() cdata.ArchetypeType {
-	return cdata.ArchetypeCharacter
+	return cdata.ArchetypePC
 }
 
 func (o *ObjectCharacter) EquipObject(ob ObjectI) error {
