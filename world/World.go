@@ -217,7 +217,7 @@ func (world *World) addPlayerByConnection(conn clientConnectionI, character *dat
 		world.data.ProcessArchetype(&character.Archetype)
 		world.data.CompileArchetype(&character.Archetype)
 		// Create character object.
-		pc := NewObjectPCFromCharacter(character)
+		pc := NewObjectCharacterFromCharacter(character)
 		pc.id = world.objectIDs.acquire()
 		world.objects[pc.id] = pc
 		player.SetTarget(pc)
@@ -246,7 +246,7 @@ func (world *World) addPlayerByConnection(conn clientConnectionI, character *dat
 
 func (world *World) removePlayerByConnection(conn clientConnectionI) {
 	if index := world.getExistingPlayerConnectionIndex(conn); index >= 0 {
-		// TODO: Save ObjectPC to connection's associated Character data.
+		// TODO: Save ObjectCharacter to connection's associated Character data.
 		// Remove owner from map -- this also deletes the character object.
 		if playerMap := world.players[index].GetMap(); playerMap != nil {
 			playerMap.RemoveOwner(world.players[index])
@@ -279,8 +279,8 @@ func (w *World) CreateObjectFromArch(arch *data.Archetype) (o ObjectI, err error
 		o = NewObjectBlock(arch)
 	case cdata.ArchetypeItem:
 		o = NewObjectItem(arch)
-	case cdata.ArchetypeNPC:
-		o = NewObjectNPC(arch)
+	case cdata.ArchetypeCharacter:
+		o = NewObjectCharacter(arch)
 	case cdata.ArchetypeArmor:
 		o = NewObjectArmor(arch)
 	case cdata.ArchetypeShield:

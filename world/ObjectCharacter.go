@@ -9,8 +9,8 @@ import (
 	"github.com/chimera-rpg/go-server/data"
 )
 
-// ObjectPC represents player characters.
-type ObjectPC struct {
+// ObjectCharacter represents player characters.
+type ObjectCharacter struct {
 	Object
 	//
 	name          string
@@ -27,9 +27,9 @@ type ObjectPC struct {
 	equipment     []ObjectI // Equipment is all equipped inventory items.
 }
 
-// NewObjectPC creates a new ObjectPC from the given archetype.
-func NewObjectPC(a *data.Archetype) (o *ObjectPC) {
-	o = &ObjectPC{
+// NewObjectCharacter creates a new ObjectCharacter from the given archetype.
+func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
+	o = &ObjectCharacter{
 		Object: Object{
 			Archetype: a,
 		},
@@ -40,9 +40,9 @@ func NewObjectPC(a *data.Archetype) (o *ObjectPC) {
 	return
 }
 
-// NewObjectPCFromCharacter creates a new ObjectPC from the given character data.
-func NewObjectPCFromCharacter(c *data.Character) (o *ObjectPC) {
-	o = &ObjectPC{
+// NewObjectCharacterFromCharacter creates a new ObjectCharacter from the given character data.
+func NewObjectCharacterFromCharacter(c *data.Character) (o *ObjectCharacter) {
+	o = &ObjectCharacter{
 		Object: Object{
 			Archetype: &c.Archetype,
 		},
@@ -51,7 +51,7 @@ func NewObjectPCFromCharacter(c *data.Character) (o *ObjectPC) {
 	return
 }
 
-func (o *ObjectPC) setArchetype(targetArch *data.Archetype) {
+func (o *ObjectCharacter) setArchetype(targetArch *data.Archetype) {
 	// First inherit from another Archetype if ArchID is set.
 	/*mutatedArch := data.NewArchetype()
 	for targetArch != nil {
@@ -64,7 +64,7 @@ func (o *ObjectPC) setArchetype(targetArch *data.Archetype) {
 	o.name, _ = mutatedArch.Name.GetString()*/
 }
 
-func (o *ObjectPC) update(delta time.Duration) {
+func (o *ObjectCharacter) update(delta time.Duration) {
 	doTilesBlock := func(targetTiles []*Tile) bool {
 		isBlocked := false
 		matter := o.GetArchetype().Matter
@@ -98,12 +98,12 @@ func (o *ObjectPC) update(delta time.Duration) {
 	o.Object.update(delta)
 }
 
-func (o *ObjectPC) AddStatus(s StatusI) {
+func (o *ObjectCharacter) AddStatus(s StatusI) {
 	s.SetTarget(o)
 	o.statuses = append(o.statuses, s)
 }
 
-func (o *ObjectPC) ResolveEvent(e EventI) bool {
+func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 	// TODO: Send event messages to the owner.
 	switch e := e.(type) {
 	case EventFall:
@@ -116,16 +116,16 @@ func (o *ObjectPC) ResolveEvent(e EventI) bool {
 	return false
 }
 
-func (o *ObjectPC) RollAttack(w *ObjectWeapon) (a Attacks) {
+func (o *ObjectCharacter) RollAttack(w *ObjectWeapon) (a Attacks) {
 	//
 	return a
 }
 
-func (o *ObjectPC) getType() cdata.ArchetypeType {
-	return cdata.ArchetypeNPC
+func (o *ObjectCharacter) getType() cdata.ArchetypeType {
+	return cdata.ArchetypeCharacter
 }
 
-func (o *ObjectPC) EquipObject(ob ObjectI) error {
+func (o *ObjectCharacter) EquipObject(ob ObjectI) error {
 	// Ensure we are only equipping from our inventory.
 	index := -1
 	for i, v := range o.inventory {
@@ -156,14 +156,14 @@ func (o *ObjectPC) EquipObject(ob ObjectI) error {
 	return err
 }
 
-func (o *ObjectPC) EquipArmor(armor *ObjectArmor) error {
+func (o *ObjectCharacter) EquipArmor(armor *ObjectArmor) error {
 	return nil
 }
 
-func (o *ObjectPC) EquipShield(armor *ObjectShield) error {
+func (o *ObjectCharacter) EquipShield(armor *ObjectShield) error {
 	return nil
 }
 
-func (o *ObjectPC) EquipWeapon(armor *ObjectWeapon) error {
+func (o *ObjectCharacter) EquipWeapon(armor *ObjectWeapon) error {
 	return nil
 }

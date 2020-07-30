@@ -220,9 +220,7 @@ func (gmap *Map) PlaceObject(o ObjectI, y int, x int, z int) (err error) {
 
 	// Add object types that need to update per tick.
 	switch o.(type) {
-	case *ObjectPC:
-		gmap.activeObjects[o.GetID()] = o
-	case *ObjectNPC:
+	case *ObjectCharacter:
 		gmap.activeObjects[o.GetID()] = o
 	}
 
@@ -291,10 +289,8 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 					if tO.blocking.Is(matter) {
 						isBlocked = true
 					}
-					/*case *ObjectPC:
-						// TODO: Check for aggression and possibly attack.
-					case *ObjectNPC:
-						// TODO: Check for aggression and possibly attack.*/
+				case *ObjectCharacter:
+					// TODO: Check for aggression and possibly attack.
 				}
 			}
 		}

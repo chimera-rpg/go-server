@@ -23,7 +23,7 @@ type clientConnectionI interface {
 type OwnerPlayer struct {
 	commandChannel   chan OwnerCommand
 	ClientConnection clientConnectionI
-	target           *ObjectPC
+	target           *ObjectCharacter
 	currentMap       *Map
 	mapUpdateTime    uint8
 	view             [][][]TileView
@@ -37,10 +37,10 @@ func (player *OwnerPlayer) GetTarget() ObjectI {
 
 // SetTarget sets the given object as the target of the player.
 func (player *OwnerPlayer) SetTarget(object ObjectI) {
-	if objectpc, ok := object.(*ObjectPC); ok {
+	if objectpc, ok := object.(*ObjectCharacter); ok {
 		player.target = objectpc
 	} else {
-		log.Printf("Attempted to set OwnerPlayer to non-ObjectPC...\n")
+		log.Printf("Attempted to set OwnerPlayer to non-ObjectCharacter...\n")
 	}
 	object.SetOwner(player)
 }

@@ -39,12 +39,12 @@ type Manager struct {
 	Strings      StringsMap
 	imageFileMap FileMap
 	// images map[string][]bytes
-	generaArchetypes  []*Archetype     // Slice of genera archetypes.
-	speciesArchetypes []*Archetype     // Slice of species archetypes.
-	pcArchetypes      []*Archetype     // Player Character archetypes, used for creating new characters.
-	maps              map[string]*Map  // Full map of Maps.
-	loadedUsers       map[string]*User // Map of loaded Players
-	cryptParams       cryptParams      // Cryptography parameters
+	generaArchetypes    []*Archetype     // Slice of genera archetypes.
+	speciesArchetypes   []*Archetype     // Slice of species archetypes.
+	characterArchetypes []*Archetype     // Player Character archetypes, used for creating new characters.
+	maps                map[string]*Map  // Full map of Maps.
+	loadedUsers         map[string]*User // Map of loaded Players
+	cryptParams         cryptParams      // Cryptography parameters
 }
 
 type objectTemplate struct {
@@ -238,26 +238,26 @@ func (m *Manager) parseArchetypeFiles() error {
 
 	m.buildGeneraArchetypes()
 	m.buildSpeciesArchetypes()
-	m.buildPCArchetypes()
+	m.buildCharacterArchetypes()
 
 	l.WithFields(log.Fields{
-		"Total":   len(m.archetypes),
-		"Genera":  len(m.generaArchetypes),
-		"Species": len(m.speciesArchetypes),
-		"PCs":     len(m.pcArchetypes),
+		"Total":      len(m.archetypes),
+		"Genera":     len(m.generaArchetypes),
+		"Species":    len(m.speciesArchetypes),
+		"Characters": len(m.characterArchetypes),
 	}).Println("Archetypes: Done!")
 
 	return nil
 }
 
-func (m *Manager) buildPCArchetypes() int {
-	oldCount := len(m.pcArchetypes)
+func (m *Manager) buildCharacterArchetypes() int {
+	oldCount := len(m.characterArchetypes)
 	for _, v := range m.archetypes {
-		if v.Type == cdata.ArchetypePC {
-			m.pcArchetypes = append(m.pcArchetypes, v)
+		if v.Type == cdata.ArchetypeCharacter {
+			m.characterArchetypes = append(m.characterArchetypes, v)
 		}
 	}
-	return len(m.pcArchetypes) - oldCount
+	return len(m.characterArchetypes) - oldCount
 }
 
 func (m *Manager) buildGeneraArchetypes() int {
@@ -585,9 +585,9 @@ func (m *Manager) GetEtcPath() string {
 	return m.etcPath
 }
 
-// GetPCArchetypes returns the underlying *Archetype slice for player character archetypes.
-func (m *Manager) GetPCArchetypes() []*Archetype {
-	return m.pcArchetypes
+// GetCharacterArchetypes returns the underlying *Archetype slice for player character archetypes.
+func (m *Manager) GetCharacterArchetypes() []*Archetype {
+	return m.characterArchetypes
 }
 
 // GetGeneraArchetypes returns the underlying *Archetype slice for genera archetypes.
