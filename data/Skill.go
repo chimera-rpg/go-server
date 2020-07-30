@@ -7,16 +7,19 @@ type SkillType uint32
 const (
 	NoSkill     SkillType = 0
 	MeleeCombat           = 1 << iota
+	HandToHand
 )
 
 var StringToSkillTypeMap = map[string]SkillType{
 	"No Skill":     NoSkill,
 	"Melee Combat": MeleeCombat,
+	"Hand-to-Hand": HandToHand,
 }
 
 var SkillTypeToStringMap = map[SkillType]string{
 	NoSkill:     "No Skill",
 	MeleeCombat: "Melee Combat",
+	HandToHand:  "Hand-to-Hand",
 }
 
 // UnmarshalYAML unmarshals an SkillType from a string.

@@ -19,6 +19,9 @@ const (
 	TwoHandedCompetency
 	DualHandedCompetency
 	ShieldCompetency
+	//
+	PugilismCompetency
+	PushDaggersCompetency
 )
 
 var StringToCompetencyMap = map[string]CompetencyType{
@@ -33,6 +36,9 @@ var StringToCompetencyMap = map[string]CompetencyType{
 	"Two Handed":  TwoHandedCompetency,
 	"Dual Handed": DualHandedCompetency,
 	"Shield":      ShieldCompetency,
+	//
+	"Pugilism":     PugilismCompetency,
+	"Push Daggers": PushDaggersCompetency,
 }
 
 var CompetencyToStringMap = map[CompetencyType]string{
@@ -48,6 +54,9 @@ var CompetencyToStringMap = map[CompetencyType]string{
 	TwoHandedCompetency:  "Two Handed",
 	DualHandedCompetency: "Dual Handed",
 	ShieldCompetency:     "Shield",
+	//
+	PugilismCompetency:    "PugilismCompetency",
+	PushDaggersCompetency: "Push Daggers",
 }
 
 // UnmarshalYAML unmarshals an ArchetypeType from a string.
