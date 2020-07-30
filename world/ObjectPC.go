@@ -125,7 +125,7 @@ func (o *ObjectPC) getType() cdata.ArchetypeType {
 	return cdata.ArchetypeNPC
 }
 
-func (o *ObjectPC) EquipItem(ob ObjectI) error {
+func (o *ObjectPC) EquipObject(ob ObjectI) error {
 	// Ensure we are only equipping from our inventory.
 	index := -1
 	for i, v := range o.inventory {
@@ -137,8 +137,33 @@ func (o *ObjectPC) EquipItem(ob ObjectI) error {
 	if index == -1 {
 		return errors.New("object does not exist in inventory")
 	}
+	// Ensure the item can be equipped.
+	var err error
+	switch obj := ob.(type) {
+	case *ObjectWeapon:
+		err = o.EquipWeapon(obj)
+	case *ObjectShield:
+		err = o.EquipShield(obj)
+	case *ObjectArmor:
+		err = o.EquipArmor(obj)
+	default:
+		return errors.New("object cannot be equipped")
+	}
+	if err == nil {
+		o.equipment = append(o.equipment, o.inventory[index])
+		o.inventory = append(o.inventory[:index], o.inventory[index+1:]...)
+	}
+	return err
+}
 
-	o.equipment = append(o.equipment, o.inventory[index])
-	o.inventory = append(o.inventory[:index], o.inventory[index+1:]...)
+func (o *ObjectPC) EquipArmor(armor *ObjectArmor) error {
+	return nil
+}
+
+func (o *ObjectPC) EquipShield(armor *ObjectShield) error {
+	return nil
+}
+
+func (o *ObjectPC) EquipWeapon(armor *ObjectWeapon) error {
 	return nil
 }
