@@ -8,10 +8,11 @@ import (
 // ObjectSkill represents a skill.
 type ObjectSkill struct {
 	Object
-	name        string
-	level       uint8   // Current level of the skill. Determines bonuses.
-	efficiency  float32 // Efficiency % of the skill. Increases by use, decreases over time.
-	advancement float32 // Advancement to the next level.
+	name string
+	//level        uint8                                   // Current level of the skill. Determines bonuses.
+	//advancement  float32                                 // Advancement into the next level.
+	//efficiency   float32                                 // Efficiency % of the skill. Increases by use, decreases over time.
+	//competencies map[data.CompetencyType]data.Competency // Associated competencies for this skill.
 }
 
 // NewObjectSkill creates a skill object from the given archetype.

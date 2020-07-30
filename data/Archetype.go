@@ -34,11 +34,20 @@ type Archetype struct {
 	Properties map[string]Variable `yaml:"Properties,omitempty"`
 	//
 	Inventory []Archetype `yaml:"Inventory,omitempty"`
-	Skills    []Archetype `yaml:"Skills,omitempty"`
-	//
-	Competencies []CompetencyType `yaml:"Competencies,omitempty"`
-	Resistances  AttackTypes      `yaml:"Armors,omitempty"`
-	AttackTypes  AttackTypes      `yaml:"AttackTypes,omitempty"`
+	// Skills are the skills contained by a player.
+	Skills []Archetype `yaml:"Skills,omitempty"`
+	// CompetencyTypes are the competency types of a weapon.
+	CompetencyTypes []CompetencyType `yaml:"CompetencyTypes,omitempty"`
+	// Competencies are the associated competencies' values that a skill instance has.
+	Competencies map[CompetencyType]Competency `yaml:"Competencies,omitempty"`
+	// Resistances represents the attack type resistances of armor or a player.
+	Resistances AttackTypes `yaml:"Resistances,omitempty"`
+	// AttackTypes represents the attack types of a weapon or a player.
+	AttackTypes AttackTypes `yaml:"AttackTypes,omitempty"`
+	// Level represents the advancement of a skill or player.
+	Level int `yaml:"Level,omitempty"`
+	// Advancement represents the advancement of a skill or a player into the next level.
+	Advancement float32 `yaml:"Advancement,omitempty"`
 	//
 	Attributes struct {
 		Physical Attributes `yaml:"Physical,omitempty"`
