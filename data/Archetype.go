@@ -28,15 +28,19 @@ type Archetype struct {
 	Matter      cdata.MatterType    `yaml:"Matter,omitempty"`
 	Blocking    cdata.MatterType    `yaml:"Blocking,omitempty"`
 	//
-	Value       StringExpression    `yaml:"Value,omitempty"`  // NumberExpression
-	Count       StringExpression    `yaml:"Count,omitempty"`  // NumberExpression
-	Weight      StringExpression    `yaml:"Weight,omitempty"` // NumberExpression
-	Properties  map[string]Variable `yaml:"Properties,omitempty"`
-	Inventory   []Archetype         `yaml:"Inventory,omitempty"`
-	Skills      []Archetype         `yaml:"Skills,omitempty"`
-	Resistances AttackTypes         `yaml:"Armors,omitempty"`
-	AttackTypes AttackTypes         `yaml:"AttackTypes,omitempty"`
-	Attributes  struct {
+	Value      StringExpression    `yaml:"Value,omitempty"`  // NumberExpression
+	Count      StringExpression    `yaml:"Count,omitempty"`  // NumberExpression
+	Weight     StringExpression    `yaml:"Weight,omitempty"` // NumberExpression
+	Properties map[string]Variable `yaml:"Properties,omitempty"`
+	//
+	Inventory []Archetype `yaml:"Inventory,omitempty"`
+	Skills    []Archetype `yaml:"Skills,omitempty"`
+	//
+	Competencies []CompetencyType `yaml:"Competencies,omitempty"`
+	Resistances  AttackTypes      `yaml:"Armors,omitempty"`
+	AttackTypes  AttackTypes      `yaml:"AttackTypes,omitempty"`
+	//
+	Attributes struct {
 		Physical Attributes `yaml:"Physical,omitempty"`
 		Arcane   Attributes `yaml:"Arcane,omitempty"`
 		Spirit   Attributes `yaml:"Spirit,omitempty"`
