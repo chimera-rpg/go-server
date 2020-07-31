@@ -23,4 +23,5 @@ type ObjectI interface {
 	AddStatus(StatusI)
 	HasStatus(StatusI) bool
 	ResolveEvent(EventI) bool
+	Blocks(cdata.MatterType) bool
 }

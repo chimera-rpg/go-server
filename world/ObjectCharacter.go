@@ -30,9 +30,7 @@ type ObjectCharacter struct {
 // NewObjectCharacter creates a new ObjectCharacter from the given archetype.
 func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 	o = &ObjectCharacter{
-		Object: Object{
-			Archetype: a,
-		},
+		Object: NewObject(a),
 	}
 
 	//o.setArchetype(a)
@@ -43,10 +41,8 @@ func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 // NewObjectCharacterFromCharacter creates a new ObjectCharacter from the given character data.
 func NewObjectCharacterFromCharacter(c *data.Character) (o *ObjectCharacter) {
 	o = &ObjectCharacter{
-		Object: Object{
-			Archetype: &c.Archetype,
-		},
-		name: c.Name,
+		Object: NewObject(&c.Archetype),
+		name:   c.Name,
 	}
 	return
 }

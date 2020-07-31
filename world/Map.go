@@ -279,32 +279,59 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 	}
 
 	doTilesBlock := func(targetTiles []*Tile) bool {
-		isBlocked := false
 		matter := o.GetArchetype().Matter
 		for _, tT := range targetTiles {
 			for _, tO := range tT.objects {
-				switch tO := tO.(type) {
-				case *ObjectBlock:
-					// Check if the target object blocks our matter.
-					if tO.blocking.Is(matter) {
-						isBlocked = true
-					}
-				case *ObjectCharacter:
-					// TODO: Check for aggression and possibly attack.
+				if tO == o {
+					continue
+				}
+				if tO.Blocks(matter) {
+					return true
 				}
 			}
 		}
-		return isBlocked
+		return false
+	}
+
+	// Get our unique objects that are not this object in the target tiles.
+	var uniqueObjects []ObjectI
+	for _, tT := range targetTiles {
+		for _, tO := range tT.objects {
+			matched := false
+			for _, t := range uniqueObjects {
+				if t == tO {
+					matched = true
+					break
+				}
+			}
+			if tO != o && !matched {
+				uniqueObjects = append(uniqueObjects, tO)
+			}
+		}
+	}
+
+	// Get our character objects.
+	var characterObjects []*ObjectCharacter
+	for _, tO := range uniqueObjects {
+		if t, ok := tO.(*ObjectCharacter); ok {
+			characterObjects = append(characterObjects, t)
+		}
 	}
 
 	// If it is blocked, check if a vertical move would solve it (if we aren't already moving vertical) -- this is for stepping up 1 unit blocks.
 	if yDir == 0 {
 		if doTilesBlock(targetTiles) {
-			_, targetUpTiles, err := gmap.GetObjectPartTiles(o, yDir+1, xDir, zDir)
-			if !doTilesBlock(targetUpTiles) && err == nil {
-				targetTiles = targetUpTiles
-			} else {
+			// Check if it is blocked by a character and handle that appropriately.
+			if len(characterObjects) > 0 {
+				log.Println("TODO: Handle character interaction")
 				return false, nil
+			} else { // Otherwise see if we can step down.
+				_, targetUpTiles, err := gmap.GetObjectPartTiles(o, yDir+1, xDir, zDir)
+				if !doTilesBlock(targetUpTiles) && err == nil {
+					targetTiles = targetUpTiles
+				} else {
+					return false, nil
+				}
 			}
 		} else {
 			// Check if we have to step down.

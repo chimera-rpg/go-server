@@ -21,6 +21,15 @@ type Object struct {
 	statuses  []StatusI
 	inventory []ObjectI
 	hasMoved  bool
+	blocking  cdata.MatterType
+}
+
+func NewObject(a *data.Archetype) Object {
+	o := Object{
+		blocking:  a.Blocking,
+		Archetype: a,
+	}
+	return o
 }
 
 // update updates the given object.
@@ -98,4 +107,8 @@ func (o *Object) HasStatus(t StatusI) bool {
 func (o *Object) ResolveEvent(e EventI) bool {
 	// Do nothing per default.
 	return true
+}
+
+func (o *Object) Blocks(matter cdata.MatterType) bool {
+	return o.blocking.Is(matter)
 }
