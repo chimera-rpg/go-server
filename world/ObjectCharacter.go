@@ -33,6 +33,13 @@ func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 		Object: NewObject(a),
 	}
 
+	// Create a new Owner AI if it is an NPC.
+	if a.Type == cdata.ArchetypeNPC {
+		owner := NewOwnerSimpleAI()
+		owner.SetTarget(o)
+	}
+	// NOTE: We could/should probably have other AI types that can control multiple objects.
+
 	//o.setArchetype(a)
 
 	return
