@@ -28,6 +28,7 @@ type OwnerPlayer struct {
 	mapUpdateTime    uint8
 	view             [][][]TileView
 	knownIDs         map[ID]struct{}
+	attitudes        map[ID]data.Attitude
 }
 
 // GetTarget returns the player's target object.
@@ -236,4 +237,22 @@ func (player *OwnerPlayer) OnObjectDelete(oID ID) error {
 	}
 
 	return nil
+}
+
+// GetAttitude returns the attitude the owner has the a given object. If no attitude exists, one is calculated based upon the target's attitude (if it has one).
+func (player *OwnerPlayer) GetAttitude(oID ID) data.Attitude {
+	if attitude, ok := player.attitudes[oID]; ok {
+		return attitude
+	}
+	target := player.GetMap().world.GetObject(oID)
+	if target == nil {
+		delete(player.attitudes, oID)
+	} else {
+		// TODO: We should probably check if the target knows us and use their attitude. If not, we should calculate from our target object archetype's default attitude towards: Genera, Species, Legacy, and Faction.
+		if otherOwner := target.GetOwner(); otherOwner != nil {
+			return otherOwner.GetAttitude(player.target.id)
+		}
+	}
+
+	return data.NoAttitude
 }

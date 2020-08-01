@@ -1,6 +1,9 @@
 package world
 
-import "time"
+import (
+	"github.com/chimera-rpg/go-server/data"
+	"time"
+)
 
 // OwnerI represents the general interface that should be used
 // for controlling and managing autonomous Object(s). It is used for
@@ -16,4 +19,6 @@ type OwnerI interface {
 	OnObjectDelete(ID) error
 	CreateView()
 	CheckView()
+	//
+	GetAttitude(ID) data.Attitude
 }
