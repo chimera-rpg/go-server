@@ -12,8 +12,8 @@ import (
 
 type clientConnectionI interface {
 	GetUser() *data.User
-	SetOwner(p OwnerI)
-	GetOwner() OwnerI
+	SetOwner(p *OwnerPlayer)
+	GetOwner() *OwnerPlayer
 	Send(network.Command) error
 	GetID() int
 }

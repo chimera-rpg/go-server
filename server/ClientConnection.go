@@ -15,7 +15,7 @@ import (
 type ClientConnection struct {
 	network.Connection
 	id                    int
-	Owner                 world.OwnerI
+	Owner                 *world.OwnerPlayer
 	user                  *data.User
 	requestedAnimationIDs map[uint32]struct{}
 	requestedImageIDs     map[uint32]struct{}
@@ -430,11 +430,11 @@ func (c *ClientConnection) HandleTravel(s *GameServer, m *world.Map) {
 }
 
 // GetOwner returns the owner(player) of this connection.
-func (c *ClientConnection) GetOwner() world.OwnerI {
+func (c *ClientConnection) GetOwner() *world.OwnerPlayer {
 	return c.Owner
 }
 
 // SetOwner sets the owner(player) of this connection.
-func (c *ClientConnection) SetOwner(owner world.OwnerI) {
+func (c *ClientConnection) SetOwner(owner *world.OwnerPlayer) {
 	c.Owner = owner
 }
