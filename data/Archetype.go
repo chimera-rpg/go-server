@@ -42,8 +42,8 @@ type Archetype struct {
 	CompetencyTypes []CompetencyType `yaml:"CompetencyTypes,omitempty"`
 	// Competencies are the associated competencies' values that a skill instance has.
 	Competencies map[CompetencyType]Competency `yaml:"Competencies,omitempty"`
-	// CompetencyGroups are the competencies that a skill will train even if only one in a group is being trained.
-	SharedCompetencyTypes [][]CompetencyType `yaml:"SharedCompetencyTypes,omitempty"`
+	// TrainsCompetencyTypes are the competencies that a skill will train even if only one in a group is being trained.
+	TrainsCompetencyTypes map[CompetencyType][]CompetencyType `yaml:"TrainsCompetencyTypes,omitempty"`
 	// Resistances represents the attack type resistances of armor or a character.
 	Resistances AttackTypes `yaml:"Resistances,omitempty"`
 	// AttackTypes represents the attack types of a weapon or a character.
