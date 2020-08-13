@@ -289,6 +289,8 @@ func (w *World) CreateObjectFromArch(arch *data.Archetype) (o ObjectI, err error
 		o = NewObjectShield(arch)
 	case cdata.ArchetypeWeapon:
 		o = NewObjectWeapon(arch)
+	case cdata.ArchetypeFood:
+		o = NewObjectFood(arch)
 	default:
 		gameobj := ObjectGeneric{
 			Object: Object{
