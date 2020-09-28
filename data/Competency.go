@@ -23,6 +23,26 @@ const (
 	//
 	PugilismCompetency
 	PushDaggersCompetency
+	// Ranged styles
+	DrawnCompetency  // bows
+	ThrownCompetency // throwing weapons
+	AimedCompetency  // crossbows
+	// Arcane/Spirit combat styles
+	RayCompetency
+	ConeCompetency
+	ExplosionCompetency
+	ChannelCompetency
+	// Arcane types
+	KineticCompetency
+	TemperatureCompetency
+	MaterializeCompetency
+	// Spirit types
+	HealCompetency
+	HarmCompetency
+	BlessCompetency
+	CurseCompetency
+	ProtectCompetency
+	WeakenCompetency
 )
 
 var StringToCompetencyMap = map[string]CompetencyType{
@@ -41,6 +61,26 @@ var StringToCompetencyMap = map[string]CompetencyType{
 	//
 	"Pugilism":     PugilismCompetency,
 	"Push Daggers": PushDaggersCompetency,
+	//
+	"Drawn":  DrawnCompetency,
+	"Thrown": ThrownCompetency,
+	"Aimed":  AimedCompetency,
+	//
+	"Ray":       RayCompetency,
+	"Cone":      ConeCompetency,
+	"Explosion": ExplosionCompetency,
+	"Channel":   ChannelCompetency,
+	//
+	"Kinetic":     KineticCompetency,
+	"Temperature": TemperatureCompetency,
+	"Materialize": MaterializeCompetency,
+	//
+	"Heal":    HealCompetency,
+	"Harm":    HarmCompetency,
+	"Bless":   BlessCompetency,
+	"Curse":   CurseCompetency,
+	"Protect": ProtectCompetency,
+	"Weaken":  WeakenCompetency,
 }
 
 var CompetencyToStringMap = map[CompetencyType]string{
@@ -58,8 +98,28 @@ var CompetencyToStringMap = map[CompetencyType]string{
 	DualHandedCompetency: "Dual Handed",
 	ShieldCompetency:     "Shield",
 	//
-	PugilismCompetency:    "PugilismCompetency",
+	PugilismCompetency:    "Pugilism",
 	PushDaggersCompetency: "Push Daggers",
+	//
+	DrawnCompetency:  "Drawn",
+	ThrownCompetency: "Thrown",
+	AimedCompetency:  "Aimed",
+	//
+	RayCompetency:       "Ray",
+	ConeCompetency:      "Cone",
+	ExplosionCompetency: "Explosion",
+	ChannelCompetency:   "Channel",
+	//
+	KineticCompetency:     "Kinetic",
+	TemperatureCompetency: "Temperature",
+	MaterializeCompetency: "Materialize",
+	//
+	HealCompetency:    "Heal",
+	HarmCompetency:    "Harm",
+	BlessCompetency:   "Bless",
+	CurseCompetency:   "Curse",
+	ProtectCompetency: "Protect",
+	WeakenCompetency:  "Weaken",
 }
 
 // UnmarshalYAML unmarshals an ArchetypeType from a string.
