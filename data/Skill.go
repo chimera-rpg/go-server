@@ -8,18 +8,27 @@ const (
 	NoSkill     SkillType = 0
 	MeleeCombat           = 1 << iota
 	HandToHand
+	RangedCombat
+	SpiritSkill
+	ArcaneSkill
 )
 
 var StringToSkillTypeMap = map[string]SkillType{
-	"No Skill":     NoSkill,
-	"Melee Combat": MeleeCombat,
-	"Hand-to-Hand": HandToHand,
+	"No Skill":      NoSkill,
+	"Melee Combat":  MeleeCombat,
+	"Hand-to-Hand":  HandToHand,
+	"Ranged Combat": RangedCombat,
+	"Spirit":        SpiritSkill,
+	"Arcane":        ArcaneSkill,
 }
 
 var SkillTypeToStringMap = map[SkillType]string{
-	NoSkill:     "No Skill",
-	MeleeCombat: "Melee Combat",
-	HandToHand:  "Hand-to-Hand",
+	NoSkill:      "No Skill",
+	MeleeCombat:  "Melee Combat",
+	HandToHand:   "Hand-to-Hand",
+	RangedCombat: "Ranged Combat",
+	SpiritSkill:  "Spirit",
+	ArcaneSkill:  "Arcane",
 }
 
 // UnmarshalYAML unmarshals an SkillType from a string.
