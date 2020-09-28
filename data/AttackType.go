@@ -87,6 +87,17 @@ func (a AttackTypes) MarshalYAML() (interface{}, error) {
 	return r, nil
 }
 
+// Add adds missing attack types from another AttackTypes objects and combines any existing values.
+func (a AttackTypes) Add(o AttackTypes) {
+	for k, v := range o {
+		if _, exists := a[k]; !exists {
+			a[k] = v
+		} else {
+			a[k] += v
+		}
+	}
+}
+
 /*
 Impact
 Pierce
