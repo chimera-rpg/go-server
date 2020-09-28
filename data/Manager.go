@@ -622,6 +622,7 @@ func (m *Manager) GetString(name string) StringID {
 	return m.Strings.Acquire(name)
 }
 
+// GetAnimation returns a pointer to an Animation that corresponds to the passed animation ID. Returns nil if none is found.
 func (m *Manager) GetAnimation(animID StringID) (*Animation, error) {
 	if _, ok := m.animations[animID]; ok {
 		return m.animations[animID], nil
@@ -629,6 +630,7 @@ func (m *Manager) GetAnimation(animID StringID) (*Animation, error) {
 	return nil, errors.New("Animation does not exist")
 }
 
+// GetAnimationByName returns a pointer to an Animation that corresponds to the passed animation name. Returns nil if none is found.
 func (m *Manager) GetAnimationByName(name string) (*Animation, error) {
 	return m.GetAnimation(m.Strings.Acquire(name))
 }

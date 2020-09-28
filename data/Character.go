@@ -7,6 +7,7 @@ type Character struct {
 	SaveInfo  SaveInfo  `yaml:"SaveInfo"`
 }
 
+// SaveInfo is the positional information for a saved character.
 type SaveInfo struct {
 	Map string `yaml:"Map"`
 	Y   int    `yaml:"Y"`

@@ -1,7 +1,6 @@
 package data
 
-// Animation represents a collection of data that is used for managing
-// Object animation.
+// AnimationPre represents a collection of data that is used for managing Object animation.
 type AnimationPre struct {
 	//	AnimID StringID
 	Faces map[string][]AnimationFramePre `yaml:"Faces"`
@@ -13,8 +12,7 @@ type AnimationFramePre struct {
 	Time  int    `yaml:"Time"`
 }
 
-// Animation represents a collection of data that is used for managing
-// Object animation.
+// Animation represents a collection of data that is used for managing Object animation.
 type Animation struct {
 	//	AnimID StringID
 	Faces map[StringID][]AnimationFrame

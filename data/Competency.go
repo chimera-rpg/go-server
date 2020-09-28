@@ -2,10 +2,13 @@ package data
 
 import "fmt"
 
+// Competency is the floating value of competency for a competency type.
 type Competency float32
 
+// CompetencyType is a type for a given competency.
 type CompetencyType uint32
 
+// These are the various competency types within chimera.
 const (
 	Incompetency CompetencyType = 0
 	// Weapon styles
@@ -45,6 +48,7 @@ const (
 	WeakenCompetency
 )
 
+// StringToCompetencyMap maps strings to their corresponding CompetencyTypes.
 var StringToCompetencyMap = map[string]CompetencyType{
 	"Incompetency": Incompetency,
 	"Axes":         AxesCompetency,
@@ -83,6 +87,7 @@ var StringToCompetencyMap = map[string]CompetencyType{
 	"Weaken":  WeakenCompetency,
 }
 
+// CompetencyToStringMap maps CompetencyTypes to their corresponding string.
 var CompetencyToStringMap = map[CompetencyType]string{
 	// Melee
 	Incompetency:       "Incompetency",
