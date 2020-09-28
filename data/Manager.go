@@ -145,20 +145,20 @@ func (m *Manager) CompileArchetype(archetype *Archetype) error {
 
 	// Ensure deps are all compiled and inherit linearly.
 	for _, dep := range archetype.ArchIDs {
-		if depArch, err := m.GetArchetype(dep.ID); err != nil {
+		depArch, err := m.GetArchetype(dep.ID)
+		if err != nil {
 			return err
-		} else {
-			if err := m.CompileArchetype(depArch); err != nil {
+		}
+		if err := m.CompileArchetype(depArch); err != nil {
+			return err
+		}
+		if dep.Type == ArchMerge {
+			if err := archetype.Merge(depArch); err != nil {
 				return err
 			}
-			if dep.Type == ArchMerge {
-				if err := archetype.Merge(depArch); err != nil {
-					return err
-				}
-			} else if dep.Type == ArchAdd {
-				if err := archetype.Add(depArch); err != nil {
-					return err
-				}
+		} else if dep.Type == ArchAdd {
+			if err := archetype.Add(depArch); err != nil {
+				return err
 			}
 		}
 	}
