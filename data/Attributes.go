@@ -18,3 +18,13 @@ type Attributes struct {
 	// Reaction represents how well one can dodge. Used for dodging attacks.
 	Reaction Attribute `yaml:"Reaction,omitempty"`
 }
+
+// Add adds together all attributes from another Attributes object.
+func (a *Attributes) Add(o Attributes) {
+	a.Might += o.Might
+	a.Prowess += o.Prowess
+	a.Focus += o.Focus
+	a.Sense += o.Sense
+	a.Haste += o.Haste
+	a.Reaction += o.Reaction
+}
