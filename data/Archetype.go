@@ -2,15 +2,28 @@ package data
 
 import (
 	cdata "github.com/chimera-rpg/go-common/data"
+	"github.com/imdario/mergo"
 )
 
 // TODO: Should most Archetype properties be either StringExpression or NumberExpression? These would be string and int based types that can pull properties from their owning Archetype during Object creation. They likely should be a postfix-structured stack that can be passed some sort of context stack that contains the target Object and/or Archetype. We could also just have them as strings until they are instantized into an Object.
+
+type MergeArchType uint8
+
+type MergeArch struct {
+	ID   StringID
+	Type MergeArchType
+}
+
+const (
+	ArchMerge MergeArchType = iota
+	ArchAdd
+)
 
 // Archetype represents a collection of data that should be used for the
 // creation of Objects.
 type Archetype struct {
 	ArchID  StringID         `yaml:"-"` // Archetype ID used for generating objects and inheriting from.
-	ArchIDs []StringID       `yaml:"-"`
+	ArchIDs []MergeArch      `yaml:"-"`
 	Archs   []string         `yaml:"Archs,omitempty"` // Archetypes to inherit from.
 	Arch    string           `yaml:"Arch,omitempty"`  // Archetype to inherit from. During post-parsing this is used to acquire and set the ArchID for inventory archetypes.
 	SelfID  StringID         `yaml:"-"`               // The Archetype's own SelfID
@@ -106,4 +119,97 @@ func (arch *Archetype) IsCompiled() bool {
 
 func (arch *Archetype) SetCompiled(b bool) {
 	arch.isCompiled = b
+}
+
+// Add adds properties from another archetype to itself, adding missing values and combining numerical values where able.
+func (arch *Archetype) Add(other *Archetype) error {
+	arch.Matter |= other.Matter
+	arch.Blocking |= other.Blocking
+	arch.Worth.Add(other.Worth)
+	arch.Value.Add(other.Value)
+	arch.Count.Add(other.Count)
+	arch.Weight.Add(other.Weight)
+	for _, o := range other.Inventory {
+		arch.Inventory = append(arch.Inventory, o)
+	}
+	for _, o := range other.Skills {
+		exists := false
+		for _, s := range arch.Skills {
+			if o.Skill == s.Skill {
+				exists = true
+			}
+		}
+		if !exists {
+			arch.Skills = append(arch.Skills, o)
+		}
+	}
+	for _, o := range other.SkillTypes {
+		exists := false
+		for _, s := range arch.SkillTypes {
+			if o == s {
+				exists = true
+				break
+			}
+		}
+		if !exists {
+			arch.SkillTypes = append(arch.SkillTypes, o)
+		}
+	}
+	for _, o := range other.CompetencyTypes {
+		exists := false
+		for _, s := range arch.CompetencyTypes {
+			if o == s {
+				exists = true
+				break
+			}
+		}
+		if !exists {
+			arch.CompetencyTypes = append(arch.CompetencyTypes, o)
+		}
+	}
+	for k, v := range other.Competencies {
+		if _, exists := arch.Competencies[k]; !exists {
+			arch.Competencies[k] = v
+		} else {
+			arch.Competencies[k] += other.Competencies[k]
+		}
+	}
+	for k, v := range other.TrainsCompetencyTypes {
+		if types, exists := arch.TrainsCompetencyTypes[k]; !exists {
+			arch.TrainsCompetencyTypes[k] = append([]CompetencyType(nil), v...)
+		} else {
+			for _, o := range v {
+				exists = false
+				for _, tv := range types {
+					if o == tv {
+						exists = true
+						break
+					}
+				}
+				if !exists {
+					arch.TrainsCompetencyTypes[k] = append(arch.TrainsCompetencyTypes[k], o)
+				}
+			}
+		}
+	}
+
+	arch.Resistances.Add(other.Resistances)
+	arch.AttackTypes.Add(other.AttackTypes)
+	arch.Level += other.Level
+	arch.Advancement += other.Advancement
+	arch.Efficiency += other.Efficiency
+
+	arch.Attributes.Physical.Add(other.Attributes.Physical)
+	arch.Attributes.Arcane.Add(other.Attributes.Arcane)
+	arch.Attributes.Spirit.Add(other.Attributes.Spirit)
+
+	return nil
+}
+
+// Merge will attempt to merge any missing properties from another archetype to this one.
+func (arch *Archetype) Merge(other *Archetype) error {
+	if err := mergo.Merge(arch, other, mergo.WithTransformers(StringExpressionTransformer{})); err != nil {
+		return err
+	}
+	return nil
 }

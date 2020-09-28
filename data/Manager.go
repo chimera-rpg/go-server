@@ -16,7 +16,6 @@ import (
 
 	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-server/config"
-	"github.com/imdario/mergo"
 )
 
 // Manager is the controlling type for accessing archetypes, maps, player
@@ -94,11 +93,23 @@ func (m *Manager) ProcessArchetype(archetype *Archetype) error {
 
 	// Convert Archs into ArchIDs
 	for _, archname := range archetype.Archs {
+		isAdd := false
+		if archname[0] == '+' {
+			archname = archname[1:]
+			isAdd = true
+		}
 		targetID := m.Strings.Acquire(archname)
 		if _, err := m.GetArchetype(targetID); err != nil {
 			return err
 		}
-		archetype.ArchIDs = append(archetype.ArchIDs, targetID)
+		mergeArch := MergeArch{
+			ID:   targetID,
+			Type: ArchMerge,
+		}
+		if isAdd {
+			mergeArch.Type = ArchAdd
+		}
+		archetype.ArchIDs = append(archetype.ArchIDs, mergeArch)
 	}
 	archetype.Archs = nil
 
@@ -133,15 +144,21 @@ func (m *Manager) CompileArchetype(archetype *Archetype) error {
 	}
 
 	// Ensure deps are all compiled and inherit linearly.
-	for _, depID := range archetype.ArchIDs {
-		if depArch, err := m.GetArchetype(depID); err != nil {
+	for _, dep := range archetype.ArchIDs {
+		if depArch, err := m.GetArchetype(dep.ID); err != nil {
 			return err
 		} else {
 			if err := m.CompileArchetype(depArch); err != nil {
 				return err
 			}
-			if err := mergo.Merge(archetype, depArch, mergo.WithTransformers(StringExpressionTransformer{})); err != nil {
-				return err
+			if dep.Type == ArchMerge {
+				if err := archetype.Merge(depArch); err != nil {
+					return err
+				}
+			} else if dep.Type == ArchAdd {
+				if err := archetype.Add(depArch); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -177,14 +194,14 @@ func (m *Manager) resolveArchetype(archetype *Archetype) error {
 
 func (m *Manager) dependencyResolveArchetype(archetype *Archetype, resolved, unresolved map[StringID]struct{}) error {
 	unresolved[archetype.SelfID] = struct{}{}
-	for _, depID := range archetype.ArchIDs {
-		depArch, err := m.GetArchetype(depID)
+	for _, dep := range archetype.ArchIDs {
+		depArch, err := m.GetArchetype(dep.ID)
 		if err != nil {
 			return err
 		}
-		if _, ok := resolved[depID]; !ok {
-			if _, ok := unresolved[depID]; ok {
-				return errors.New(fmt.Sprintf("circular dependency between %s and %s", m.Strings.Lookup(archetype.SelfID), m.Strings.Lookup(depID)))
+		if _, ok := resolved[dep.ID]; !ok {
+			if _, ok := unresolved[dep.ID]; ok {
+				return errors.New(fmt.Sprintf("circular dependency between %s and %s", m.Strings.Lookup(archetype.SelfID), m.Strings.Lookup(dep.ID)))
 			}
 			if err := m.dependencyResolveArchetype(depArch, resolved, unresolved); err != nil {
 				return err
