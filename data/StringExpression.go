@@ -81,3 +81,8 @@ func (exp *StringExpression) GetString() (string, error) {
 func BuildStringExpression(in string) (s StringExpression) {
 	return s
 }
+
+// Add adds another StringExpression's src to this one's.
+func (exp *StringExpression) Add(other StringExpression) {
+	exp.src = exp.src + other.src
+}
