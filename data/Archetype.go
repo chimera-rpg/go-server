@@ -7,15 +7,19 @@ import (
 
 // TODO: Should most Archetype properties be either StringExpression or NumberExpression? These would be string and int based types that can pull properties from their owning Archetype during Object creation. They likely should be a postfix-structured stack that can be passed some sort of context stack that contains the target Object and/or Archetype. We could also just have them as strings until they are instantized into an Object.
 
+// MergeArchType is unique type for identifying how an archetype should be merged/added with another.
 type MergeArchType uint8
 
+// MergeArch provides an archetype ID and merge type pairing.
 type MergeArch struct {
 	ID   StringID
 	Type MergeArchType
 }
 
 const (
+	// ArchMerge determines that two archetypes should have their properties merged.
 	ArchMerge MergeArchType = iota
+	// ArchAdd determines that two archetypes should have their properties added together where applicable.
 	ArchAdd
 )
 
@@ -113,10 +117,12 @@ func (arch *Archetype) setProperty(key string, value interface{}) {
 	}
 }
 
+// IsCompiled returns if the archetype is compiled.
 func (arch *Archetype) IsCompiled() bool {
 	return arch.isCompiled
 }
 
+// SetCompiled sets the archetype to the given compiled state.
 func (arch *Archetype) SetCompiled(b bool) {
 	arch.isCompiled = b
 }
