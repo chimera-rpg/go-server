@@ -10,6 +10,7 @@ const (
 	Incompetency CompetencyType = 0
 	// Weapon styles
 	AxesCompetency = 1 << iota
+	HammersCompetency
 	DaggersCompetency
 	SwordsCompetency
 	FlailsCompetency
@@ -27,6 +28,7 @@ const (
 var StringToCompetencyMap = map[string]CompetencyType{
 	"Incompetency": Incompetency,
 	"Axes":         AxesCompetency,
+	"Hammers":      HammersCompetency,
 	"Daggers":      DaggersCompetency,
 	"Swords":       SwordsCompetency,
 	"Flails":       FlailsCompetency,
@@ -45,6 +47,7 @@ var CompetencyToStringMap = map[CompetencyType]string{
 	// Melee
 	Incompetency:       "Incompetency",
 	AxesCompetency:     "Axes",
+	HammersCompetency:  "Hammers",
 	DaggersCompetency:  "Daggers",
 	SwordsCompetency:   "Swords",
 	FlailsCompetency:   "Flails",
