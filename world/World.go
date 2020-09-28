@@ -1,11 +1,13 @@
 package world
 
 import (
-	log "github.com/sirupsen/logrus"
 	"sync"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"errors"
+
 	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-server/data"
 )
@@ -25,19 +27,19 @@ type World struct {
 
 // Setup loads our initial starting world location and starts the
 // map cleanup goroutine.
-func (world *World) Setup(data *data.Manager) error {
-	world.MessageChannel = make(chan MessageI)
-	world.data = data
-	world.players = make([]*OwnerPlayer, 0)
-	world.objects = make(map[ID]ObjectI)
-	world.LoadMap("Chamber of Origins")
+func (w *World) Setup(data *data.Manager) error {
+	w.MessageChannel = make(chan MessageI)
+	w.data = data
+	w.players = make([]*OwnerPlayer, 0)
+	w.objects = make(map[ID]ObjectI)
+	w.LoadMap("Chamber of Origins")
 	// FIXME: Create a temporary dummy map
 	// Create a timer for doing cleanup.
 	cleanupTicker := time.NewTicker(time.Second * 60)
 	go func() {
 		for {
 			<-cleanupTicker.C
-			world.cleanupMaps()
+			w.cleanupMaps()
 		}
 	}()
 	return nil
@@ -45,61 +47,61 @@ func (world *World) Setup(data *data.Manager) error {
 
 // cleanupMaps iterates through our active and inactive maps, removing
 // them as necessary.
-func (world *World) cleanupMaps() {
+func (w *World) cleanupMaps() {
 	log.Print("Ticking map cleanup")
 	// Here we iterate over our activeMaps and move any maps that should
 	// enter a sleep to the inactiveMaps slices.
 	inactivated := 0
-	world.activeMapsMutex.Lock()
-	for i := range world.activeMaps {
+	w.activeMapsMutex.Lock()
+	for i := range w.activeMaps {
 		j := i - inactivated
-		if world.activeMaps[j].playerCount == 0 && world.activeMaps[j].shouldSleep == true {
-			world.inactiveMaps = append(world.inactiveMaps, world.activeMaps[j])
-			world.activeMaps = world.activeMaps[:j+copy(world.activeMaps[j:], world.activeMaps[j+1:])]
+		if w.activeMaps[j].playerCount == 0 && w.activeMaps[j].shouldSleep == true {
+			w.inactiveMaps = append(w.inactiveMaps, w.activeMaps[j])
+			w.activeMaps = w.activeMaps[:j+copy(w.activeMaps[j:], w.activeMaps[j+1:])]
 			inactivated++
 		}
 	}
-	world.activeMapsMutex.Unlock()
+	w.activeMapsMutex.Unlock()
 	// Now we iterate over our inactiveMaps and remove any that have expired.
 	expired := 0
-	world.inactiveMapsMutex.Lock()
-	for i := range world.inactiveMaps {
+	w.inactiveMapsMutex.Lock()
+	for i := range w.inactiveMaps {
 		j := i - expired
-		if world.inactiveMaps[j].shouldExpire == true {
-			world.inactiveMaps[j].Cleanup(world)
-			world.inactiveMaps = world.inactiveMaps[:j+copy(world.inactiveMaps[j:], world.inactiveMaps[j+1:])]
+		if w.inactiveMaps[j].shouldExpire == true {
+			w.inactiveMaps[j].Cleanup(w)
+			w.inactiveMaps = w.inactiveMaps[:j+copy(w.inactiveMaps[j:], w.inactiveMaps[j+1:])]
 			expired++
 		}
 	}
-	world.inactiveMapsMutex.Unlock()
+	w.inactiveMapsMutex.Unlock()
 }
 
 // Update processes updates for each player then updates each map as necessary.
-func (world *World) Update(delta time.Duration) error {
+func (w *World) Update(delta time.Duration) error {
 	// Process world event channel.
 	select {
-	case msg := <-world.MessageChannel:
+	case msg := <-w.MessageChannel:
 		switch t := msg.(type) {
 		case MessageAddClient:
-			if err := world.addPlayerByConnection(t.Client, t.Character); err != nil {
+			if err := w.addPlayerByConnection(t.Client, t.Character); err != nil {
 				log.Println("TODO: Kick player as we errored while adding them.")
 			}
 		case MessageRemoveClient:
-			world.removePlayerByConnection(t.Client)
+			w.removePlayerByConnection(t.Client)
 		default:
 		}
 	default:
 	}
 	// Process our players.
-	for _, player := range world.players {
+	for _, player := range w.players {
 		player.Update(delta)
 	}
 	// Update all our active maps.
-	world.activeMapsMutex.Lock()
-	for _, activeMap := range world.activeMaps {
-		activeMap.Update(world, delta)
+	w.activeMapsMutex.Lock()
+	for _, activeMap := range w.activeMaps {
+		activeMap.Update(w, delta)
 	}
-	world.activeMapsMutex.Unlock()
+	w.activeMapsMutex.Unlock()
 	return nil
 }
 
@@ -109,15 +111,15 @@ func New() *World {
 }
 
 // LoadMap loads and returns a Map identified by the passed string.
-func (world *World) LoadMap(name string) (*Map, error) {
-	mapIndex, isActive := world.isMapLoaded(name)
+func (w *World) LoadMap(name string) (*Map, error) {
+	mapIndex, isActive := w.isMapLoaded(name)
 	if mapIndex >= 0 {
 		if !isActive {
-			return world.activateMap(mapIndex), nil
+			return w.activateMap(mapIndex), nil
 		}
-		return world.activeMaps[mapIndex], nil
+		return w.activeMaps[mapIndex], nil
 	}
-	gmap, err := NewMap(world, name)
+	gmap, err := NewMap(w, name)
 	if err != nil {
 		return nil, err
 	}
@@ -125,112 +127,110 @@ func (world *World) LoadMap(name string) (*Map, error) {
 		"name": name,
 	}).Println("Loaded map")
 
-	world.addMap(gmap)
+	w.addMap(gmap)
 
 	return gmap, nil
 }
 
 // GetMap returns the a loaded map. If the map has not been loaded, this returns nil.
-func (world *World) GetMap(name string) *Map {
-	mapIndex, isActive := world.isMapLoaded(name)
+func (w *World) GetMap(name string) *Map {
+	mapIndex, isActive := w.isMapLoaded(name)
 	if mapIndex == -1 {
 		return nil
 	}
 	if isActive {
-		return world.activeMaps[mapIndex]
-	} else {
-		return world.inactiveMaps[mapIndex]
+		return w.activeMaps[mapIndex]
 	}
-	return nil
+	return w.inactiveMaps[mapIndex]
 }
 
 // addMap adds the provided Map to the active maps slice.
-func (world *World) addMap(gm *Map) {
-	world.activeMapsMutex.Lock()
-	defer world.activeMapsMutex.Unlock()
-	world.activeMaps = append(world.activeMaps, gm)
+func (w *World) addMap(gm *Map) {
+	w.activeMapsMutex.Lock()
+	defer w.activeMapsMutex.Unlock()
+	w.activeMaps = append(w.activeMaps, gm)
 	log.WithFields(log.Fields{
 		"name": gm.name,
 	}).Println("Added map to active maps")
 }
 
 // activateMap activates and returns an inactive map given by its index.
-func (world *World) activateMap(inactiveIndex int) *Map {
-	world.inactiveMapsMutex.Lock()
-	world.activeMapsMutex.Lock()
-	defer world.activeMapsMutex.Unlock()
-	defer world.inactiveMapsMutex.Unlock()
+func (w *World) activateMap(inactiveIndex int) *Map {
+	w.inactiveMapsMutex.Lock()
+	w.activeMapsMutex.Lock()
+	defer w.activeMapsMutex.Unlock()
+	defer w.inactiveMapsMutex.Unlock()
 
-	if inactiveIndex > len(world.inactiveMaps) {
+	if inactiveIndex > len(w.inactiveMaps) {
 		log.WithFields(log.Fields{
 			"index": inactiveIndex,
 		}).Warnln("inactive map out of bounds")
 		return nil
 	}
-	world.activeMaps = append(world.activeMaps, world.inactiveMaps[inactiveIndex])
-	world.inactiveMaps = append(world.inactiveMaps[:inactiveIndex], world.inactiveMaps[inactiveIndex+1:]...)
-	return world.activeMaps[len(world.activeMaps)-1]
+	w.activeMaps = append(w.activeMaps, w.inactiveMaps[inactiveIndex])
+	w.inactiveMaps = append(w.inactiveMaps[:inactiveIndex], w.inactiveMaps[inactiveIndex+1:]...)
+	return w.activeMaps[len(w.activeMaps)-1]
 }
 
 // inactivateMap moves the given active map by index to the inactive map slice.
-func (world *World) inactivateMap(activeIndex int) *Map {
-	world.activeMapsMutex.Lock()
-	world.inactiveMapsMutex.Lock()
-	defer world.inactiveMapsMutex.Unlock()
-	defer world.activeMapsMutex.Unlock()
+func (w *World) inactivateMap(activeIndex int) *Map {
+	w.activeMapsMutex.Lock()
+	w.inactiveMapsMutex.Lock()
+	defer w.inactiveMapsMutex.Unlock()
+	defer w.activeMapsMutex.Unlock()
 
-	if activeIndex > len(world.activeMaps) {
+	if activeIndex > len(w.activeMaps) {
 		log.WithFields(log.Fields{
 			"index": activeIndex,
 		}).Warnln("active map out of bounds")
 		return nil
 	}
-	world.inactiveMaps = append(world.inactiveMaps, world.activeMaps[activeIndex])
-	world.activeMaps = append(world.activeMaps[:activeIndex], world.activeMaps[activeIndex+1:]...)
-	return world.inactiveMaps[len(world.inactiveMaps)-1]
+	w.inactiveMaps = append(w.inactiveMaps, w.activeMaps[activeIndex])
+	w.activeMaps = append(w.activeMaps[:activeIndex], w.activeMaps[activeIndex+1:]...)
+	return w.inactiveMaps[len(w.inactiveMaps)-1]
 }
 
 // isMapLoaded returns the index and active status of a given map.
-func (world *World) isMapLoaded(name string) (mapIndex int, isActive bool) {
-	world.activeMapsMutex.Lock()
-	defer world.activeMapsMutex.Unlock()
-	for i := range world.activeMaps {
-		if world.activeMaps[i].mapID == world.data.Strings.Acquire(name) {
+func (w *World) isMapLoaded(name string) (mapIndex int, isActive bool) {
+	w.activeMapsMutex.Lock()
+	defer w.activeMapsMutex.Unlock()
+	for i := range w.activeMaps {
+		if w.activeMaps[i].mapID == w.data.Strings.Acquire(name) {
 			return i, true
 		}
 	}
-	world.inactiveMapsMutex.Lock()
-	defer world.inactiveMapsMutex.Unlock()
-	for i := range world.inactiveMaps {
-		if world.inactiveMaps[i].mapID == world.data.Strings.Acquire(name) {
+	w.inactiveMapsMutex.Lock()
+	defer w.inactiveMapsMutex.Unlock()
+	for i := range w.inactiveMaps {
+		if w.inactiveMaps[i].mapID == w.data.Strings.Acquire(name) {
 			return i, false
 		}
 	}
 	return -1, false
 }
 
-func (world *World) addPlayerByConnection(conn clientConnectionI, character *data.Character) error {
-	if index := world.getExistingPlayerConnectionIndex(conn); index == -1 {
+func (w *World) addPlayerByConnection(conn clientConnectionI, character *data.Character) error {
+	if index := w.getExistingPlayerConnectionIndex(conn); index == -1 {
 		player := NewOwnerPlayer(conn)
 		conn.SetOwner(player)
 		// Process and compile the character's Archetype so it inherits properly.
-		world.data.ProcessArchetype(&character.Archetype)
-		world.data.CompileArchetype(&character.Archetype)
+		w.data.ProcessArchetype(&character.Archetype)
+		w.data.CompileArchetype(&character.Archetype)
 		// Create character object.
 		pc := NewObjectCharacterFromCharacter(character)
-		pc.id = world.objectIDs.acquire()
-		world.objects[pc.id] = pc
+		pc.id = w.objectIDs.acquire()
+		w.objects[pc.id] = pc
 		player.SetTarget(pc)
 		// Add player to the world's record of players.
-		world.players = append(world.players, player)
+		w.players = append(w.players, player)
 		// Add character object to its target map.
-		if gmap, err := world.LoadMap(character.SaveInfo.Map); err == nil {
+		if gmap, err := w.LoadMap(character.SaveInfo.Map); err == nil {
 			gmap.AddOwner(player, character.SaveInfo.Y, character.SaveInfo.X, character.SaveInfo.Z)
 		} else {
 			log.WithFields(log.Fields{
 				"name": character.SaveInfo.Map,
 			}).Warnln("Could not load character's map, falling back to default")
-			if gmap, err := world.LoadMap("Chamber of Origins"); err == nil {
+			if gmap, err := w.LoadMap("Chamber of Origins"); err == nil {
 				gmap.AddOwner(player, 0, 1, 1)
 			} else {
 				return err
@@ -244,21 +244,21 @@ func (world *World) addPlayerByConnection(conn clientConnectionI, character *dat
 	return nil
 }
 
-func (world *World) removePlayerByConnection(conn clientConnectionI) {
-	if index := world.getExistingPlayerConnectionIndex(conn); index >= 0 {
+func (w *World) removePlayerByConnection(conn clientConnectionI) {
+	if index := w.getExistingPlayerConnectionIndex(conn); index >= 0 {
 		// TODO: Save ObjectCharacter to connection's associated Character data.
 		// Remove owner from map -- this also deletes the character object.
-		if playerMap := world.players[index].GetMap(); playerMap != nil {
-			playerMap.RemoveOwner(world.players[index])
-			world.DeleteObject(world.players[index].GetTarget(), true)
+		if playerMap := w.players[index].GetMap(); playerMap != nil {
+			playerMap.RemoveOwner(w.players[index])
+			w.DeleteObject(w.players[index].GetTarget(), true)
 		}
 		// Remove from our slice.
-		world.players = append(world.players[:index], world.players[index+1:]...)
+		w.players = append(w.players[:index], w.players[index+1:]...)
 	}
 }
 
-func (world *World) getExistingPlayerConnectionIndex(conn clientConnectionI) int {
-	for index, player := range world.players {
+func (w *World) getExistingPlayerConnectionIndex(conn clientConnectionI) int {
+	for index, player := range w.players {
 		if conn.GetID() == player.ClientConnection.GetID() {
 			return index
 		}
@@ -313,7 +313,7 @@ func (w *World) CreateObjectFromArch(arch *data.Archetype) (o ObjectI, err error
 // DeleteObject deletes a given object. If shouldFree is true, the associated object ID is freed.
 func (w *World) DeleteObject(o ObjectI, shouldFree bool) (err error) {
 	if o == nil {
-		return errors.New("Attempted to delete a nil object!")
+		return errors.New("attempted to delete a nil object")
 	}
 	if tile := o.GetTile(); tile != nil {
 		if m := tile.GetMap(); m != nil {
@@ -338,7 +338,7 @@ func (w *World) GetPlayers() []*OwnerPlayer {
 	return w.players
 }
 
-// GetPlayerByName returns a player by their owning user name.
+// GetPlayerByUsername returns a player by their owning user name.
 func (w *World) GetPlayerByUsername(name string) *OwnerPlayer {
 	for _, p := range w.players {
 		if p.ClientConnection.GetUser().Username == name {

@@ -204,12 +204,12 @@ func (gmap *Map) GetTile(y, x, z int) *Tile {
 // PlaceObject is places an object at the given y, x, and z
 func (gmap *Map) PlaceObject(o ObjectI, y int, x int, z int) (err error) {
 	if o == nil {
-		return errors.New("Attempted to place a nil object!")
+		return errors.New("attempted to place a nil object")
 	}
 
 	tile := gmap.GetTile(y, x, z)
 	if tile == nil {
-		return errors.New("Attempted to place object out of bounds!")
+		return errors.New("attempted to place object out of bounds")
 	}
 	tile.insertObject(o, -1)
 
@@ -231,7 +231,7 @@ func (gmap *Map) PlaceObject(o ObjectI, y int, x int, z int) (err error) {
 // RemoveObject removes the given object from the map.
 func (gmap *Map) RemoveObject(o ObjectI) (err error) {
 	if o == nil {
-		return errors.New("Attempted to remove a nil object!")
+		return errors.New("attempted to remove a nil object")
 	}
 
 	tile := o.GetTile()
@@ -257,7 +257,7 @@ func (gmap *Map) RemoveObject(o ObjectI) (err error) {
 // MoveObject attempts to move the given object from its current position by a relative coordinate adjustment.
 func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, error) {
 	if o == nil {
-		return false, errors.New("Attempted to move a nil object!")
+		return false, errors.New("attempted to move a nil object")
 	}
 
 	if !force {
@@ -275,7 +275,7 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 
 	if len(targetTiles) == 0 {
 		// Bizarre...
-		return false, errors.New("Somehow no tiles could be targeted")
+		return false, errors.New("somehow no tiles could be targeted")
 	}
 
 	doTilesBlock := func(targetTiles []*Tile) bool {
@@ -325,13 +325,13 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 			if len(characterObjects) > 0 {
 				log.Println("TODO: Handle character interaction")
 				return false, nil
-			} else { // Otherwise see if we can step down.
-				_, targetUpTiles, err := gmap.GetObjectPartTiles(o, yDir+1, xDir, zDir)
-				if !doTilesBlock(targetUpTiles) && err == nil {
-					targetTiles = targetUpTiles
-				} else {
-					return false, nil
-				}
+			}
+			// Otherwise see if we can step down.
+			_, targetUpTiles, err := gmap.GetObjectPartTiles(o, yDir+1, xDir, zDir)
+			if !doTilesBlock(targetUpTiles) && err == nil {
+				targetTiles = targetUpTiles
+			} else {
+				return false, nil
 			}
 		} else {
 			// Check if we have to step down.
@@ -365,7 +365,7 @@ func (gmap *Map) GetObjectPartTiles(o ObjectI, yDir, xDir, zDir int) (currentTil
 	// Get object's current root tile.
 	tile := o.GetTile()
 	if tile == nil {
-		err = errors.New("Attempted to place object out of bounds!")
+		err = errors.New("attempted to place object out of bounds")
 		return
 	}
 	// Get our origin.
@@ -396,7 +396,7 @@ func (gmap *Map) GetObjectPartTiles(o ObjectI, yDir, xDir, zDir int) (currentTil
 						targetTiles = append(targetTiles, tT)
 					} else {
 						// out of bounds.
-						err = errors.New("Out of bounds!")
+						err = errors.New("out of bounds")
 						return
 					}
 				}

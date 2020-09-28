@@ -51,12 +51,11 @@ func (s *StatusFalling) update(delta time.Duration) {
 				// TODO: Let target know how far they fell so they can account for damage. This should likely only report if greater than 2 units or so.
 				s.shouldRemove = true
 				return
-			} else {
-				if _, err := m.MoveObject(s.target, -1, 0, 0, true); err != nil {
-					// Remove status if we had an error while moving.
-					s.shouldRemove = true
-					return
-				}
+			}
+			if _, err := m.MoveObject(s.target, -1, 0, 0, true); err != nil {
+				// Remove status if we had an error while moving.
+				s.shouldRemove = true
+				return
 			}
 		}
 	}
