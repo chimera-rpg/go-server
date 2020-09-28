@@ -1,10 +1,12 @@
-// Do you got the 'tude, man?
 package data
+
+// Do you got the 'tude, man?
 
 import (
 	"fmt"
 )
 
+// Attitude represents the variable levels of hostility or friendliness.
 type Attitude uint8
 
 // These attitudes correspond to the given levels of hostility or friendliness of a character.
@@ -19,6 +21,7 @@ const (
 	LoathingAttitude
 )
 
+// StringToAttitudeMap is a map of strings to Attitude types.
 var StringToAttitudeMap = map[string]Attitude{
 	"None":       NoAttitude,
 	"Slavish":    SlavishAttitude,
@@ -30,6 +33,7 @@ var StringToAttitudeMap = map[string]Attitude{
 	"Loathing":   LoathingAttitude,
 }
 
+// AttitudeToStringMap is a map of Attitude types to strings.
 var AttitudeToStringMap = map[Attitude]string{
 	NoAttitude:         "None",
 	SlavishAttitude:    "Slavish",
