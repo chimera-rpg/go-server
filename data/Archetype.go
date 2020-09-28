@@ -35,6 +35,8 @@ type Archetype struct {
 	Properties map[string]Variable `yaml:"Properties,omitempty"`
 	//
 	Inventory []Archetype `yaml:"Inventory,omitempty"`
+	// Skill is the skill name that a skill archetype will target.
+	Skill SkillType `yaml:"Skill,omitempty"`
 	// Skills are the skills contained by a character.
 	Skills []Archetype `yaml:"Skills,omitempty"`
 	// SkillTypes correspond to the skills used by weapons and similar.
@@ -53,6 +55,8 @@ type Archetype struct {
 	Level int `yaml:"Level,omitempty"`
 	// Advancement represents the advancement of a skill or a character into the next level.
 	Advancement float32 `yaml:"Advancement,omitempty"`
+	// Efficiency represents the current efficiency of a skill.
+	Efficiency float32 `yaml:"Efficiency,omitempty"`
 	//
 	Attributes struct {
 		Physical Attributes `yaml:"Physical,omitempty"`
