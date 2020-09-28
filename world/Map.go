@@ -7,6 +7,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/chimera-rpg/go-common/network"
 	"github.com/chimera-rpg/go-server/data"
 )
 
@@ -159,6 +160,14 @@ func (gmap *Map) AddOwner(owner OwnerI, y, x, z int) error {
 
 	// Place object in our map.
 	gmap.PlaceObject(owner.GetTarget(), y, x, z)
+
+	if po, ok := owner.(*OwnerPlayer); ok {
+		// Let client know that this object should be its view target.
+		po.ClientConnection.Send(network.CommandObject{
+			ObjectID: owner.GetTarget().GetID(),
+			Payload:  network.CommandObjectPayloadViewTarget{},
+		})
+	}
 
 	// Add to our owners.
 	gmap.owners = append(gmap.owners, owner)
