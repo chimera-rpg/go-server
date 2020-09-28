@@ -101,11 +101,13 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 	o.Object.update(delta)
 }
 
+// AddStatus adds the given status to the character.
 func (o *ObjectCharacter) AddStatus(s StatusI) {
 	s.SetTarget(o)
 	o.statuses = append(o.statuses, s)
 }
 
+// ResolveEvent handles events that pertain to the character.
 func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 	// TODO: Send event messages to the owner.
 	switch e := e.(type) {
@@ -119,6 +121,7 @@ func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 	return false
 }
 
+// RollAttack rolls an attack with the given weapon.
 func (o *ObjectCharacter) RollAttack(w *ObjectWeapon) (a Attacks) {
 	//
 	return a
@@ -128,6 +131,8 @@ func (o *ObjectCharacter) getType() cdata.ArchetypeType {
 	return cdata.ArchetypePC
 }
 
+// EquipObject attempts to equip a given object. The object must be in the character's inventory and must be equippable (weapon, shield, or armor).
+// This removes the item from the inventory and adds it to the equipment if the equipping was successful.
 func (o *ObjectCharacter) EquipObject(ob ObjectI) error {
 	// Ensure we are only equipping from our inventory.
 	index := -1
@@ -159,14 +164,17 @@ func (o *ObjectCharacter) EquipObject(ob ObjectI) error {
 	return err
 }
 
+// EquipArmor equips armor.
 func (o *ObjectCharacter) EquipArmor(armor *ObjectArmor) error {
 	return nil
 }
 
+// EquipShield equips a shield.
 func (o *ObjectCharacter) EquipShield(armor *ObjectShield) error {
 	return nil
 }
 
+// EquipWeapon equips a weapon.
 func (o *ObjectCharacter) EquipWeapon(armor *ObjectWeapon) error {
 	return nil
 }

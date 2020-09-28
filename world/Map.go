@@ -86,7 +86,7 @@ func (gmap *Map) String() string {
 	return fmt.Sprintf("{name: \"%s\", height: %d, width: %d, depth: %d, owners: %d, objects: %v}", gmap.name, gmap.height, gmap.width, gmap.depth, len(gmap.owners), oIDs)
 }
 
-// sizeMaps resizes the map according to the given height, width, and depth.
+// sizeMap resizes the map according to the given height, width, and depth.
 func (gmap *Map) sizeMap(height int, width int, depth int) error {
 	gmap.tiles = make([][][]Tile, height)
 	for y := range gmap.tiles {

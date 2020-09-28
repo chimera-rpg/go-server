@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+// StatusFalling is the status for when an object is falling.
 type StatusFalling struct {
 	Status
 	aggregate time.Duration

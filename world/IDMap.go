@@ -1,7 +1,9 @@
 package world
 
+// ID is a simple identifier.
 type ID = uint32
 
+// IDMap is a structure for managing a pool of IDs that can be used and freed.
 type IDMap struct {
 	id      ID
 	freeIDs []ID

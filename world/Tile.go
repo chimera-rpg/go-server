@@ -104,6 +104,7 @@ func (tile *Tile) GetMap() *Map {
 	return tile.gameMap
 }
 
+// CheckObjects calls the given function on all contained objects and returns true as soon as the function returns true.
 func (tile *Tile) CheckObjects(f func(ObjectI) bool) bool {
 	for _, o := range tile.objects {
 		if f(o) {

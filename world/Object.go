@@ -24,6 +24,7 @@ type Object struct {
 	blocking  cdata.MatterType
 }
 
+// NewObject returns a new Object that references the given Archetype.
 func NewObject(a *data.Archetype) Object {
 	o := Object{
 		blocking:  a.Blocking,
@@ -64,7 +65,7 @@ func (o *Object) GetTile() *Tile {
 	return o.tile
 }
 
-// SetMoved
+// SetMoved sets the object's hasMoved to the given value.
 func (o *Object) SetMoved(b bool) {
 	o.hasMoved = b
 }
@@ -90,11 +91,13 @@ func (o *Object) getType() cdata.ArchetypeType {
 	return cdata.ArchetypeUnknown
 }
 
+// AddStatus adds the given status to the object.
 func (o *Object) AddStatus(s StatusI) {
 	s.SetTarget(o)
 	o.statuses = append(o.statuses, s)
 }
 
+// HasStatus checks if the object has the given status.
 func (o *Object) HasStatus(t StatusI) bool {
 	for _, s := range o.statuses {
 		if reflect.TypeOf(s) == reflect.TypeOf(t) {
@@ -104,11 +107,13 @@ func (o *Object) HasStatus(t StatusI) bool {
 	return false
 }
 
+// ResolveEvent is the default handler for object events.
 func (o *Object) ResolveEvent(e EventI) bool {
 	// Do nothing per default.
 	return true
 }
 
+// Blocks returns if the object blocks the given MatterType.
 func (o *Object) Blocks(matter cdata.MatterType) bool {
 	return o.blocking.Is(matter)
 }
