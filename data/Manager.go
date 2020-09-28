@@ -201,7 +201,7 @@ func (m *Manager) dependencyResolveArchetype(archetype *Archetype, resolved, unr
 		}
 		if _, ok := resolved[dep.ID]; !ok {
 			if _, ok := unresolved[dep.ID]; ok {
-				return errors.New(fmt.Sprintf("circular dependency between %s and %s", m.Strings.Lookup(archetype.SelfID), m.Strings.Lookup(dep.ID)))
+				return fmt.Errorf("circular dependency between %s and %s", m.Strings.Lookup(archetype.SelfID), m.Strings.Lookup(dep.ID))
 			}
 			if err := m.dependencyResolveArchetype(depArch, resolved, unresolved); err != nil {
 				return err

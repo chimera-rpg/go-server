@@ -1,7 +1,6 @@
 package data
 
 import (
-	"errors"
 	"fmt"
 	"hash/crc32"
 	"io/ioutil"
@@ -44,7 +43,7 @@ func (f *FileMap) GetBytes(id FileID) (bytes []byte, err error) {
 	if p, ok := f.Paths[id]; ok {
 		return ioutil.ReadFile(p)
 	}
-	err = errors.New(fmt.Sprintf("non-existent file id \"%d\" requested", id))
+	err = fmt.Errorf("non-existent file id \"%d\" requested", id)
 	return
 }
 
