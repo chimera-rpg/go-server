@@ -4,25 +4,37 @@ package data
 type AttackType uint32
 
 const (
+	// NoAttackType should not occur.
 	NoAttackType AttackType = 0
-	Physical                = 1 << iota
+	// Physical represents physical attacks.
+	Physical = 1 << iota
+	// Arcane represents arcane attacks.
 	Arcane
+	// Spirit represents spirit attacks.
 	Spirit
-	//
+	// Impact represents physical attack types of a bludgeoning nature.
 	Impact
+	// Pierce represents physical attack types of a sharp, thrusting nature.
 	Pierce
+	// Edged represents physical attack types of an edged nature, such as swords.
 	Edged
-	//
+	// Flame represents fire.
 	Flame
+	// Frost represents cold.
 	Frost
+	// Lightning represents Zeus's mighty power.
 	Lightning
+	// Corrosive represents acid.
 	Corrosive
+	// Force represents mere force.
 	Force
-	//
+	// Heal does healing.
 	Heal
+	// Harm does harming.
 	Harm
 )
 
+// StringToAttackTypeMap is the map of strings to attack types.
 var StringToAttackTypeMap = map[string]AttackType{
 	"Physical": Physical,
 	"Arcane":   Arcane,
@@ -42,6 +54,7 @@ var StringToAttackTypeMap = map[string]AttackType{
 	"Harm": Harm,
 }
 
+// AttackTypeToStringMap is a map of attack types to strings.
 var AttackTypeToStringMap = map[AttackType]string{
 	Physical: "Physical",
 	Arcane:   "Arcane",
@@ -61,8 +74,10 @@ var AttackTypeToStringMap = map[AttackType]string{
 	Harm: "Harm",
 }
 
+// AttackTypes is a map of AttackTypes to floats.
 type AttackTypes map[AttackType]float32
 
+// UnmarshalYAML unmarshals, converting attack type strings into AttackTypes.
 func (a *AttackTypes) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	*a = make(AttackTypes)
 	var value map[string]float32
@@ -77,6 +92,7 @@ func (a *AttackTypes) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return nil
 }
 
+// MarshalYAML marshals, converting AttackTypes into strings.
 func (a AttackTypes) MarshalYAML() (interface{}, error) {
 	r := make(map[string]float32)
 	for k, v := range a {
