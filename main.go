@@ -3,12 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/chimera-rpg/go-server/config"
 	"github.com/chimera-rpg/go-server/server"
@@ -28,10 +29,12 @@ func main() {
 	dir = filepath.Dir(filepath.Dir(dir))
 	// Get our default configuration path.
 	cfgPath := path.Join(dir, "etc", "chimera", "config.yml")
+	noPrompt := false
 
 	// Load up flags.
 	flag.StringVar(&cfgPath, "config", cfgPath, "configuration file")
 	flag.StringVar(&cfgPath, "c", cfgPath, "configuration file (shorthand)")
+	flag.BoolVar(&noPrompt, "no-prompt", noPrompt, "Disable command prompt")
 	flag.Parse()
 
 	// Setup our default configuration.
@@ -99,10 +102,12 @@ func main() {
 		}
 	}()
 	// Create and initialize our prompt.
-	fmt.Println("Entering prompt. Issue \"help\" for commands.")
-	var prompt Prompt
-	prompt.Init(s)
-	prompt.Capture()
-	go prompt.ShowPrompt()
+	if !noPrompt {
+		var prompt Prompt
+		prompt.Init(s)
+		fmt.Println("Entering prompt. Issue \"help\" for commands.")
+		prompt.Capture()
+		go prompt.ShowPrompt()
+	}
 	<-s.End
 }
