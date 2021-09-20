@@ -2,11 +2,12 @@ package data
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"path"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 
 	"gopkg.in/yaml.v2"
 )
@@ -179,7 +180,7 @@ func (m *Manager) CreateUserCharacter(u *User, name string) (err error) {
 	c := &Character{
 		Name: name,
 		Archetype: Archetype{
-			Name: StringExpression{src: name},
+			Name: &name,
 		},
 		SaveInfo: SaveInfo{
 			Map: "Chamber of Origins",

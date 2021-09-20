@@ -1,11 +1,11 @@
 package data
 
 import (
+	"reflect"
+
 	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/imdario/mergo"
 )
-
-// TODO: Should most Archetype properties be either StringExpression or NumberExpression? These would be string and int based types that can pull properties from their owning Archetype during Object creation. They likely should be a postfix-structured stack that can be passed some sort of context stack that contains the target Object and/or Archetype. We could also just have them as strings until they are instantized into an Object.
 
 // MergeArchType is unique type for identifying how an archetype should be merged/added with another.
 type MergeArchType uint8
@@ -26,14 +26,14 @@ const (
 // Archetype represents a collection of data that should be used for the
 // creation of Objects.
 type Archetype struct {
-	ArchID  StringID         `yaml:"-"` // Archetype ID used for generating objects and inheriting from.
-	ArchIDs []MergeArch      `yaml:"-"`
-	Archs   []string         `yaml:"Archs,omitempty"` // Archetypes to inherit from.
-	Arch    string           `yaml:"Arch,omitempty"`  // Archetype to inherit from. During post-parsing this is used to acquire and set the ArchID for inventory archetypes.
-	SelfID  StringID         `yaml:"-"`               // The Archetype's own SelfID
-	Name    StringExpression `yaml:"Name,omitempty"`  // StringExpression
+	ArchID  StringID    `yaml:"-"` // Archetype ID used for generating objects and inheriting from.
+	ArchIDs []MergeArch `yaml:"-"`
+	Archs   []string    `yaml:"Archs,omitempty"` // Archetypes to inherit from.
+	Arch    string      `yaml:"Arch,omitempty"`  // Archetype to inherit from. During post-parsing this is used to acquire and set the ArchID for inventory archetypes.
+	SelfID  StringID    `yaml:"-"`               // The Archetype's own SelfID
+	Name    *string     `yaml:"Name,omitempty"`  //
 	//Name string
-	Description StringExpression    `yaml:"Description,omitempty"` // StringExpression
+	Description *string             `yaml:"Description,omitempty"`
 	Type        cdata.ArchetypeType `yaml:"Type,omitempty"`
 	Anim        string              `yaml:"Anim,omitempty"`
 	AnimID      StringID            `yaml:"-"`
@@ -45,10 +45,10 @@ type Archetype struct {
 	Matter      cdata.MatterType    `yaml:"Matter,omitempty"`
 	Blocking    cdata.MatterType    `yaml:"Blocking,omitempty"`
 	//
-	Worth      StringExpression    `yaml:"Worth,omitempty"`  // NumberExpression
-	Value      StringExpression    `yaml:"Value,omitempty"`  // NumberExpression
-	Count      StringExpression    `yaml:"Count,omitempty"`  // NumberExpression
-	Weight     StringExpression    `yaml:"Weight,omitempty"` // NumberExpression
+	Worth      *string             `yaml:"Worth,omitempty"`
+	Value      *string             `yaml:"Value,omitempty"`
+	Count      *string             `yaml:"Count,omitempty"`
+	Weight     *string             `yaml:"Weight,omitempty"`
 	Properties map[string]Variable `yaml:"Properties,omitempty"`
 	//
 	Inventory []Archetype `yaml:"Inventory,omitempty"`
@@ -131,10 +131,27 @@ func (arch *Archetype) SetCompiled(b bool) {
 func (arch *Archetype) Add(other *Archetype) error {
 	arch.Matter |= other.Matter
 	arch.Blocking |= other.Blocking
-	arch.Worth.Add(other.Worth)
-	arch.Value.Add(other.Value)
-	arch.Count.Add(other.Count)
-	arch.Weight.Add(other.Weight)
+	if arch.Worth == nil && other.Worth != nil {
+		arch.Worth = &*other.Worth
+	} else if other.Worth != nil {
+		*arch.Worth += *other.Worth
+	}
+	if arch.Value == nil && other.Value != nil {
+		arch.Value = &*other.Value
+	} else if other.Value != nil {
+		*arch.Value += *other.Value
+	}
+	if arch.Count == nil && other.Count != nil {
+		arch.Count = &*other.Count
+	} else if other.Count != nil {
+		*arch.Count += *other.Count
+	}
+	if arch.Weight == nil && other.Weight != nil {
+		arch.Weight = &*other.Weight
+	} else if other.Weight != nil {
+		*arch.Weight += *other.Weight
+	}
+
 	for _, o := range other.Inventory {
 		arch.Inventory = append(arch.Inventory, o)
 	}
@@ -214,8 +231,15 @@ func (arch *Archetype) Add(other *Archetype) error {
 
 // Merge will attempt to merge any missing properties from another archetype to this one.
 func (arch *Archetype) Merge(other *Archetype) error {
-	if err := mergo.Merge(arch, other, mergo.WithTransformers(StringExpressionTransformer{})); err != nil {
+	if err := mergo.Merge(arch, other); err != nil {
 		return err
 	}
 	return nil
+}
+
+// GetField returns a reflect.Value of the target field in the archetype's properties.
+func (arch *Archetype) GetField(fieldName string) reflect.Value {
+	s := reflect.ValueOf(arch).Elem()
+	f := s.FieldByName(fieldName)
+	return f
 }

@@ -1,6 +1,7 @@
 package world
 
 import (
+	"strconv"
 	"sync"
 	"time"
 
@@ -297,9 +298,20 @@ func (w *World) CreateObjectFromArch(arch *data.Archetype) (o ObjectI, err error
 				Archetype: arch,
 			},
 		}
-		gameobj.value, _ = arch.Value.GetInt()
-		gameobj.count, _ = arch.Count.GetInt()
-		gameobj.name, _ = arch.Name.GetString()
+		// TODO: Create/use a simple scripting language for rolling dynamic values.
+		if arch.Value != nil {
+			if i, err := strconv.Atoi(*arch.Value); err == nil {
+				gameobj.value = i
+			}
+		}
+		if arch.Count != nil {
+			if i, err := strconv.Atoi(*arch.Count); err == nil {
+				gameobj.count = i
+			}
+		}
+		if arch.Name != nil {
+			gameobj.name = *arch.Name
+		}
 
 		o = &gameobj
 	}
