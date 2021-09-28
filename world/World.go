@@ -248,6 +248,15 @@ func (w *World) addPlayerByConnection(conn clientConnectionI, character *data.Ch
 			Type: network.ServerMessage,
 			Body: fmt.Sprintf("Welcome back, %s!", pc.name),
 		})
+		for _, p := range w.players {
+			if p == player {
+				continue
+			}
+			p.ClientConnection.Send(network.CommandMessage{
+				Type: network.ServerMessage,
+				Body: fmt.Sprintf("%s has materialized!", pc.name),
+			})
+		}
 	}
 	return nil
 }
