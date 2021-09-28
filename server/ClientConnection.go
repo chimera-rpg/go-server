@@ -2,8 +2,9 @@ package server
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"net"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/chimera-rpg/go-common/network"
 	"github.com/chimera-rpg/go-server/data"
@@ -413,6 +414,24 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 			c.log.WithFields(log.Fields{
 				"cmd": t,
 			}).Print("CommandExtCmd")
+		case network.CommandViewport:
+			// TODO: Make these limits configurable.
+			if t.Height > 32 {
+				t.Height = 32
+			} else if t.Height < 8 {
+				t.Height = 8
+			}
+			if t.Width > 48 {
+				t.Width = 48
+			} else if t.Width < 8 {
+				t.Width = 8
+			}
+			if t.Depth > 48 {
+				t.Depth = 48
+			} else if t.Depth < 8 {
+				t.Depth = 8
+			}
+			c.Owner.SetViewSize(int(t.Height), int(t.Width), int(t.Depth))
 		default: // Boot the client if it sends anything else.
 			c.log.Warnln("Client sent bad data, kicking")
 			s.RemoveClientByID(c.GetID())

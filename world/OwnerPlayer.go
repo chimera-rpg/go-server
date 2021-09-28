@@ -108,10 +108,17 @@ func (player *OwnerPlayer) CheckView() {
 	player.checkVisibleTiles()
 }
 
+// SetViewSize sets the viewport limits of the player.
+func (player *OwnerPlayer) SetViewSize(h, w, d int) {
+	player.viewHeight = h
+	player.viewWidth = w
+	player.viewDepth = d
+}
+
 // GetViewSize returns the view port size that is used to send map updates to the player.
-func (player *OwnerPlayer) GetViewSize() (w, h, d int) {
+func (player *OwnerPlayer) GetViewSize() (h, w, d int) {
 	// TODO: Probably conditionally replace with target object's vision.
-	return player.viewWidth, player.viewHeight, player.viewDepth
+	return player.viewHeight, player.viewWidth, player.viewDepth
 }
 
 // checkVisibleTiles gets the initial view of the player. This sends tile information equal to how far the owner's PC can see.

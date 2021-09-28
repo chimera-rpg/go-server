@@ -17,7 +17,8 @@ type OwnerI interface {
 	Update(delta time.Duration) error
 	OnMapUpdate(delta time.Duration) error
 	OnObjectDelete(ID) error
-	GetViewSize() (w, h, d int)
+	SetViewSize(h, w, d int)
+	GetViewSize() (h, w, d int)
 	//
 	GetAttitude(ID) data.Attitude
 }

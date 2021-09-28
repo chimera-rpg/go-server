@@ -11,11 +11,12 @@ import (
 // OwnerSimpleAI represents a non-owner character with a fairly
 // simple logic.
 type OwnerSimpleAI struct {
-	target        *ObjectCharacter
-	currentMap    *Map
-	mapUpdateTime uint8
-	knownIDs      map[ID]struct{}
-	attitudes     map[ID]data.Attitude
+	target                           *ObjectCharacter
+	currentMap                       *Map
+	mapUpdateTime                    uint8
+	knownIDs                         map[ID]struct{}
+	attitudes                        map[ID]data.Attitude
+	viewHeight, viewWidth, viewDepth int
 }
 
 // GetTarget returns the owners's target object.
@@ -46,14 +47,24 @@ func (owner *OwnerSimpleAI) SetMap(m *Map) {
 // NewOwnerSimpleAI creates a new OwnerSimpleAI.
 func NewOwnerSimpleAI() *OwnerSimpleAI {
 	return &OwnerSimpleAI{
-		knownIDs: make(map[ID]struct{}),
+		knownIDs:   make(map[ID]struct{}),
+		viewHeight: 8,
+		viewWidth:  16,
+		viewDepth:  16,
 	}
 }
 
+// SetViewSize sets the viewport limits of the player.
+func (owner *OwnerSimpleAI) SetViewSize(h, w, d int) {
+	owner.viewHeight = h
+	owner.viewWidth = w
+	owner.viewDepth = d
+}
+
 // GetViewSize returns the view port size that is used to send map updates to the player.
-func (owner *OwnerSimpleAI) GetViewSize() (w, h, d int) {
+func (owner *OwnerSimpleAI) GetViewSize() (h, w, d int) {
 	// TODO: Possibly replace with target object's vision.
-	return 16, 8, 16
+	return owner.viewHeight, owner.viewWidth, owner.viewDepth
 }
 
 // Update does something.?
