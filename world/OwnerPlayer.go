@@ -108,9 +108,9 @@ func (player *OwnerPlayer) CheckView() {
 func (player *OwnerPlayer) checkVisibleTiles() error {
 	gmap := player.GetMap()
 	// Get owner's viewport.
-	vw := 16 // assume 16 for now.
+	vw := 32 // assume 32 for now.
 	vh := 16 //
-	vd := 16 //
+	vd := 32 //
 	vwh := vw / 2
 	vhh := vh / 2
 	vdh := vd / 2
