@@ -1,8 +1,9 @@
 package world
 
 import (
-	"github.com/chimera-rpg/go-server/data"
 	"time"
+
+	"github.com/chimera-rpg/go-server/data"
 )
 
 // OwnerI represents the general interface that should be used
@@ -16,6 +17,7 @@ type OwnerI interface {
 	Update(delta time.Duration) error
 	OnMapUpdate(delta time.Duration) error
 	OnObjectDelete(ID) error
+	GetViewSize() (w, h, d int)
 	//
 	GetAttitude(ID) data.Attitude
 }

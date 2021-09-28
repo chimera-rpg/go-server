@@ -50,6 +50,12 @@ func NewOwnerSimpleAI() *OwnerSimpleAI {
 	}
 }
 
+// GetViewSize returns the view port size that is used to send map updates to the player.
+func (owner *OwnerSimpleAI) GetViewSize() (w, h, d int) {
+	// TODO: Possibly replace with target object's vision.
+	return 16, 8, 16
+}
+
 // Update does something.?
 func (owner *OwnerSimpleAI) Update(delta time.Duration) error {
 	// TODO: Handle a state machine or similar here.

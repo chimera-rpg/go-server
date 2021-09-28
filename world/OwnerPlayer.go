@@ -21,14 +21,15 @@ type clientConnectionI interface {
 // OwnerPlayer represents a player character through a network
 // connection and the associated player object.
 type OwnerPlayer struct {
-	commandChannel   chan OwnerCommand
-	ClientConnection clientConnectionI
-	target           *ObjectCharacter
-	currentMap       *Map
-	mapUpdateTime    uint8
-	view             [][][]TileView
-	knownIDs         map[ID]struct{}
-	attitudes        map[ID]data.Attitude
+	commandChannel                   chan OwnerCommand
+	ClientConnection                 clientConnectionI
+	target                           *ObjectCharacter
+	currentMap                       *Map
+	mapUpdateTime                    uint8
+	viewWidth, viewHeight, viewDepth int
+	view                             [][][]TileView
+	knownIDs                         map[ID]struct{}
+	attitudes                        map[ID]data.Attitude
 }
 
 // GetTarget returns the player's target object.
@@ -79,6 +80,9 @@ func NewOwnerPlayer(cc clientConnectionI) *OwnerPlayer {
 		commandChannel:   make(chan OwnerCommand),
 		ClientConnection: cc,
 		knownIDs:         make(map[ID]struct{}),
+		viewWidth:        32,
+		viewHeight:       16,
+		viewDepth:        32,
 	}
 }
 
@@ -104,13 +108,17 @@ func (player *OwnerPlayer) CheckView() {
 	player.checkVisibleTiles()
 }
 
+// GetViewSize returns the view port size that is used to send map updates to the player.
+func (player *OwnerPlayer) GetViewSize() (w, h, d int) {
+	// TODO: Probably conditionally replace with target object's vision.
+	return player.viewWidth, player.viewHeight, player.viewDepth
+}
+
 // checkVisibleTiles gets the initial view of the player. This sends tile information equal to how far the owner's PC can see.
 func (player *OwnerPlayer) checkVisibleTiles() error {
 	gmap := player.GetMap()
 	// Get owner's viewport.
-	vw := 32 // assume 32 for now.
-	vh := 16 //
-	vd := 32 //
+	vw, vh, vd := player.GetViewSize()
 	vwh := vw / 2
 	vhh := vh / 2
 	vdh := vd / 2
