@@ -1,6 +1,7 @@
 package world
 
 import (
+	"fmt"
 	"strconv"
 	"sync"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"errors"
 
 	cdata "github.com/chimera-rpg/go-common/data"
+	"github.com/chimera-rpg/go-common/network"
 	"github.com/chimera-rpg/go-server/data"
 )
 
@@ -241,6 +243,11 @@ func (w *World) addPlayerByConnection(conn clientConnectionI, character *data.Ch
 			"ID": conn.GetID(),
 			"PC": pc.id,
 		}).Debugln("Added player to world.")
+		//
+		player.ClientConnection.Send(network.CommandMessage{
+			Type: network.ServerMessage,
+			Body: fmt.Sprintf("Welcome back, %s!", pc.name),
+		})
 	}
 	return nil
 }
