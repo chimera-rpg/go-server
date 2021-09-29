@@ -351,6 +351,8 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 						faces[key][frameIndex] = network.AnimationFrame{
 							ImageID: frame.ImageID,
 							Time:    frame.Time,
+							X:       frame.X,
+							Y:       frame.Y,
 						}
 					}
 				}

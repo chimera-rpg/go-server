@@ -372,6 +372,8 @@ func (m *Manager) parseAnimationFile(filepath string) error {
 				parsedFrame := AnimationFrame{
 					ImageID: imageID,
 					Time:    frame.Time,
+					X:       frame.X,
+					Y:       frame.Y,
 				}
 				parsedAnimation.Faces[faceID] = append(parsedAnimation.Faces[faceID], parsedFrame)
 			}
@@ -644,7 +646,7 @@ func (m *Manager) GetAnimationFrame(animID StringID, faceID StringID, index int)
 			}
 		}
 	}
-	return AnimationFrame{0, 0}
+	return AnimationFrame{0, 0, 0, 0}
 }
 
 // GetImageData returns the image bytes associated with the provided image ID.
