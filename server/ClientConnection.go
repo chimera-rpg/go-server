@@ -390,6 +390,17 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 					GraphicsID: t.GraphicsID,
 				})
 			}
+		case network.CommandMessage:
+			switch t.Type {
+			case network.ChatMessage: // General Chat
+				s.SendChatMessageFrom(c, t)
+			case network.MapMessage: // Local Map
+			case network.PartyMessage: // Party Message
+			default: // Bad message, boot.
+				c.log.Warnln("Client sent bad data, kicking")
+				s.RemoveClientByID(c.GetID())
+				c.GetSocket().Close()
+			}
 		case network.CommandCmd:
 			c.log.WithFields(log.Fields{
 				"cmd": t,
