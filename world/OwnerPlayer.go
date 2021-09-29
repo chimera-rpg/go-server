@@ -125,9 +125,9 @@ func (player *OwnerPlayer) GetViewSize() (h, w, d int) {
 func (player *OwnerPlayer) checkVisibleTiles() error {
 	gmap := player.GetMap()
 	// Get owner's viewport.
-	vw, vh, vd := player.GetViewSize()
-	vwh := vw / 2
+	vh, vw, vd := player.GetViewSize()
 	vhh := vh / 2
+	vwh := vw / 2
 	vdh := vd / 2
 	// Get tile where owner is, then send from negative half owner object's viewport to positive half in y, x, and z.
 	if tile := player.target.GetTile(); tile != nil {
