@@ -100,7 +100,7 @@ func (m *Manager) ProcessArchetype(archetype *Archetype) error {
 		}
 		targetID := m.Strings.Acquire(archname)
 		if _, err := m.GetArchetype(targetID); err != nil {
-			return err
+			return fmt.Errorf("\"%s\" does not exist", archname)
 		}
 		mergeArch := MergeArch{
 			ID:   targetID,
@@ -416,6 +416,10 @@ func (m *Manager) buildImagesMap() error {
 }
 
 func (m *Manager) parseMapFile(filepath string) error {
+	l := log.WithFields(log.Fields{
+		"mapset": filepath,
+	})
+
 	r, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		return err
@@ -426,17 +430,28 @@ func (m *Manager) parseMapFile(filepath string) error {
 		return err
 	}
 	for k, v := range maps {
+		l = l.WithFields(log.Fields{
+			"map": k,
+		})
 		// Acquire our ArchIDs for Tiles
 		for y := range v.Tiles {
 			for x := range v.Tiles[y] {
 				for z := range v.Tiles[y][x] {
 					for i := range v.Tiles[y][x][z] {
+						l = l.WithFields(log.Fields{
+							"y": y,
+							"x": x,
+							"z": y,
+							"i": i,
+						})
 						// We also process and compile our tiles so as to allow for XTREME custom archs in maps!
 						if err := m.ProcessArchetype(&v.Tiles[y][x][z][i]); err != nil {
-							return err
+							l.Warnln(err)
+							continue
 						}
 						if err := m.CompileArchetype(&v.Tiles[y][x][z][i]); err != nil {
-							return err
+							l.Warnln(err)
+							continue
 						}
 					}
 				}
