@@ -178,3 +178,8 @@ func (o *ObjectCharacter) EquipShield(armor *ObjectShield) error {
 func (o *ObjectCharacter) EquipWeapon(armor *ObjectWeapon) error {
 	return nil
 }
+
+// Name returns the name of the character.
+func (o *ObjectCharacter) Name() string {
+	return o.name
+}

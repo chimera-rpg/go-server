@@ -117,3 +117,8 @@ func (o *Object) ResolveEvent(e EventI) bool {
 func (o *Object) Blocks(matter cdata.MatterType) bool {
 	return o.blocking.Is(matter)
 }
+
+// Name returns the name of the object, if available.
+func (o *Object) Name() string {
+	return ""
+}
