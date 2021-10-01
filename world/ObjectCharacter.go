@@ -2,7 +2,6 @@ package world
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	cdata "github.com/chimera-rpg/go-common/data"
@@ -112,10 +111,15 @@ func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 	// TODO: Send event messages to the owner.
 	switch e := e.(type) {
 	case EventFall:
-		fmt.Println("You begin to fall...")
+		if o.GetOwner() != nil {
+			o.GetOwner().SendMessage("You begin to fall...")
+		}
 		return true
 	case EventFell:
-		fmt.Println(e)
+		if o.GetOwner() != nil {
+			o.GetOwner().SendMessage(e.String())
+		}
+		// TODO: If we're not invisible or very quiet, notify other creatures in a radius that we've cratered our legs.
 		return true
 	}
 	return false

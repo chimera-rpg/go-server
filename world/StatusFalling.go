@@ -7,7 +7,8 @@ import (
 // StatusFalling is the status for when an object is falling.
 type StatusFalling struct {
 	Status
-	aggregate time.Duration
+	aggregate    time.Duration
+	fallDistance int
 }
 
 func (s *StatusFalling) update(delta time.Duration) {
@@ -45,10 +46,11 @@ func (s *StatusFalling) update(delta time.Duration) {
 			_, fallingTiles, err := m.GetObjectPartTiles(s.target, -1, 0, 0)
 
 			if doTilesBlock(fallingTiles) && err == nil {
-				s.target.ResolveEvent(EventFell{
-					distance: int(s.elapsed / fallRate),
-				})
-				// TODO: Let target know how far they fell so they can account for damage. This should likely only report if greater than 2 units or so.
+				if s.fallDistance >= 4 {
+					s.target.ResolveEvent(EventFell{
+						distance: int(s.elapsed / fallRate),
+					})
+				}
 				s.shouldRemove = true
 				return
 			}
@@ -56,6 +58,10 @@ func (s *StatusFalling) update(delta time.Duration) {
 				// Remove status if we had an error while moving.
 				s.shouldRemove = true
 				return
+			}
+			s.fallDistance++
+			if s.fallDistance == 4 {
+				s.target.ResolveEvent(EventFall{})
 			}
 		}
 	}
