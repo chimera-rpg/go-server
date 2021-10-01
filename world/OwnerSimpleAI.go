@@ -111,3 +111,6 @@ func (owner *OwnerSimpleAI) GetAttitude(oID ID) data.Attitude {
 	}
 	return data.NoAttitude
 }
+
+func (owner *OwnerSimpleAI) SendMessage(s string) {
+}

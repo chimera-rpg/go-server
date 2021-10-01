@@ -21,4 +21,6 @@ type OwnerI interface {
 	GetViewSize() (h, w, d int)
 	//
 	GetAttitude(ID) data.Attitude
+	//
+	SendMessage(string)
 }

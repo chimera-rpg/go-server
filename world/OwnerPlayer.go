@@ -271,3 +271,12 @@ func (player *OwnerPlayer) GetAttitude(oID ID) data.Attitude {
 
 	return data.NoAttitude
 }
+
+// SendMessage sends a message to the character.
+func (player *OwnerPlayer) SendMessage(s string) {
+	player.ClientConnection.Send(network.CommandMessage{
+		Type:         network.MapMessage,
+		FromObjectID: player.target.id,
+		Body:         s,
+	})
+}
