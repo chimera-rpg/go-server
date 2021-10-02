@@ -1,6 +1,7 @@
 package world
 
 import (
+	"math"
 	"reflect"
 	"time"
 
@@ -97,6 +98,17 @@ func (o *Object) AddStatus(s StatusI) {
 	o.statuses = append(o.statuses, s)
 }
 
+// RemoveStatus removes the given status from the object.
+func (o *Object) RemoveStatus(s StatusI) bool {
+	for i, s2 := range o.statuses {
+		if reflect.TypeOf(s) == reflect.TypeOf(s2) {
+			o.statuses = append(o.statuses[:i], o.statuses[i+1:]...)
+			return true
+		}
+	}
+	return false
+}
+
 // HasStatus checks if the object has the given status.
 func (o *Object) HasStatus(t StatusI) bool {
 	for _, s := range o.statuses {
@@ -121,4 +133,25 @@ func (o *Object) Blocks(matter cdata.MatterType) bool {
 // Name returns the name of the object, if available.
 func (o *Object) Name() string {
 	return ""
+}
+
+func (o *Object) GetDimensions() (h, w, d int) {
+	a := o.GetArchetype()
+	if a != nil {
+		h = int(a.Height)
+		w = int(a.Width)
+		d = int(a.Depth)
+	}
+	// If the object is squeezing, shrink its depth and width by a third with a minimum of 1.
+	if o.HasStatus(&StatusSqueezing{}) {
+		w = w - int(math.Max(float64(w)/3, 1))
+		if w == 0 {
+			w = 1
+		}
+		d = d - int(math.Max(float64(d)/3, 1))
+		if d == 0 {
+			d = 1
+		}
+	}
+	return
 }

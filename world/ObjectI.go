@@ -21,8 +21,10 @@ type ObjectI interface {
 	update(time.Duration)
 	getType() cdata.ArchetypeType
 	AddStatus(StatusI)
+	RemoveStatus(StatusI) bool
 	HasStatus(StatusI) bool
 	ResolveEvent(EventI) bool
 	Blocks(cdata.MatterType) bool
 	Name() string
+	GetDimensions() (h, w, d int)
 }
