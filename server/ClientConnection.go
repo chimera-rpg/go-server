@@ -396,6 +396,8 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 				s.SendChatMessageFrom(c, t)
 			case network.MapMessage: // Local Map
 			case network.PartyMessage: // Party Message
+			case network.PCMessage:
+				s.SendPCMessageFrom(c, t)
 			default: // Bad message, boot.
 				c.log.Warnln("Client sent bad data, kicking")
 				s.RemoveClientByID(c.GetID())
