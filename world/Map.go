@@ -287,6 +287,27 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 		return false, errors.New("somehow no tiles could be targeted")
 	}
 
+	// NOTE: How squeezing works is: 1. StatusSqueeze is set following by an immediate MoveObject for the same position; 2. MoveObject call removes old position and replaces it with a new one and also sets StatusSqueezing on the object; 3. Object sets StatusUnsqueeze and an immediate MoveObject for the same position; 4. MoveObject call removes the old position and replaces it with a new one that is unsqueezed and also removes StatusSqueezing and StatusUnsqueeze.
+	var squeeze *StatusSqueeze
+	var squeezing *StatusSqueezing
+	var unsqueeze *StatusUnsqueeze
+	if o.HasStatus(squeeze) && !o.HasStatus(squeezing) {
+		o.AddStatus(&StatusSqueezing{})
+		o.RemoveStatus(squeeze)
+		_, targetTiles, err = gmap.GetObjectPartTiles(o, yDir, xDir, zDir)
+		if err != nil {
+			return false, err
+		}
+	} else if o.HasStatus(unsqueeze) {
+		// Otherwise, if we are meant to unsqueeze, remove squeezing and unsqueeze, and adjust our new target tiles.
+		o.RemoveStatus(squeezing)
+		o.RemoveStatus(unsqueeze)
+		_, targetTiles, err = gmap.GetObjectPartTiles(o, yDir, xDir, zDir)
+		if err != nil {
+			return false, err
+		}
+	}
+
 	doTilesBlock := func(targetTiles []*Tile) bool {
 		matter := o.GetArchetype().Matter
 		for _, tT := range targetTiles {
@@ -380,13 +401,7 @@ func (gmap *Map) GetObjectPartTiles(o ObjectI, yDir, xDir, zDir int) (currentTil
 	// Get our origin.
 	oY, oX, oZ := tile.y, tile.x, tile.z
 	// Get our object's height, width, and depth.
-	h, w, d := 1, 1, 1
-	a := o.GetArchetype()
-	if a != nil {
-		h = int(a.Height)
-		w = int(a.Width)
-		d = int(a.Depth)
-	}
+	h, w, d := o.GetDimensions()
 	// Check each potential move position.
 	getTargets := yDir != 0 || xDir != 0 || zDir != 0
 	// Iterate through our box.
