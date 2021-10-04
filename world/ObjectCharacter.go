@@ -106,6 +106,26 @@ func (o *ObjectCharacter) AddStatus(s StatusI) {
 	o.statuses = append(o.statuses, s)
 }
 
+// SetStatus sets the status.
+func (o *ObjectCharacter) SetStatus(s StatusI) bool {
+	switch e := s.(type) {
+	case *StatusSqueeze:
+		var squeeze *StatusSqueeze
+		var squeezing *StatusSqueezing
+		var unsqueeze *StatusUnsqueeze
+		if e.Activate {
+			if !o.HasStatus(squeeze) && !o.HasStatus(squeezing) && !o.HasStatus(unsqueeze) {
+				o.AddStatus(&StatusSqueeze{})
+			}
+		} else {
+			if !o.HasStatus(squeeze) && !o.HasStatus(unsqueeze) {
+				o.AddStatus(&StatusUnsqueeze{})
+			}
+		}
+	}
+	return false
+}
+
 // ResolveEvent handles events that pertain to the character.
 func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 	// TODO: Send event messages to the owner.
@@ -121,6 +141,16 @@ func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 		}
 		// TODO: If we're not invisible or very quiet, notify other creatures in a radius that we've cratered our legs.
 		return true
+		/*case EventSqueezing:
+			if o.GetOwner() != nil {
+				o.GetOwner().SendMessage("You are squeezing.")
+			}
+			return true
+		case EventUnsqueeze:
+			if o.GetOwner() != nil {
+				o.GetOwner().SendMessage("You are no longer squeezing.")
+			}
+			return true*/
 	}
 	return false
 }
