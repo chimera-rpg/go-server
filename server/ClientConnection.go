@@ -6,6 +6,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-common/network"
 	"github.com/chimera-rpg/go-server/data"
 	"github.com/chimera-rpg/go-server/world"
@@ -429,6 +430,14 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 			c.log.WithFields(log.Fields{
 				"cmd": t,
 			}).Print("CommandExtCmd")
+		case network.CommandStatus:
+			switch t.Type {
+			case cdata.SqueezingStatus:
+				c.Owner.GetCommandChannel() <- world.OwnerStatusCommand{&world.StatusSqueeze{Activate: t.Active}}
+			}
+			c.log.WithFields(log.Fields{
+				"cmd": t,
+			}).Print("CommandStatus")
 		case network.CommandViewport:
 			// TODO: Make these limits configurable.
 			if t.Height > 32 {

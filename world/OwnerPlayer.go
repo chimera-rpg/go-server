@@ -217,6 +217,8 @@ func (player *OwnerPlayer) Update(delta time.Duration) error {
 				if _, err := player.currentMap.MoveObject(player.target, c.Y, c.X, c.Z, false); err != nil {
 					log.Warn(err)
 				}
+			case OwnerStatusCommand:
+				player.target.SetStatus(c.Status)
 			default:
 				fmt.Printf("Got unhandled owner command: %+v\n", ocmd)
 			}
