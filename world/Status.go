@@ -2,6 +2,8 @@ package world
 
 import (
 	"time"
+
+	cdata "github.com/chimera-rpg/go-common/data"
 )
 
 // Status represents a pending status effect for an object. These tick over time.
@@ -39,4 +41,9 @@ func (s *Status) update(delta time.Duration) {
 // ShouldRemove returns if the status should be removed.
 func (s *Status) ShouldRemove() bool {
 	return s.shouldRemove
+}
+
+// StatusType returns the StatusType of the status.
+func (s *Status) StatusType() cdata.StatusType {
+	return 0
 }

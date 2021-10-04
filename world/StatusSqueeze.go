@@ -7,6 +7,7 @@ import (
 // StatusSqueeze is the status for when an object is to enter the squeezing state.
 type StatusSqueeze struct {
 	Status
+	Activate bool
 }
 
 func (s *StatusSqueeze) update(delta time.Duration) {

@@ -2,6 +2,8 @@ package world
 
 import (
 	"time"
+
+	cdata "github.com/chimera-rpg/go-common/data"
 )
 
 // StatusFalling is the status for when an object is falling.
@@ -65,4 +67,9 @@ func (s *StatusFalling) update(delta time.Duration) {
 			}
 		}
 	}
+}
+
+// StatusType returns cdata.Falling
+func (s *StatusFalling) StatusType() cdata.StatusType {
+	return cdata.FallingStatus
 }
