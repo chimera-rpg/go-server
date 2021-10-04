@@ -8,3 +8,8 @@ type OwnerCommand interface {
 type OwnerMoveCommand struct {
 	Y, X, Z int
 }
+
+// OwnerStatusCommand represents an owner command to set the status for its target object.
+type OwnerStatusCommand struct {
+	Status StatusI
+}
