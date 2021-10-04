@@ -23,6 +23,7 @@ type ObjectI interface {
 	AddStatus(StatusI)
 	RemoveStatus(StatusI) bool
 	HasStatus(StatusI) bool
+	SetStatus(StatusI) bool
 	ResolveEvent(EventI) bool
 	Blocks(cdata.MatterType) bool
 	Name() string

@@ -119,6 +119,11 @@ func (o *Object) HasStatus(t StatusI) bool {
 	return false
 }
 
+// SetStatus sets the status.
+func (o *Object) SetStatus(t StatusI) bool {
+	return false
+}
+
 // ResolveEvent is the default handler for object events.
 func (o *Object) ResolveEvent(e EventI) bool {
 	// Do nothing per default.
