@@ -222,7 +222,7 @@ func (gmap *Map) PlaceObject(o ObjectI, y int, x int, z int) (err error) {
 	}
 	tile.insertObject(o, -1)
 
-	tiles, _, err := gmap.GetObjectPartTiles(o, 0, 0, 0)
+	tiles, _, err := gmap.GetObjectPartTiles(o, 0, 0, 0, false)
 	for _, t := range tiles {
 		t.insertObjectPart(o, -1)
 	}
@@ -248,7 +248,7 @@ func (gmap *Map) RemoveObject(o ObjectI) (err error) {
 		tile.removeObject(o)
 	}
 
-	tiles, _, err := gmap.GetObjectPartTiles(o, 0, 0, 0)
+	tiles, _, err := gmap.GetObjectPartTiles(o, 0, 0, 0, false)
 	for _, t := range tiles {
 		t.removeObjectPart(o)
 	}
@@ -277,7 +277,7 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 	}
 	// TODO: Some sort of CanMove flag, as things such as falling, paralysis, or otherwise should prevent movement. This might be handled in the calling function, such as the Owner.
 
-	oldTiles, targetTiles, err := gmap.GetObjectPartTiles(o, yDir, xDir, zDir)
+	oldTiles, targetTiles, err := gmap.GetObjectPartTiles(o, yDir, xDir, zDir, true)
 	if err != nil {
 		return false, err
 	}
@@ -294,7 +294,7 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 	if o.HasStatus(squeeze) && !o.HasStatus(squeezing) {
 		o.AddStatus(&StatusSqueezing{})
 		o.RemoveStatus(squeeze)
-		_, targetTiles, err = gmap.GetObjectPartTiles(o, yDir, xDir, zDir)
+		_, targetTiles, err = gmap.GetObjectPartTiles(o, yDir, xDir, zDir, true)
 		if err != nil {
 			return false, err
 		}
@@ -302,7 +302,7 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 		// Otherwise, if we are meant to unsqueeze, remove squeezing and unsqueeze, and adjust our new target tiles.
 		o.RemoveStatus(squeezing)
 		o.RemoveStatus(unsqueeze)
-		_, targetTiles, err = gmap.GetObjectPartTiles(o, yDir, xDir, zDir)
+		_, targetTiles, err = gmap.GetObjectPartTiles(o, yDir, xDir, zDir, true)
 		if err != nil {
 			return false, err
 		}
@@ -357,7 +357,7 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 				return false, nil
 			}
 			// Otherwise see if we can step down.
-			_, targetUpTiles, err := gmap.GetObjectPartTiles(o, yDir+1, xDir, zDir)
+			_, targetUpTiles, err := gmap.GetObjectPartTiles(o, yDir+1, xDir, zDir, false)
 			if !doTilesBlock(targetUpTiles) && err == nil {
 				targetTiles = targetUpTiles
 			} else {
@@ -365,9 +365,9 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 			}
 		} else {
 			// Check if we have to step down.
-			_, targetDownTiles, err := gmap.GetObjectPartTiles(o, yDir-1, xDir, zDir)
+			_, targetDownTiles, err := gmap.GetObjectPartTiles(o, yDir-1, xDir, zDir, false)
 			if !doTilesBlock(targetDownTiles) && err == nil {
-				_, targetStepTiles, err := gmap.GetObjectPartTiles(o, yDir-2, xDir, zDir)
+				_, targetStepTiles, err := gmap.GetObjectPartTiles(o, yDir-2, xDir, zDir, false)
 				if doTilesBlock(targetStepTiles) && err == nil {
 					targetTiles = targetDownTiles
 				}
@@ -391,7 +391,7 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 }
 
 // GetObjectPartTiles returns two arrays for Tiles that a given object intersects with. If all directions are zero, then targetTiles will be empty.
-func (gmap *Map) GetObjectPartTiles(o ObjectI, yDir, xDir, zDir int) (currentTiles, targetTiles []*Tile, err error) {
+func (gmap *Map) GetObjectPartTiles(o ObjectI, yDir, xDir, zDir int, force bool) (currentTiles, targetTiles []*Tile, err error) {
 	// Get object's current root tile.
 	tile := o.GetTile()
 	if tile == nil {
@@ -403,7 +403,7 @@ func (gmap *Map) GetObjectPartTiles(o ObjectI, yDir, xDir, zDir int) (currentTil
 	// Get our object's height, width, and depth.
 	h, w, d := o.GetDimensions()
 	// Check each potential move position.
-	getTargets := yDir != 0 || xDir != 0 || zDir != 0
+	getTargets := force || yDir != 0 || xDir != 0 || zDir != 0
 	// Iterate through our box.
 	for sY := 0; sY < h; sY++ {
 		olY := oY + sY

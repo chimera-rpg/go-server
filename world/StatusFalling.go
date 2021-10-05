@@ -45,7 +45,7 @@ func (s *StatusFalling) update(delta time.Duration) {
 		s.aggregate -= fallRate
 		m := s.target.GetTile().gameMap
 		if m != nil {
-			_, fallingTiles, err := m.GetObjectPartTiles(s.target, -1, 0, 0)
+			_, fallingTiles, err := m.GetObjectPartTiles(s.target, -1, 0, 0, false)
 
 			if doTilesBlock(fallingTiles) && err == nil {
 				if s.fallDistance >= 4 {
