@@ -287,6 +287,28 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 		return false, errors.New("somehow no tiles could be targeted")
 	}
 
+	// Check if we're uncrouching or should be crouched.
+	var crouch *StatusCrouch
+	if crouch := o.GetStatus(crouch); crouch != nil {
+		s := crouch.(*StatusCrouch)
+		if s.Remove {
+			o.RemoveStatus(crouch)
+			_, targetTiles, err = gmap.GetObjectPartTiles(o, yDir, xDir, zDir, true)
+			if err != nil {
+				return false, err
+			}
+			if doTilesBlock(targetTiles) {
+				// TODO: Send message that there is not space to stand here!
+			}
+		} else if !s.Crouching {
+			_, targetTiles, err = gmap.GetObjectPartTiles(o, yDir, xDir, zDir, true)
+			if err != nil {
+				return false, err
+			}
+			s.Crouching = true
+		}
+	}
+
 	// NOTE: How squeezing works is: 1. StatusSqueeze is set following by an immediate MoveObject for the same position; 2. MoveObject call removes old position and replaces it with a new one and also sets StatusSqueezing on the object; 3. Object sets StatusUnsqueeze and an immediate MoveObject for the same position; 4. MoveObject call removes the old position and replaces it with a new one that is unsqueezed and also removes StatusSqueezing and StatusUnsqueeze.
 	var squeeze *StatusSqueeze
 	var squeezing *StatusSqueezing

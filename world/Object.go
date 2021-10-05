@@ -166,5 +166,9 @@ func (o *Object) GetDimensions() (h, w, d int) {
 		w -= t.X
 		d -= t.Z
 	}
+	if s := o.GetStatus(&StatusCrouch{}); s != nil {
+		t := s.(*StatusCrouch)
+		h -= t.Y
+	}
 	return
 }
