@@ -16,14 +16,16 @@ type Tile struct {
 
 // insertObject inserts the provided Object at the given index.
 func (tile *Tile) insertObject(object ObjectI, index int) error {
+	// Remove from old tile _first_ just in case the object is in this tile already.
+	if object.GetTile() != nil {
+		object.GetTile().removeObject(object)
+	}
+
 	if index == -1 {
 		index = len(tile.objects)
 	}
 	if index == -1 {
 		index = 0
-	}
-	if object.GetTile() != nil {
-		object.GetTile().removeObject(object)
 	}
 
 	if len(tile.objects) == 0 {
