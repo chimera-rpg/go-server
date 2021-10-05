@@ -47,3 +47,13 @@ func (s *Status) ShouldRemove() bool {
 func (s *Status) StatusType() cdata.StatusType {
 	return 0
 }
+
+// OnAdd is called when the status is added. Target is guaranteed to be set.
+func (s *Status) OnAdd() {
+	return
+}
+
+// OnRemove is called when the status is removed. Target is guaranteed to be set.
+func (s *Status) OnRemove() {
+	return
+}

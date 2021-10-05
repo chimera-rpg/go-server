@@ -15,4 +15,6 @@ type StatusI interface {
 	ShouldRemove() bool
 	update(time.Duration)
 	StatusType() cdata.StatusType
+	OnAdd()
+	OnRemove()
 }
