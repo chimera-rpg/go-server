@@ -431,13 +431,13 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 				"cmd": t,
 			}).Print("CommandExtCmd")
 		case network.CommandStatus:
-			switch t.Type {
-			case cdata.SqueezingStatus:
-				c.Owner.GetCommandChannel() <- world.OwnerStatusCommand{&world.StatusSqueeze{Activate: t.Active}}
-			}
 			c.log.WithFields(log.Fields{
 				"cmd": t,
 			}).Print("CommandStatus")
+			switch t.Type {
+			case cdata.SqueezingStatus:
+				c.Owner.GetCommandChannel() <- world.OwnerStatusCommand{Status: &world.StatusSqueeze{Activate: t.Active}}
+			}
 		case network.CommandViewport:
 			// TODO: Make these limits configurable.
 			if t.Height > 32 {
