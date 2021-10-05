@@ -324,24 +324,25 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 		}
 	}
 
-	// NOTE: How squeezing works is: 1. StatusSqueeze is set following by an immediate MoveObject for the same position; 2. MoveObject call removes old position and replaces it with a new one and also sets StatusSqueezing on the object; 3. Object sets StatusUnsqueeze and an immediate MoveObject for the same position; 4. MoveObject call removes the old position and replaces it with a new one that is unsqueezed and also removes StatusSqueezing and StatusUnsqueeze.
+	// Check if we're unsqueezing or should be squeezed.
 	var squeeze *StatusSqueeze
-	var squeezing *StatusSqueezing
-	var unsqueeze *StatusUnsqueeze
-	if o.HasStatus(squeeze) && !o.HasStatus(squeezing) {
-		o.AddStatus(&StatusSqueezing{})
-		o.RemoveStatus(squeeze)
-		_, targetTiles, err = gmap.GetObjectPartTiles(o, yDir, xDir, zDir, true)
-		if err != nil {
-			return false, err
-		}
-	} else if o.HasStatus(unsqueeze) {
-		// Otherwise, if we are meant to unsqueeze, remove squeezing and unsqueeze, and adjust our new target tiles.
-		o.RemoveStatus(squeezing)
-		o.RemoveStatus(unsqueeze)
-		_, targetTiles, err = gmap.GetObjectPartTiles(o, yDir, xDir, zDir, true)
-		if err != nil {
-			return false, err
+	if squeeze := o.GetStatus(squeeze); squeeze != nil {
+		s := squeeze.(*StatusSqueeze)
+		if s.Remove {
+			o.RemoveStatus(squeeze)
+			_, targetTiles, err = gmap.GetObjectPartTiles(o, yDir, xDir, zDir, true)
+			if err != nil {
+				return false, err
+			}
+			if doTilesBlock(targetTiles) {
+				// TODO: Send message that there is not space to unsqueeze here!
+			}
+		} else if !s.Squeezing {
+			_, targetTiles, err = gmap.GetObjectPartTiles(o, yDir, xDir, zDir, true)
+			if err != nil {
+				return false, err
+			}
+			s.Squeezing = true
 		}
 	}
 

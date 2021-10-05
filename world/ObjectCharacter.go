@@ -118,16 +118,15 @@ func (o *ObjectCharacter) SetStatus(s StatusI) bool {
 			// TODO: Tell client we can't squeeze while crouching.
 			return false
 		}
-		var squeeze *StatusSqueeze
-		var squeezing *StatusSqueezing
-		var unsqueeze *StatusUnsqueeze
-		if o.HasStatus(squeezing) {
-			o.AddStatus(&StatusUnsqueeze{})
+		s2 := o.GetStatus(s)
+		if s2 == nil {
+			o.AddStatus(s)
 			o.GetTile().GetMap().MoveObject(o, 0, 0, 0, false)
-		} else if !o.HasStatus(squeeze) && !o.HasStatus(squeezing) && !o.HasStatus(unsqueeze) {
-			o.AddStatus(&StatusSqueeze{})
+		} else {
+			s2.(*StatusSqueeze).Remove = true
 			o.GetTile().GetMap().MoveObject(o, 0, 0, 0, false)
 		}
+
 	case *StatusCrouch:
 		if o.HasStatus(&StatusSqueeze{}) {
 			// TODO: Tell client we can't crouch while squeezing.

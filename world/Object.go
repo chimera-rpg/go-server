@@ -161,8 +161,8 @@ func (o *Object) GetDimensions() (h, w, d int) {
 		w = int(a.Width)
 		d = int(a.Depth)
 	}
-	if s := o.GetStatus(&StatusSqueezing{}); s != nil {
-		t := s.(*StatusSqueezing)
+	if s := o.GetStatus(&StatusSqueeze{}); s != nil {
+		t := s.(*StatusSqueeze)
 		w -= t.X
 		d -= t.Z
 	}
