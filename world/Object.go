@@ -1,7 +1,6 @@
 package world
 
 import (
-	"math"
 	"reflect"
 	"time"
 
@@ -96,6 +95,7 @@ func (o *Object) getType() cdata.ArchetypeType {
 func (o *Object) AddStatus(s StatusI) {
 	s.SetTarget(o)
 	o.statuses = append(o.statuses, s)
+	s.OnAdd()
 }
 
 // RemoveStatus removes the given status from the object.
@@ -103,6 +103,10 @@ func (o *Object) RemoveStatus(s StatusI) bool {
 	for i, s2 := range o.statuses {
 		if reflect.TypeOf(s) == reflect.TypeOf(s2) {
 			o.statuses = append(o.statuses[:i], o.statuses[i+1:]...)
+			s2.OnRemove()
+			if o.GetOwner() != nil {
+				o.GetOwner().SendStatus(s2, false)
+			}
 			return true
 		}
 	}
@@ -130,6 +134,16 @@ func (o *Object) ResolveEvent(e EventI) bool {
 	return true
 }
 
+// GetStatus returns the associated status.
+func (o *Object) GetStatus(t StatusI) StatusI {
+	for _, s := range o.statuses {
+		if reflect.TypeOf(s) == reflect.TypeOf(t) {
+			return s
+		}
+	}
+	return nil
+}
+
 // Blocks returns if the object blocks the given MatterType.
 func (o *Object) Blocks(matter cdata.MatterType) bool {
 	return o.blocking.Is(matter)
@@ -147,16 +161,10 @@ func (o *Object) GetDimensions() (h, w, d int) {
 		w = int(a.Width)
 		d = int(a.Depth)
 	}
-	// If the object is squeezing, shrink its depth and width by a third with a minimum of 1.
-	if o.HasStatus(&StatusSqueezing{}) {
-		w = w - int(math.Max(float64(w)/3, 1))
-		if w == 0 {
-			w = 1
-		}
-		d = d - int(math.Max(float64(d)/3, 1))
-		if d == 0 {
-			d = 1
-		}
+	if s := o.GetStatus(&StatusSqueezing{}); s != nil {
+		t := s.(*StatusSqueezing)
+		w -= t.X
+		d -= t.Z
 	}
 	return
 }
