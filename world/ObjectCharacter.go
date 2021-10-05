@@ -115,7 +115,7 @@ func (o *ObjectCharacter) SetStatus(s StatusI) bool {
 	switch s.(type) {
 	case *StatusSqueeze:
 		if o.HasStatus(&StatusCrouch{}) {
-			// TODO: Tell client we can't squeeze while crouching.
+			o.GetOwner().SendMessage("You cannot squeeze while crouching.")
 			return false
 		}
 		s2 := o.GetStatus(s)
@@ -129,7 +129,7 @@ func (o *ObjectCharacter) SetStatus(s StatusI) bool {
 
 	case *StatusCrouch:
 		if o.HasStatus(&StatusSqueeze{}) {
-			// TODO: Tell client we can't crouch while squeezing.
+			o.GetOwner().SendMessage("You cannot crouch while squeezing.")
 			return false
 		}
 		s2 := o.GetStatus(s)
