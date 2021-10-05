@@ -313,7 +313,10 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 				return false, err
 			}
 			if doTilesBlock(targetTiles) {
-				// TODO: Send message that there is not space to stand here!
+				s.Remove = false
+				o.AddStatus(s)
+				o.GetOwner().SendMessage("There is not enough space to stand here!") // TODO: Replace with an Event or something.
+				return false, nil
 			}
 		} else if !s.Crouching {
 			_, targetTiles, err = gmap.GetObjectPartTiles(o, yDir, xDir, zDir, true)
@@ -335,7 +338,10 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 				return false, err
 			}
 			if doTilesBlock(targetTiles) {
-				// TODO: Send message that there is not space to unsqueeze here!
+				s.Remove = false
+				o.AddStatus(s)
+				o.GetOwner().SendMessage("There is not enough space to unsqueeze here!") // TODO: Replace with an Event or something.
+				return false, nil
 			}
 		} else if !s.Squeezing {
 			_, targetTiles, err = gmap.GetObjectPartTiles(o, yDir, xDir, zDir, true)
