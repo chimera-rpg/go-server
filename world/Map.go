@@ -287,6 +287,21 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 		return false, errors.New("somehow no tiles could be targeted")
 	}
 
+	doTilesBlock := func(targetTiles []*Tile) bool {
+		matter := o.GetArchetype().Matter
+		for _, tT := range targetTiles {
+			for _, tO := range tT.objects {
+				if tO == o {
+					continue
+				}
+				if tO.Blocks(matter) {
+					return true
+				}
+			}
+		}
+		return false
+	}
+
 	// Check if we're uncrouching or should be crouched.
 	var crouch *StatusCrouch
 	if crouch := o.GetStatus(crouch); crouch != nil {
@@ -328,21 +343,6 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 		if err != nil {
 			return false, err
 		}
-	}
-
-	doTilesBlock := func(targetTiles []*Tile) bool {
-		matter := o.GetArchetype().Matter
-		for _, tT := range targetTiles {
-			for _, tO := range tT.objects {
-				if tO == o {
-					continue
-				}
-				if tO.Blocks(matter) {
-					return true
-				}
-			}
-		}
-		return false
 	}
 
 	// Get our unique objects that are not this object in the target tiles.
