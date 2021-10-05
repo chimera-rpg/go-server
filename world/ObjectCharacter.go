@@ -89,7 +89,7 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 	if o.hasMoved && !o.HasStatus(s) {
 		m := o.tile.gameMap
 		if m != nil {
-			_, fallingTiles, err := m.GetObjectPartTiles(o, -1, 0, 0)
+			_, fallingTiles, err := m.GetObjectPartTiles(o, -1, 0, 0, false)
 
 			if !doTilesBlock(fallingTiles) && err == nil {
 				o.AddStatus(&StatusFalling{})
@@ -104,23 +104,25 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 func (o *ObjectCharacter) AddStatus(s StatusI) {
 	s.SetTarget(o)
 	o.statuses = append(o.statuses, s)
+	s.OnAdd()
+	if o.GetOwner() != nil {
+		o.GetOwner().SendStatus(s, true)
+	}
 }
 
 // SetStatus sets the status.
 func (o *ObjectCharacter) SetStatus(s StatusI) bool {
-	switch e := s.(type) {
+	switch s.(type) {
 	case *StatusSqueeze:
 		var squeeze *StatusSqueeze
 		var squeezing *StatusSqueezing
 		var unsqueeze *StatusUnsqueeze
-		if e.Activate {
-			if !o.HasStatus(squeeze) && !o.HasStatus(squeezing) && !o.HasStatus(unsqueeze) {
-				o.AddStatus(&StatusSqueeze{})
-			}
-		} else {
-			if !o.HasStatus(squeeze) && !o.HasStatus(unsqueeze) {
-				o.AddStatus(&StatusUnsqueeze{})
-			}
+		if o.HasStatus(squeezing) {
+			o.AddStatus(&StatusUnsqueeze{})
+			o.GetTile().GetMap().MoveObject(o, 0, 0, 0, false)
+		} else if !o.HasStatus(squeeze) && !o.HasStatus(squeezing) && !o.HasStatus(unsqueeze) {
+			o.AddStatus(&StatusSqueeze{})
+			o.GetTile().GetMap().MoveObject(o, 0, 0, 0, false)
 		}
 	}
 	return false
