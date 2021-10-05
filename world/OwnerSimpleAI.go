@@ -112,5 +112,10 @@ func (owner *OwnerSimpleAI) GetAttitude(oID ID) data.Attitude {
 	return data.NoAttitude
 }
 
+// SendMessage sends a message to the character.
 func (owner *OwnerSimpleAI) SendMessage(s string) {
+}
+
+// SendStatus sends the status to the owner, providing it has a StatusType.
+func (owner *OwnerSimpleAI) SendStatus(s StatusI, active bool) {
 }

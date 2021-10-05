@@ -282,3 +282,13 @@ func (player *OwnerPlayer) SendMessage(s string) {
 		Body:         s,
 	})
 }
+
+// SendStatus sends the status to the owner, providing it has a StatusType.
+func (player *OwnerPlayer) SendStatus(s StatusI, active bool) {
+	if s.StatusType() != 0 {
+		player.ClientConnection.Send(network.CommandStatus{
+			Type:   s.StatusType(),
+			Active: active,
+		})
+	}
+}

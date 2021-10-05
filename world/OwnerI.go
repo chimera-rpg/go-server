@@ -23,4 +23,5 @@ type OwnerI interface {
 	GetAttitude(ID) data.Attitude
 	//
 	SendMessage(string)
+	SendStatus(StatusI, bool)
 }
