@@ -208,14 +208,19 @@ func (player *OwnerPlayer) checkVisibleTiles() error {
 
 // Update does something.?
 func (player *OwnerPlayer) Update(delta time.Duration) error {
-	// I guess here is where we'd have some sort of "handleCommandQueue" functionality.
 	done := false
 	for !done {
 		select {
 		case ocmd, _ := <-player.commandChannel:
 			switch c := ocmd.(type) {
-			/*case OwnerClearCommand:
-			player.ClearCommands()*/
+			case OwnerRepeatCommand:
+				if c.Cancel {
+					player.repeatCommand = nil
+				} else {
+					player.repeatCommand = c
+				}
+			case OwnerClearCommand:
+				player.ClearCommands()
 			default:
 				player.PushCommand(c)
 			}
@@ -224,13 +229,14 @@ func (player *OwnerPlayer) Update(delta time.Duration) error {
 		}
 	}
 
+	// TODO: Throttle sending updates for stamina and others.
 	if t := player.GetTarget(); t != nil {
 		if t.Stamina() != player.lastKnownStamina {
+			player.lastKnownStamina = t.Stamina()
 			player.ClientConnection.Send(network.CommandStamina{
 				Stamina:    player.lastKnownStamina,
 				MaxStamina: t.MaxStamina(),
 			})
-			player.lastKnownStamina = t.Stamina()
 		}
 	}
 
