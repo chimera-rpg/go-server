@@ -29,4 +29,7 @@ type ObjectI interface {
 	Blocks(cdata.MatterType) bool
 	Name() string
 	GetDimensions() (h, w, d int)
+	//
+	Stamina() time.Duration
+	MaxStamina() time.Duration
 }

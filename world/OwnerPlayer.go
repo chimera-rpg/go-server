@@ -4,7 +4,6 @@ import (
 	"github.com/chimera-rpg/go-common/network"
 	"github.com/chimera-rpg/go-server/data"
 
-	"fmt"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -21,6 +20,7 @@ type clientConnectionI interface {
 // OwnerPlayer represents a player character through a network
 // connection and the associated player object.
 type OwnerPlayer struct {
+	Owner
 	commandChannel                   chan OwnerCommand
 	ClientConnection                 clientConnectionI
 	target                           *ObjectCharacter
@@ -30,6 +30,7 @@ type OwnerPlayer struct {
 	view                             [][][]TileView
 	knownIDs                         map[ID]struct{}
 	attitudes                        map[ID]data.Attitude
+	lastKnownStamina                 time.Duration
 }
 
 // GetTarget returns the player's target object.
@@ -213,17 +214,23 @@ func (player *OwnerPlayer) Update(delta time.Duration) error {
 		select {
 		case ocmd, _ := <-player.commandChannel:
 			switch c := ocmd.(type) {
-			case OwnerMoveCommand:
-				if _, err := player.currentMap.MoveObject(player.target, c.Y, c.X, c.Z, false); err != nil {
-					log.Warn(err)
-				}
-			case OwnerStatusCommand:
-				player.target.SetStatus(c.Status)
+			/*case OwnerClearCommand:
+			player.ClearCommands()*/
 			default:
-				fmt.Printf("Got unhandled owner command: %+v\n", ocmd)
+				player.PushCommand(c)
 			}
 		default:
 			done = true
+		}
+	}
+
+	if t := player.GetTarget(); t != nil {
+		if t.Stamina() != player.lastKnownStamina {
+			player.ClientConnection.Send(network.CommandStamina{
+				Stamina:    player.lastKnownStamina,
+				MaxStamina: t.MaxStamina(),
+			})
+			player.lastKnownStamina = t.Stamina()
 		}
 	}
 

@@ -11,6 +11,7 @@ import (
 // OwnerSimpleAI represents a non-owner character with a fairly
 // simple logic.
 type OwnerSimpleAI struct {
+	Owner
 	target                           *ObjectCharacter
 	currentMap                       *Map
 	mapUpdateTime                    uint8

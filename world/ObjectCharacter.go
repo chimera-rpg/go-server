@@ -6,30 +6,38 @@ import (
 
 	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-server/data"
+	log "github.com/sirupsen/logrus"
 )
 
 // ObjectCharacter represents player characters.
 type ObjectCharacter struct {
 	Object
 	//
-	name          string
-	maxHp         int
-	level         int
-	race          string
-	count         int
-	value         int
-	mapUpdateTime uint8 // Corresponds to the map's updateTime -- if they are out of sync then the player will sample its view space.
-	resistances   data.AttackTypes
-	attacktypes   data.AttackTypes
-	attributes    data.Attributes
-	skills        []ObjectSkill
-	equipment     []ObjectI // Equipment is all equipped inventory items.
+	name                   string
+	maxHp                  int
+	level                  int
+	race                   string
+	count                  int
+	value                  int
+	mapUpdateTime          uint8 // Corresponds to the map's updateTime -- if they are out of sync then the player will sample its view space.
+	resistances            data.AttackTypes
+	attacktypes            data.AttackTypes
+	attributes             data.Attributes
+	skills                 []ObjectSkill
+	equipment              []ObjectI // Equipment is all equipped inventory items.
+	currentCommand         OwnerCommand
+	currentCommandElapsed  time.Duration
+	currentCommandDuration time.Duration
+	// FIXME: Temporary code for testing a stamina system.
+	stamina    time.Duration
+	maxStamina time.Duration
 }
 
 // NewObjectCharacter creates a new ObjectCharacter from the given archetype.
 func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 	o = &ObjectCharacter{
-		Object: NewObject(a),
+		Object:     NewObject(a),
+		maxStamina: time.Millisecond * 100, // TEMP.
 	}
 
 	// Create a new Owner AI if it is an NPC.
@@ -47,8 +55,9 @@ func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 // NewObjectCharacterFromCharacter creates a new ObjectCharacter from the given character data.
 func NewObjectCharacterFromCharacter(c *data.Character) (o *ObjectCharacter) {
 	o = &ObjectCharacter{
-		Object: NewObject(&c.Archetype),
-		name:   c.Name,
+		Object:     NewObject(&c.Archetype),
+		name:       c.Name,
+		maxStamina: time.Millisecond * 100, // TEMP.
 	}
 	return
 }
@@ -96,6 +105,40 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 			}
 		}
 	}
+
+	o.stamina += delta
+	if o.stamina > o.maxStamina {
+		o.stamina = o.maxStamina
+	}
+
+	// Process as many commands as we can.
+	for {
+		if o.currentCommand == nil {
+			if o.GetOwner() != nil {
+				if o.GetOwner().HasCommands() {
+					o.currentCommand = o.GetOwner().ShiftCommand()
+					o.currentCommandDuration = time.Millisecond * 50
+				} else {
+					break
+				}
+			}
+		}
+		if o.stamina >= o.currentCommandDuration {
+			switch c := o.currentCommand.(type) {
+			case OwnerMoveCommand:
+				if _, err := o.GetTile().GetMap().MoveObject(o, c.Y, c.X, c.Z, false); err != nil {
+					log.Warn(err)
+				}
+			case OwnerStatusCommand:
+				o.SetStatus(c.Status)
+			}
+			o.currentCommand = nil
+			o.stamina -= o.currentCommandDuration
+		} else {
+			break
+		}
+	}
+
 	//
 	o.Object.update(delta)
 }
@@ -234,4 +277,14 @@ func (o *ObjectCharacter) EquipWeapon(armor *ObjectWeapon) error {
 // Name returns the name of the character.
 func (o *ObjectCharacter) Name() string {
 	return o.name
+}
+
+// Stamina returns the object's stamina.
+func (o *ObjectCharacter) Stamina() time.Duration {
+	return o.stamina
+}
+
+// Stamina returns the object's max stamina.
+func (o *ObjectCharacter) MaxStamina() time.Duration {
+	return o.maxStamina
 }

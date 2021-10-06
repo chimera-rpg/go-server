@@ -172,3 +172,13 @@ func (o *Object) GetDimensions() (h, w, d int) {
 	}
 	return
 }
+
+// Stamina returns the object's stamina.
+func (o *Object) Stamina() time.Duration {
+	return 0
+}
+
+// MaxStamina returns the object's maximum stamina.
+func (o *Object) MaxStamina() time.Duration {
+	return 0
+}
