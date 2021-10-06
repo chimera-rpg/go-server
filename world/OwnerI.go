@@ -25,6 +25,7 @@ type OwnerI interface {
 	SendMessage(string)
 	SendStatus(StatusI, bool)
 	//
+	RepeatCommand() OwnerCommand
 	HasCommands() bool
 	PushCommand(c OwnerCommand)
 	ShiftCommand() OwnerCommand

@@ -1,7 +1,8 @@
 package world
 
 type Owner struct {
-	commandQueue []OwnerCommand
+	commandQueue  []OwnerCommand
+	repeatCommand OwnerCommand
 }
 
 func (owner *Owner) HasCommands() bool {
@@ -20,4 +21,9 @@ func (owner *Owner) ShiftCommand() OwnerCommand {
 
 func (owner *Owner) ClearCommands() {
 	owner.commandQueue = make([]OwnerCommand, 0)
+	owner.repeatCommand = nil
+}
+
+func (owner *Owner) RepeatCommand() OwnerCommand {
+	return owner.repeatCommand
 }
