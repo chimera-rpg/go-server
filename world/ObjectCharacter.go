@@ -111,6 +111,7 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 		o.stamina = o.maxStamina
 	}
 
+	// TODO: What we should do is convert these commands into concrete actions, of which only 1 action may be in use at a time. So, CommandMove -> ActionMove, ActionMove would then take time and stamina to resolve, and upon its finish, the next command (and associated action) begin.
 	// Process as many commands as we can.
 	isRunning := false
 	for {
