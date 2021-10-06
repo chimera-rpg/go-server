@@ -38,8 +38,9 @@ func (o *Object) update(delta time.Duration) {
 	for i := 0; i < len(o.statuses); i++ {
 		o.statuses[i].update(delta)
 		if o.statuses[i].ShouldRemove() {
-			o.statuses = append(o.statuses[:i], o.statuses[i+1:]...)
-			i--
+      if o.RemoveStatus(o.statuses[i]) {
+			  i--
+      }
 		}
 	}
 }
