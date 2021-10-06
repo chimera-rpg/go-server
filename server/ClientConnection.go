@@ -426,10 +426,34 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 			case network.Southwest:
 				c.Owner.GetCommandChannel() <- world.OwnerMoveCommand{X: -1, Z: 1}
 			}
+		case network.CommandClearCmd:
+			c.Owner.GetCommandChannel() <- world.OwnerClearCommand{}
 		case network.CommandExtCmd:
 			c.log.WithFields(log.Fields{
 				"cmd": t,
 			}).Print("CommandExtCmd")
+		case network.CommandRepeatCmd:
+			switch t.Cmd {
+			case network.North:
+				c.Owner.GetCommandChannel() <- world.OwnerRepeatCommand{Command: world.OwnerMoveCommand{Z: -1}, Cancel: t.Cancel}
+			case network.South:
+				c.Owner.GetCommandChannel() <- world.OwnerRepeatCommand{Command: world.OwnerMoveCommand{Z: 1}, Cancel: t.Cancel}
+			case network.East:
+				c.Owner.GetCommandChannel() <- world.OwnerRepeatCommand{Command: world.OwnerMoveCommand{X: 1}, Cancel: t.Cancel}
+			case network.West:
+				c.Owner.GetCommandChannel() <- world.OwnerRepeatCommand{Command: world.OwnerMoveCommand{X: -1}, Cancel: t.Cancel}
+			case network.Northeast:
+				c.Owner.GetCommandChannel() <- world.OwnerRepeatCommand{Command: world.OwnerMoveCommand{X: 1, Z: -1}, Cancel: t.Cancel}
+			case network.Northwest:
+				c.Owner.GetCommandChannel() <- world.OwnerRepeatCommand{Command: world.OwnerMoveCommand{X: -1, Z: -1}, Cancel: t.Cancel}
+			case network.Southeast:
+				c.Owner.GetCommandChannel() <- world.OwnerRepeatCommand{Command: world.OwnerMoveCommand{X: 1, Z: 1}, Cancel: t.Cancel}
+			case network.Southwest:
+				c.Owner.GetCommandChannel() <- world.OwnerRepeatCommand{Command: world.OwnerMoveCommand{X: -1, Z: 1}, Cancel: t.Cancel}
+			}
+			c.log.WithFields(log.Fields{
+				"cmd": t,
+			}).Print("CommandRepeatCmd")
 		case network.CommandStatus:
 			c.log.WithFields(log.Fields{
 				"cmd": t,
