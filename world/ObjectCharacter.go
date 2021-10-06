@@ -112,7 +112,23 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 	}
 
 	// Process as many commands as we can.
+	isRunning := false
 	for {
+		// Always prioritize repeat commands.
+		if cmd := o.GetOwner().RepeatCommand(); cmd != nil {
+			cmd := cmd.(OwnerRepeatCommand)
+			switch c := cmd.Command.(type) {
+			case OwnerMoveCommand:
+				if o.stamina >= 50*time.Millisecond {
+					if _, err := o.GetTile().GetMap().MoveObject(o, c.Y, c.X, c.Z, false); err != nil {
+						log.Warn(err)
+					}
+					o.stamina -= 50 * time.Millisecond
+				}
+				isRunning = true
+			}
+			break
+		}
 		if o.currentCommand == nil {
 			if o.GetOwner() != nil {
 				if o.GetOwner().HasCommands() {
@@ -137,6 +153,11 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 		} else {
 			break
 		}
+	}
+	if isRunning && !o.HasStatus(&StatusRunning{}) {
+		o.AddStatus(&StatusRunning{})
+	} else if !isRunning && o.HasStatus(&StatusRunning{}) {
+		o.RemoveStatus(&StatusRunning{})
 	}
 
 	//
