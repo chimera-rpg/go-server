@@ -21,7 +21,7 @@ type ObjectI interface {
 	update(time.Duration)
 	getType() cdata.ArchetypeType
 	AddStatus(StatusI)
-	RemoveStatus(StatusI) bool
+	RemoveStatus(StatusI) StatusI
 	HasStatus(StatusI) bool
 	SetStatus(StatusI) bool
 	GetStatus(StatusI) StatusI
@@ -30,8 +30,8 @@ type ObjectI interface {
 	Name() string
 	GetDimensions() (h, w, d int)
 	//
-	Stamina() time.Duration
-	MaxStamina() time.Duration
+	Stamina() int
+	MaxStamina() int
 	//
-	RestoreActions()
+	RestoreStamina()
 }

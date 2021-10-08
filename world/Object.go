@@ -40,7 +40,7 @@ func (o *Object) update(delta time.Duration) {
 	for i := 0; i < len(o.statuses); i++ {
 		o.statuses[i].update(delta)
 		if o.statuses[i].ShouldRemove() {
-			if o.RemoveStatus(o.statuses[i]) {
+			if o.RemoveStatus(o.statuses[i]) != nil {
 				i--
 			}
 		}
@@ -101,8 +101,8 @@ func (o *Object) AddStatus(s StatusI) {
 	s.OnAdd()
 }
 
-// RemoveStatus removes the given status from the object.
-func (o *Object) RemoveStatus(s StatusI) bool {
+// RemoveStatus removes the given status from the object, returning the status that was stored.
+func (o *Object) RemoveStatus(s StatusI) StatusI {
 	for i, s2 := range o.statuses {
 		if reflect.TypeOf(s) == reflect.TypeOf(s2) {
 			o.statuses = append(o.statuses[:i], o.statuses[i+1:]...)
@@ -110,10 +110,10 @@ func (o *Object) RemoveStatus(s StatusI) bool {
 			if o.GetOwner() != nil {
 				o.GetOwner().SendStatus(s2, false)
 			}
-			return true
+			return s2
 		}
 	}
-	return false
+	return nil
 }
 
 // HasStatus checks if the object has the given status.
@@ -177,16 +177,14 @@ func (o *Object) GetDimensions() (h, w, d int) {
 }
 
 // Stamina returns the object's stamina.
-func (o *Object) Stamina() time.Duration {
+func (o *Object) Stamina() int {
 	return 0
 }
 
 // MaxStamina returns the object's maximum stamina.
-func (o *Object) MaxStamina() time.Duration {
+func (o *Object) MaxStamina() int {
 	return 0
 }
 
-// RestoreActions restore the object's actions ot its maximum amount.
-func (o *Object) RestoreActions() {
-	o.actions = o.maxActions
-}
+// RestoreStamina DOES NOTHING
+func (o *Object) RestoreStamina() {}

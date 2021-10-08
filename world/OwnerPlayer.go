@@ -231,13 +231,13 @@ func (player *OwnerPlayer) Update(delta time.Duration) error {
 
 	// TODO: Throttle sending updates for stamina and others.
 	if t := player.GetTarget(); t != nil {
-		if t.Stamina() != player.lastKnownStamina {
+		/*if t.Stamina() != player.lastKnownStamina {
 			player.lastKnownStamina = t.Stamina()
 			player.ClientConnection.Send(network.CommandStamina{
 				Stamina:    player.lastKnownStamina,
 				MaxStamina: t.MaxStamina(),
 			})
-		}
+		}*/
 	}
 
 	return nil

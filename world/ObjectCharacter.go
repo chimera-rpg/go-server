@@ -14,32 +14,33 @@ import (
 type ObjectCharacter struct {
 	Object
 	//
-	name                   string
-	maxHp                  int
-	level                  int
-	race                   string
-	count                  int
-	value                  int
-	mapUpdateTime          uint8 // Corresponds to the map's updateTime -- if they are out of sync then the player will sample its view space.
-	resistances            data.AttackTypes
-	attacktypes            data.AttackTypes
-	attributes             data.AttributeSets
-	skills                 []ObjectSkill
-	equipment              []ObjectI // Equipment is all equipped inventory items.
-	currentCommand         OwnerCommand
-	currentCommandElapsed  time.Duration
-	currentCommandDuration time.Duration
+	name                  string
+	maxHp                 int
+	level                 int
+	race                  string
+	count                 int
+	value                 int
+	mapUpdateTime         uint8 // Corresponds to the map's updateTime -- if they are out of sync then the player will sample its view space.
+	resistances           data.AttackTypes
+	attacktypes           data.AttackTypes
+	attributes            data.AttributeSets
+	skills                []ObjectSkill
+	equipment             []ObjectI // Equipment is all equipped inventory items.
+	currentActionDuration time.Duration
 	// FIXME: Temporary code for testing a stamina system.
-	stamina    time.Duration // Stamina is a pool that recharges and is consumed by actions.
-	maxStamina time.Duration
+	stamina                int // Stamina is a pool that recharges and is consumed by actions.
+	maxStamina             int
+	currentAction          ActionI
+	speedPenaltyMultiplier int // The speed penalty multiplier, for status penalties to action duration costs.
 }
 
 // NewObjectCharacter creates a new ObjectCharacter from the given archetype.
 func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 	o = &ObjectCharacter{
-		Object:     NewObject(a),
-		maxStamina: time.Millisecond * 100, // TEMP.
+		Object:                 NewObject(a),
+		speedPenaltyMultiplier: 1,
 	}
+	o.maxStamina = o.CalculateStamina()
 
 	// Create a new Owner AI if it is an NPC.
 	if a.Type == cdata.ArchetypeNPC {
@@ -53,16 +54,15 @@ func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 	return
 }
 
-// newObjectCharacterFromCharacter creates a new ObjectCharacter from the given character data.
+// NewObjectCharacterFromCharacter creates a new ObjectCharacter from the given character data.
 func NewObjectCharacterFromCharacter(c *data.Character) (o *ObjectCharacter) {
 	o = &ObjectCharacter{
-		Object:     NewObject(&c.Archetype),
-		name:       c.Name,
-		maxStamina: time.Millisecond * 100, // TEMP.
+		Object:                 NewObject(&c.Archetype),
+		name:                   c.Name,
+		speedPenaltyMultiplier: 1,
 	}
 	//o.maxStamina = time.Duration(o.CalculateStamina())
-	o.maxActions = o.CalculateActions()
-	//o.actions = // TODO: Restore from character.
+	o.maxStamina = o.CalculateStamina()
 	return
 }
 
@@ -110,55 +110,72 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 		}
 	}
 
-	o.stamina += delta
-	if o.stamina > o.maxStamina {
-		o.stamina = o.maxStamina
-	}
-
-	// TODO: What we should do is convert these commands into concrete actions, of which only 1 action may be in use at a time. So, CommandMove -> ActionMove, ActionMove would then take time and stamina to resolve, and upon its finish, the next command (and associated action) begin.
 	// Process as many commands as we can.
-	isRunning := false
+	o.currentActionDuration += delta / time.Duration(o.speedPenaltyMultiplier)
 	for {
+		// Process our current action first.
+		if o.currentAction != nil {
+			if !o.currentAction.Channeled() && o.currentActionDuration >= o.currentAction.ChannelTime() {
+				switch a := o.currentAction.(type) {
+				case *ActionMove:
+					if _, err := o.GetTile().GetMap().MoveObject(o, a.y, a.x, a.z, false); err != nil {
+						log.Warn(err)
+					}
+				case *ActionStatus:
+					o.SetStatus(a.status)
+				}
+				o.currentAction.Channel(true)
+			}
+			if o.currentActionDuration < o.currentAction.ChannelTime()+o.currentAction.RecoveryTime() {
+				break
+			}
+			o.currentAction = nil
+		}
+		calcDuration := func(base time.Duration, min time.Duration, reduction time.Duration) time.Duration {
+			d := base - reduction
+			if d < min {
+				d = min
+			}
+			return d
+		}
 		// Always prioritize repeat commands.
 		if cmd := o.GetOwner().RepeatCommand(); cmd != nil {
 			cmd := cmd.(OwnerRepeatCommand)
 			switch c := cmd.Command.(type) {
 			case OwnerMoveCommand:
-				if o.stamina >= 50*time.Millisecond {
-					if _, err := o.GetTile().GetMap().MoveObject(o, c.Y, c.X, c.Z, false); err != nil {
-						log.Warn(err)
-					}
-					o.stamina -= 50 * time.Millisecond
-				}
-				isRunning = true
+				// Cap movement duration cost to a minimum of 20 millisecond
+				duration := calcDuration(100*time.Millisecond, 20*time.Millisecond, time.Duration(o.CalculateSpeed())*time.Millisecond)
+				o.currentAction = NewActionMove(c.Y, c.X, c.Z, duration, true)
+				o.currentActionDuration = 0 // TODO: Add remainder from last operation if possible.
 			}
-			break
-		}
-		if o.currentCommand == nil {
-			if o.GetOwner() != nil {
-				if o.GetOwner().HasCommands() {
-					o.currentCommand = o.GetOwner().ShiftCommand()
-					o.currentCommandDuration = time.Millisecond * 50
-				} else {
-					break
-				}
-			}
-		}
-		if o.stamina >= o.currentCommandDuration {
-			switch c := o.currentCommand.(type) {
+		} else if o.GetOwner() != nil && o.GetOwner().HasCommands() {
+			cmd := o.GetOwner().ShiftCommand()
+			switch c := cmd.(type) {
 			case OwnerMoveCommand:
-				if _, err := o.GetTile().GetMap().MoveObject(o, c.Y, c.X, c.Z, false); err != nil {
-					log.Warn(err)
-				}
+				duration := calcDuration(100*time.Millisecond, 20*time.Millisecond, time.Duration(o.CalculateSpeed())*time.Millisecond)
+				o.currentAction = NewActionMove(c.Y, c.X, c.Z, duration, false)
+				o.currentActionDuration = 0 // TODO: Add remainder from last operation if possible.
 			case OwnerStatusCommand:
-				o.SetStatus(c.Status)
+				duration := calcDuration(200*time.Millisecond, 50*time.Millisecond, time.Duration(o.CalculateSpeed())*time.Millisecond)
+				o.currentAction = NewActionStatus(c.Status, duration)
+				o.currentActionDuration = 0 // TODO: Add remainder from last operation if possible.
 			}
-			o.currentCommand = nil
-			o.stamina -= o.currentCommandDuration
-		} else {
+		}
+		if o.currentAction == nil {
 			break
 		}
 	}
+	isRunning := false
+
+	if o.currentAction != nil {
+		switch a := o.currentAction.(type) {
+		case *ActionMove:
+			if a.running {
+				isRunning = true
+			}
+		}
+	}
+
 	if isRunning && !o.HasStatus(&StatusRunning{}) {
 		o.AddStatus(&StatusRunning{})
 	} else if !isRunning && o.HasStatus(&StatusRunning{}) {
@@ -177,6 +194,25 @@ func (o *ObjectCharacter) AddStatus(s StatusI) {
 	if o.GetOwner() != nil {
 		o.GetOwner().SendStatus(s, true)
 	}
+	switch s.(type) {
+	case *StatusSqueeze:
+		o.speedPenaltyMultiplier++
+	case *StatusCrouch:
+		o.speedPenaltyMultiplier += 2
+	}
+}
+
+// RemoveStatus removes the given status type from the character.
+func (o *ObjectCharacter) RemoveStatus(s StatusI) StatusI {
+	if s = o.Object.RemoveStatus(s); s != nil {
+		switch s.(type) {
+		case *StatusSqueeze:
+			o.speedPenaltyMultiplier--
+		case *StatusCrouch:
+			o.speedPenaltyMultiplier -= 2
+		}
+	}
+	return s
 }
 
 // SetStatus sets the status.
@@ -306,13 +342,23 @@ func (o *ObjectCharacter) Name() string {
 }
 
 // Stamina returns the object's stamina.
-func (o *ObjectCharacter) Stamina() time.Duration {
+func (o *ObjectCharacter) Stamina() int {
 	return o.stamina
 }
 
 // MaxStamina returns the object's max stamina.
-func (o *ObjectCharacter) MaxStamina() time.Duration {
+func (o *ObjectCharacter) MaxStamina() int {
 	return o.maxStamina
+}
+
+// RestoreStamina restores a calculated amount of stamina on turn start.
+func (o *ObjectCharacter) RestoreStamina() {
+	if o.stamina < o.maxStamina {
+		o.stamina += o.CalculateStamina()
+		if o.stamina > o.maxStamina {
+			o.stamina = o.maxStamina
+		}
+	}
 }
 
 // CalculateStamina calculates the maximum stamina based upon our attributes.
@@ -327,14 +373,14 @@ func (o *ObjectCharacter) CalculateStamina() int {
 	return result
 }
 
-// CalculateActions calculates the maximum actions a character has.
-func (o *ObjectCharacter) CalculateActions() int {
-	result := 1
+// CalculateSpeed calculates the speed a character has.
+func (o *ObjectCharacter) CalculateSpeed() int {
+	result := 10
 
 	h, _ := o.GetAttributeValue(data.PhysicalAttributes, data.Haste)
 	r, _ := o.GetAttributeValue(data.PhysicalAttributes, data.Reaction)
 
-	result += int(h) + int(r)/4
+	result += int(h)*5 + int(r)/4*5
 
 	return result
 }
