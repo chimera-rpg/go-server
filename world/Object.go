@@ -18,10 +18,12 @@ type Object struct {
 	parent ObjectI
 	owner  OwnerI
 	//
-	statuses  []StatusI
-	inventory []ObjectI
-	hasMoved  bool
-	blocking  cdata.MatterType
+	statuses   []StatusI
+	inventory  []ObjectI
+	hasMoved   bool
+	blocking   cdata.MatterType
+	actions    int // Actions are the amount of actions that a player can take within 1 second
+	maxActions int // Max actions are the amount of actions that a player can take within 1 second.
 }
 
 // NewObject returns a new Object that references the given Archetype.
@@ -38,9 +40,9 @@ func (o *Object) update(delta time.Duration) {
 	for i := 0; i < len(o.statuses); i++ {
 		o.statuses[i].update(delta)
 		if o.statuses[i].ShouldRemove() {
-      if o.RemoveStatus(o.statuses[i]) {
-			  i--
-      }
+			if o.RemoveStatus(o.statuses[i]) {
+				i--
+			}
 		}
 	}
 }
@@ -182,4 +184,9 @@ func (o *Object) Stamina() time.Duration {
 // MaxStamina returns the object's maximum stamina.
 func (o *Object) MaxStamina() time.Duration {
 	return 0
+}
+
+// RestoreActions restore the object's actions ot its maximum amount.
+func (o *Object) RestoreActions() {
+	o.actions = o.maxActions
 }

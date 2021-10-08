@@ -32,7 +32,9 @@ type Map struct {
 	width         int
 	height        int
 	depth         int
-	updateTime    uint8 // Whenever this is updated, owners will check their surroundings for updates.
+	updateTime    uint8         // Whenever this is updated, owners will check their surroundings for updates.
+	turnTime      time.Duration // Time until the next map turn (when characters have their actions restored)
+	turnElapsed   time.Duration
 }
 
 // NewMap loads the given map file from the data manager.
@@ -48,6 +50,7 @@ func NewMap(world *World, name string) (*Map, error) {
 		mapID:         gd.MapID,
 		name:          gd.Name,
 		activeObjects: make(map[ID]ObjectI),
+		turnTime:      time.Second * 1,
 	}
 	gmap.owners = make([]OwnerI, 0)
 	// Size map and populate it with the data tiles
@@ -117,6 +120,15 @@ func (gmap *Map) Update(gm *World, delta time.Duration) error {
 
 	for _, owner := range gmap.owners {
 		owner.OnMapUpdate(delta)
+	}
+
+	// Check if it is time for the next turn.
+	gmap.turnElapsed += delta
+	if gmap.turnElapsed >= gmap.turnTime {
+		for _, object := range gmap.activeObjects {
+			object.RestoreActions()
+		}
+		gmap.turnElapsed = 0
 	}
 
 	for _, object := range gmap.activeObjects {

@@ -32,4 +32,6 @@ type ObjectI interface {
 	//
 	Stamina() time.Duration
 	MaxStamina() time.Duration
+	//
+	RestoreActions()
 }

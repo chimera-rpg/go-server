@@ -30,10 +30,8 @@ type ObjectCharacter struct {
 	currentCommandElapsed  time.Duration
 	currentCommandDuration time.Duration
 	// FIXME: Temporary code for testing a stamina system.
-	stamina    time.Duration
+	stamina    time.Duration // Stamina is a pool that recharges and is consumed by actions.
 	maxStamina time.Duration
-	actions    int
-	maxActions int
 }
 
 // NewObjectCharacter creates a new ObjectCharacter from the given archetype.
@@ -64,6 +62,7 @@ func NewObjectCharacterFromCharacter(c *data.Character) (o *ObjectCharacter) {
 	}
 	//o.maxStamina = time.Duration(o.CalculateStamina())
 	o.maxActions = o.CalculateActions()
+	//o.actions = // TODO: Restore from character.
 	return
 }
 
