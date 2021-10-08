@@ -340,6 +340,19 @@ func (o *ObjectCharacter) CalculateActions() int {
 	return result
 }
 
+// CalculateHealth calculates the maximum health a character has.
+func (o *ObjectCharacter) CalculateHealth() int {
+	result := 0
+
+	p, _ := o.GetAttributeValue(data.PhysicalAttributes, data.Prowess)
+	m, _ := o.GetAttributeValue(data.PhysicalAttributes, data.Might)
+
+	result += int(p) * 8
+	result += int(m) * 2
+
+	return result
+}
+
 // GetAttributeValue gets the calculated value for a given attribute.
 func (o *ObjectCharacter) GetAttributeValue(set data.AttributesType, a data.AttributeType) (int, error) {
 	var value int
