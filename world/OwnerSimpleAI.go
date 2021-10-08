@@ -120,3 +120,7 @@ func (owner *OwnerSimpleAI) SendMessage(s string) {
 // SendStatus sends the status to the owner, providing it has a StatusType.
 func (owner *OwnerSimpleAI) SendStatus(s StatusI, active bool) {
 }
+
+// SendSound does nothing.
+func (owner *OwnerSimpleAI) SendSound(snd string, objectID ID, y, x, z int) {
+}

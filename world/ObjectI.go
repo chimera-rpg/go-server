@@ -29,6 +29,7 @@ type ObjectI interface {
 	Blocks(cdata.MatterType) bool
 	Name() string
 	GetDimensions() (h, w, d int)
+	GetDistance(y, x, z int) float64
 	//
 	Stamina() int
 	MaxStamina() int

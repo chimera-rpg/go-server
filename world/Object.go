@@ -1,6 +1,7 @@
 package world
 
 import (
+	"math"
 	"reflect"
 	"time"
 
@@ -188,3 +189,9 @@ func (o *Object) MaxStamina() int {
 
 // RestoreStamina DOES NOTHING
 func (o *Object) RestoreStamina() {}
+
+// GetDistance gets the distance from the object to the target coordinates.
+func (o *Object) GetDistance(y, x, z int) float64 {
+	t := o.GetTile()
+	return math.Sqrt(math.Pow(float64(y-t.y), 2) + math.Pow(float64(x-t.x), 2) + math.Pow(float64(z-t.z), 2))
+}

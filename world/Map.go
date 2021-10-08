@@ -318,7 +318,8 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 				s.Remove = false
 				o.AddStatus(s)
 				o.GetOwner().SendMessage("There is not enough space to stand here!") // TODO: Replace with an Event or something.
-				// TODO: Send a *bonk* from this coordinate.
+				h, w, d := o.GetDimensions()
+				gmap.EmitSound("bonk", targetTiles[0].y+h, targetTiles[0].x+w/2, targetTiles[0].z+d/2, 0.25)
 				return false, nil
 			}
 		} else if !s.Crouching {
@@ -463,4 +464,26 @@ func (gmap *Map) GetObjectPartTiles(o ObjectI, yDir, xDir, zDir int, force bool)
 		}
 	}
 	return
+}
+
+// Sounds
+
+// EmitSound emits a sound at Y, X, Z to all characters at a volume. // FIXME: Sounds are strings at the moment, but should be replaced with a SoundID type.
+func (gmap *Map) EmitSound(snd string, y, x, z int, volume float64) {
+	for _, o := range gmap.activeObjects {
+		switch c := o.(type) {
+		case *ObjectCharacter:
+			c.HandleSound(snd, y, x, z, volume)
+		}
+	}
+}
+
+// EmitObjectSound emits a sound at an object to all characters at a volume. // FIXME: Sounds are strings at the moment, but should be replaced with a SoundID type.
+func (gmap *Map) EmitObjectSound(snd string, o ObjectI, volume float64) {
+	for _, o := range gmap.activeObjects {
+		switch c := o.(type) {
+		case *ObjectCharacter:
+			c.HandleObjectSound(snd, o, volume)
+		}
+	}
 }
