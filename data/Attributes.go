@@ -1,22 +1,74 @@
 package data
 
-// Attribute is a numeric value that represents a character's base ability.
-type Attribute uint8
+// AttributesType is a numerical type for specific attribute sets.
+type AttributesType uint8
+
+// AttributesType consts
+const (
+	UnknownAttributes  AttributeType = 0
+	PhysicalAttributes               = 1 << iota
+	ArcaneAttributes
+	SpiritAttributes
+)
+
+// AttributeSets is our set of a Attributes.
+type AttributeSets struct {
+	Physical Attributes `yaml:"Physical,omitempty"`
+	Arcane   Attributes `yaml:"Arcane,omitempty"`
+	Spirit   Attributes `yaml:"Spirit,omitempty"`
+}
+
+// AttributeValue is a numeric value that represents a character's base ability.
+type AttributeValue int
+
+// AttributeType is a numerical reference to specific attributes.
+type AttributeType uint8
+
+// AttributeType consts
+const (
+	UnknownAttribute AttributeType = 0
+	Might                          = 1 << iota
+	Prowess
+	Focus
+	Sense
+	Haste
+	Reaction
+)
+
+// StringToAttributeTypeMap is the map of strings to attributes.
+var StringToAttributeTypeMap = map[string]AttributeType{
+	"Might":    Might,
+	"Prowess":  Prowess,
+	"Focus":    Focus,
+	"Sense":    Sense,
+	"Haste":    Haste,
+	"Reaction": Reaction,
+}
+
+// AttributeTypeToStringMap is the map of attributes to strings.
+var AttributeTypeToStringMap = map[AttributeType]string{
+	Might:    "Might",
+	Prowess:  "Prowess",
+	Focus:    "Focus",
+	Sense:    "Sense",
+	Haste:    "Haste",
+	Reaction: "Reaction",
+}
 
 // Attributes represent the attribute scores for skills, combat, and more.
 type Attributes struct {
 	// Might represents general strength. Used for damage.
-	Might Attribute `yaml:"Might,omitempty"`
+	Might AttributeValue `yaml:"Might,omitempty"`
 	// Prowess represents endurance. Used for hit/arcane/divine points.
-	Prowess Attribute `yaml:"Prowess,omitempty"`
+	Prowess AttributeValue `yaml:"Prowess,omitempty"`
 	// Focus represents accuracy. Used for criticals.
-	Focus Attribute `yaml:"Focus,omitempty"`
+	Focus AttributeValue `yaml:"Focus,omitempty"`
 	// Sense represents ability to sense things. Used primary for passive skills.
-	Sense Attribute `yaml:"Sense,omitempty"`
+	Sense AttributeValue `yaml:"Sense,omitempty"`
 	// Haste represents how quickly one can do things. Used for attack speed and movement speed.
-	Haste Attribute `yaml:"Haste,omitempty"`
+	Haste AttributeValue `yaml:"Haste,omitempty"`
 	// Reaction represents how well one can dodge. Used for dodging attacks.
-	Reaction Attribute `yaml:"Reaction,omitempty"`
+	Reaction AttributeValue `yaml:"Reaction,omitempty"`
 }
 
 // Add adds together all attributes from another Attributes object.

@@ -75,11 +75,7 @@ type Archetype struct {
 	// Efficiency represents the current efficiency of a skill.
 	Efficiency float32 `yaml:"Efficiency,omitempty"`
 	//
-	Attributes struct {
-		Physical Attributes `yaml:"Physical,omitempty"`
-		Arcane   Attributes `yaml:"Arcane,omitempty"`
-		Spirit   Attributes `yaml:"Spirit,omitempty"`
-	} `yaml:"Attributes,omitempty"`
+	Attributes AttributeSets `yaml:"Attributes,omitempty"`
 	//
 	isCompiled bool `yaml:"-"`
 }

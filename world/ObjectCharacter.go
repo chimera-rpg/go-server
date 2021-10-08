@@ -2,6 +2,7 @@ package world
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	cdata "github.com/chimera-rpg/go-common/data"
@@ -22,7 +23,7 @@ type ObjectCharacter struct {
 	mapUpdateTime          uint8 // Corresponds to the map's updateTime -- if they are out of sync then the player will sample its view space.
 	resistances            data.AttackTypes
 	attacktypes            data.AttackTypes
-	attributes             data.Attributes
+	attributes             data.AttributeSets
 	skills                 []ObjectSkill
 	equipment              []ObjectI // Equipment is all equipped inventory items.
 	currentCommand         OwnerCommand
@@ -31,6 +32,8 @@ type ObjectCharacter struct {
 	// FIXME: Temporary code for testing a stamina system.
 	stamina    time.Duration
 	maxStamina time.Duration
+	actions    int
+	maxActions int
 }
 
 // NewObjectCharacter creates a new ObjectCharacter from the given archetype.
@@ -52,13 +55,15 @@ func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 	return
 }
 
-// NewObjectCharacterFromCharacter creates a new ObjectCharacter from the given character data.
+// newObjectCharacterFromCharacter creates a new ObjectCharacter from the given character data.
 func NewObjectCharacterFromCharacter(c *data.Character) (o *ObjectCharacter) {
 	o = &ObjectCharacter{
 		Object:     NewObject(&c.Archetype),
 		name:       c.Name,
 		maxStamina: time.Millisecond * 100, // TEMP.
 	}
+	//o.maxStamina = time.Duration(o.CalculateStamina())
+	o.maxActions = o.CalculateActions()
 	return
 }
 
@@ -306,7 +311,76 @@ func (o *ObjectCharacter) Stamina() time.Duration {
 	return o.stamina
 }
 
-// Stamina returns the object's max stamina.
+// MaxStamina returns the object's max stamina.
 func (o *ObjectCharacter) MaxStamina() time.Duration {
 	return o.maxStamina
+}
+
+// CalculateStamina calculates the maximum stamina based upon our attributes.
+func (o *ObjectCharacter) CalculateStamina() int {
+	result := 1 // Baseline 1, so the player can always somewhat move.
+
+	p, _ := o.GetAttributeValue(data.PhysicalAttributes, data.Prowess)
+	m, _ := o.GetAttributeValue(data.PhysicalAttributes, data.Might)
+
+	result += int(p) + int(m)/2
+
+	return result
+}
+
+// CalculateActions calculates the maximum actions a character has.
+func (o *ObjectCharacter) CalculateActions() int {
+	result := 1
+
+	h, _ := o.GetAttributeValue(data.PhysicalAttributes, data.Haste)
+	r, _ := o.GetAttributeValue(data.PhysicalAttributes, data.Reaction)
+
+	result += int(h) + int(r)/4
+
+	return result
+}
+
+// GetAttributeValue gets the calculated value for a given attribute.
+func (o *ObjectCharacter) GetAttributeValue(set data.AttributesType, a data.AttributeType) (int, error) {
+	var value int
+	var archSet, objSet *data.Attributes
+
+	switch set {
+	case data.PhysicalAttributes:
+		archSet = &o.Archetype.Attributes.Physical
+		objSet = &o.attributes.Physical
+	case data.ArcaneAttributes:
+		archSet = &o.Archetype.Attributes.Arcane
+		objSet = &o.attributes.Arcane
+	case data.SpiritAttributes:
+		archSet = &o.Archetype.Attributes.Spirit
+		objSet = &o.attributes.Spirit
+	default:
+		return 0, fmt.Errorf("no attribute set matching %d", set)
+	}
+
+	// TODO: Calculate bonuses from items, statuses, and beyond!
+	switch a {
+	case data.Might:
+		value += int(archSet.Might)
+		value += int(objSet.Might)
+	case data.Prowess:
+		value += int(archSet.Prowess)
+		value += int(objSet.Prowess)
+	case data.Focus:
+		value += int(archSet.Focus)
+		value += int(objSet.Focus)
+	case data.Sense:
+		value += int(archSet.Sense)
+		value += int(objSet.Sense)
+	case data.Haste:
+		value += int(archSet.Haste)
+		value += int(objSet.Haste)
+	case data.Reaction:
+		value += int(archSet.Reaction)
+		value += int(objSet.Reaction)
+	default:
+		return 0, fmt.Errorf("no attribute matching %d", a)
+	}
+	return value, nil
 }
