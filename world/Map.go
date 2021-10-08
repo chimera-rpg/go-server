@@ -50,7 +50,6 @@ func NewMap(world *World, name string) (*Map, error) {
 		mapID:         gd.MapID,
 		name:          gd.Name,
 		activeObjects: make(map[ID]ObjectI),
-		turnTime:      time.Second * 1,
 	}
 	gmap.owners = make([]OwnerI, 0)
 	// Size map and populate it with the data tiles
@@ -120,15 +119,6 @@ func (gmap *Map) Update(gm *World, delta time.Duration) error {
 
 	for _, owner := range gmap.owners {
 		owner.OnMapUpdate(delta)
-	}
-
-	// Check if it is time for the next turn.
-	gmap.turnElapsed += delta
-	if gmap.turnElapsed >= gmap.turnTime {
-		for _, object := range gmap.activeObjects {
-			object.RestoreActions()
-		}
-		gmap.turnElapsed = 0
 	}
 
 	for _, object := range gmap.activeObjects {
@@ -328,6 +318,7 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 				s.Remove = false
 				o.AddStatus(s)
 				o.GetOwner().SendMessage("There is not enough space to stand here!") // TODO: Replace with an Event or something.
+				// TODO: Send a *bonk* from this coordinate.
 				return false, nil
 			}
 		} else if !s.Crouching {
