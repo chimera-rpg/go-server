@@ -9,8 +9,9 @@ type Character struct {
 
 // SaveInfo is the positional information for a saved character.
 type SaveInfo struct {
-	Map string `yaml:"Map"`
-	Y   int    `yaml:"Y"`
-	X   int    `yaml:"X"`
-	Z   int    `yaml:"Z"`
+	Map     string `yaml:"Map"`
+	Y       int    `yaml:"Y"`
+	X       int    `yaml:"X"`
+	Z       int    `yaml:"Z"`
+	Actions int    `yaml:"Actions"` // Stored actions the player has available from when they disconnected.
 }
