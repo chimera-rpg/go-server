@@ -21,6 +21,8 @@ type ClientConnection struct {
 	user                  *data.User
 	requestedAnimationIDs map[uint32]struct{}
 	requestedImageIDs     map[uint32]struct{}
+	requestedAudioIDs     map[uint32]struct{}
+	requestedSoundIDs     map[uint32]struct{}
 	log                   *log.Entry
 }
 
@@ -46,6 +48,8 @@ func NewClientConnection(conn net.Conn, id int) *ClientConnection {
 		id:                    id,
 		requestedAnimationIDs: make(map[uint32]struct{}),
 		requestedImageIDs:     make(map[uint32]struct{}),
+		requestedAudioIDs:     make(map[uint32]struct{}),
+		requestedSoundIDs:     make(map[uint32]struct{}),
 	}
 	cc.SetConn(conn)
 	cc.log = log.WithFields(log.Fields{
@@ -366,6 +370,61 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 				// Animation does not exist. Send client bogus data.
 				c.Send(network.CommandAnimation{
 					AnimationID: t.AnimationID,
+				})
+			}
+		case network.CommandAudio:
+			// If the client has already requested this audio, boot it. NOTE: It would be better to limit requests first rather than immediately booting -- as well as to warn the player that it should stop requesting.
+			if _, alreadyRequested := c.requestedAudioIDs[t.AudioID]; alreadyRequested {
+				c.log.Warnln("Kicking client due to multiple audio request")
+				s.RemoveClientByID(c.GetID())
+				c.GetSocket().Close()
+				return
+			}
+			c.requestedAudioIDs[t.AudioID] = struct{}{}
+			if audio, err := s.dataManager.GetAudio(t.AudioID); err == nil {
+				// This feels a bit heavy to convert our server audio data to our network audio data.
+				sounds := make(map[uint32][]network.AudioSound)
+				for key, soundSet := range audio.SoundSets {
+					sounds[key] = make([]network.AudioSound, len(soundSet))
+					for soundIndex, sound := range soundSet {
+						sounds[key][soundIndex] = network.AudioSound{
+							SoundID: sound.SoundID,
+							Text:    sound.Text,
+						}
+					}
+				}
+
+				c.Send(network.CommandAudio{
+					AudioID: t.AudioID,
+					Sounds:  sounds,
+				})
+			} else {
+				// Animation does not exist. Send client bogus data.
+				c.Send(network.CommandAudio{
+					AudioID: t.AudioID,
+				})
+			}
+		case network.CommandSound:
+			if _, alreadyRequested := c.requestedSoundIDs[t.SoundID]; alreadyRequested {
+				c.log.Warnln("Kicking client due to multiple sound request")
+
+				s.RemoveClientByID(c.GetID())
+				c.GetSocket().Close()
+				return
+			}
+			c.requestedSoundIDs[t.SoundID] = struct{}{}
+			if soundData, err := s.dataManager.GetSoundData(t.SoundID); err == nil {
+				c.Send(network.CommandSound{
+					Type:     network.Set,
+					SoundID:  t.SoundID,
+					DataType: network.SoundFlac, // For now...
+					Data:     soundData,
+				})
+			} else {
+				// Let client know that no such graphics exists.
+				c.Send(network.CommandSound{
+					Type:    network.Nokay,
+					SoundID: t.SoundID,
 				})
 			}
 		case network.CommandGraphics:

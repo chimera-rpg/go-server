@@ -263,7 +263,9 @@ func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 			o.GetOwner().SendMessage(e.String())
 			t := o.GetTile()
 			_, w, d := o.GetDimensions()
-			t.GetMap().EmitSound("thump", t.y-1, t.x+w/2, t.z+d/2, 0.25)
+			audioID := t.GetMap().world.data.Strings.Acquire("thump")
+			soundID := t.GetMap().world.data.Strings.Acquire("default")
+			t.GetMap().EmitSound(audioID, soundID, t.y-1, t.x+w/2, t.z+d/2, 0.25)
 		}
 		// TODO: If we're not invisible or very quiet, notify other creatures in a radius that we've cratered our legs.
 		return true
@@ -453,20 +455,20 @@ func (o *Object) CanHear(distance float64) bool {
 }
 
 // HandleSound processes a sound at a given coordinate to see if it should be heard.
-func (o *ObjectCharacter) HandleSound(snd string, y, x, z int, volume float64) {
+func (o *ObjectCharacter) HandleSound(audioID, soundID ID, y, x, z int, volume float64) {
 	d := o.GetDistance(y, x, z)
 	if d < 100*volume { // FIXME: Use a Sense + Focus(minor) derived value.
-		o.GetOwner().SendSound(snd, 0, y, x, z)
+		o.GetOwner().SendSound(audioID, soundID, 0, y, x, z)
 		// TODO: EventSound?
 	}
 }
 
 // HandleObjectSound processes a sound from a given object to see if it should be heard.
-func (o *ObjectCharacter) HandleObjectSound(snd string, o2 ObjectI, volume float64) {
+func (o *ObjectCharacter) HandleObjectSound(audioID, soundID ID, o2 ObjectI, volume float64) {
 	t2 := o.GetTile()
 	d := o.GetDistance(t2.y, t2.x, t2.z)
 	if d < 100*volume { // FIXME: Use a Sense + Focus(minor) derived value.
-		o.GetOwner().SendSound(snd, o2.GetID(), 0, 0, 0)
+		o.GetOwner().SendSound(audioID, soundID, o2.GetID(), 0, 0, 0)
 		// TODO: EventSound?
 	}
 }

@@ -23,6 +23,7 @@ import (
 type Manager struct {
 	dataPath       string
 	archetypesPath string
+	audioPath      string
 	varPath        string
 	etcPath        string
 	usersPath      string
@@ -34,9 +35,11 @@ type Manager struct {
 	archetypes       map[StringID]*Archetype // Full Map of archetypes.
 	//animations map[string]*Animation // Full Map of animations.
 	animations map[StringID]*Animation // ID to Animation map
+	audio      map[StringID]*Audio
 	// Hmm... almost map[uint32]*Archetype... with CRC id
 	Strings      StringsMap
 	imageFileMap FileMap
+	soundFileMap FileMap
 	// images map[string][]bytes
 	generaArchetypes  []*Archetype     // Slice of genera archetypes.
 	speciesArchetypes []*Archetype     // Slice of species archetypes.
@@ -415,6 +418,105 @@ func (m *Manager) buildImagesMap() error {
 	return nil
 }
 
+func (m *Manager) parseAudioFiles() error {
+	l := log.WithFields(log.Fields{
+		"path": m.audioPath,
+	})
+	l.Print("Audio: Loading...")
+	err := filepath.Walk(m.audioPath, func(filepath string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			if strings.HasSuffix(filepath, ".audio.yaml") {
+				err = m.parseAudioFile(filepath)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		l.Error("Error walking the path", err)
+	}
+
+	l.WithFields(log.Fields{
+		"count": len(m.audio),
+	}).Print("Audio: Done!")
+	return nil
+}
+
+// parseAudioFile parses the given audio file into our audio field.
+func (m *Manager) parseAudioFile(filepath string) error {
+	r, err := ioutil.ReadFile(filepath)
+	if err != nil {
+		return err
+	}
+
+	audioMap := make(map[string]AudioPre)
+
+	if err = yaml.Unmarshal(r, &audioMap); err != nil {
+		return err
+	}
+	for k, audio := range audioMap {
+		audioID := m.Strings.Acquire(k)
+
+		parsedAudio := &Audio{
+			SoundSets: make(map[StringID][]AudioSound),
+		}
+
+		for soundSetKey, soundSet := range audio.SoundSets {
+			soundSetID := m.Strings.Acquire(soundSetKey)
+
+			parsedAudio.SoundSets[soundSetID] = make([]AudioSound, 0)
+
+			for _, sound := range soundSet {
+				soundID := m.Strings.Acquire(sound.File)
+				parsedSubSound := AudioSound{
+					SoundID: soundID,
+					Text:    sound.Text,
+				}
+				parsedAudio.SoundSets[soundSetID] = append(parsedAudio.SoundSets[soundSetID], parsedSubSound)
+			}
+		}
+		m.audio[audioID] = parsedAudio
+	}
+	return nil
+}
+
+func (m *Manager) buildSoundsMap() error {
+	l := log.WithFields(log.Fields{
+		"path": m.audioPath,
+	})
+	l.Print("soundFileMap: Loading...")
+	err := filepath.Walk(m.audioPath, func(fpath string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			if path.Ext(fpath) == ".flac" {
+				shortpath := filepath.ToSlash(fpath[len(m.audioPath)+1:])
+				id := m.Strings.Acquire(shortpath)
+				_, err := m.soundFileMap.BuildCRC(id, fpath)
+
+				if err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		l.Error("Error walking the path", err)
+		return err
+	}
+	l.WithFields(log.Fields{
+		"count": len(m.soundFileMap.Paths),
+	}).Print("soundFileMap: Done!")
+	return nil
+}
+
 func (m *Manager) parseMapFile(filepath string) error {
 	l := log.WithFields(log.Fields{
 		"mapset": filepath,
@@ -505,10 +607,12 @@ func (m *Manager) GetMap(name string) (Map *Map, err error) {
 func (m *Manager) Setup(config *config.Config) error {
 	m.archetypes = make(map[StringID]*Archetype)
 	m.animations = make(map[StringID]*Animation)
+	m.audio = make(map[StringID]*Audio)
 	m.maps = make(map[string]*Map)
 	m.loadedUsers = make(map[string]*User)
 	m.Strings = NewStringsMap()
 	m.imageFileMap = NewFileMap()
+	m.soundFileMap = NewFileMap()
 	m.cryptParams = cryptParams{
 		memory:      64 * 1024,
 		iterations:  12,
@@ -537,6 +641,11 @@ func (m *Manager) Setup(config *config.Config) error {
 	}
 	m.mapsPath = path.Join(dataPath, "maps")
 	if _, err := os.Stat(m.mapsPath); os.IsNotExist(err) {
+		log.Fatal(err)
+		return err
+	}
+	m.audioPath = path.Join(dataPath, "audio")
+	if _, err := os.Stat(m.audioPath); os.IsNotExist(err) {
 		log.Fatal(err)
 		return err
 	}
@@ -582,6 +691,12 @@ func (m *Manager) Setup(config *config.Config) error {
 		log.Fatal(err)
 		return err
 	}
+	// Sounds
+	err = m.buildSoundsMap()
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
 	// Animations
 	// Read animations config
 	animationsConfigPath := path.Join(m.archetypesPath, "config.yaml")
@@ -594,6 +709,12 @@ func (m *Manager) Setup(config *config.Config) error {
 	}
 	// Read animation files
 	err = m.parseAnimationFiles()
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	// Read audio files
+	err = m.parseAudioFiles()
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -667,6 +788,19 @@ func (m *Manager) GetAnimationFrame(animID StringID, faceID StringID, index int)
 // GetImageData returns the image bytes associated with the provided image ID.
 func (m *Manager) GetImageData(imageID StringID) ([]byte, error) {
 	return m.imageFileMap.GetBytes(imageID)
+}
+
+// GetAudio returns a pointer to an Audio that corresponds to the passed Audio ID. Returns nil if none is found.
+func (m *Manager) GetAudio(audioID StringID) (*Audio, error) {
+	if _, ok := m.audio[audioID]; ok {
+		return m.audio[audioID], nil
+	}
+	return nil, errors.New("Audio does not exist")
+}
+
+// GetSoundData returns the sound bytes associated with the provided sound ID.
+func (m *Manager) GetSoundData(soundID StringID) ([]byte, error) {
+	return m.soundFileMap.GetBytes(soundID)
 }
 
 /*func (m *Manager) createObject(which string) World.GameObject {
