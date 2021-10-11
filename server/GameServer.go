@@ -16,6 +16,7 @@ type GameServer struct {
 	listener net.Listener
 	// Client Connections
 	clientConnections     chan ClientConnection
+	CleanupClientChannel  chan *ClientConnection
 	connectedClients      map[int]ClientConnection
 	connectedClientsMutex sync.Mutex
 	topClientID           int
@@ -32,7 +33,8 @@ type GameServer struct {
 // New returns a new instance of the game server.
 func New() *GameServer {
 	return &GameServer{
-		listener: nil,
+		CleanupClientChannel: make(chan *ClientConnection),
+		listener:             nil,
 	}
 }
 
@@ -64,16 +66,23 @@ func (s *GameServer) cleanupConnection(c *ClientConnection) (err error) {
 	defer s.connectedClientsMutex.Unlock()
 
 	// Remove object and owner data.
-	fmt.Printf("cleanup data for %d\n", c.GetID())
+	if c.user != nil {
+		if p := s.world.GetPlayerByUsername(c.user.Username); p != nil {
+			t := p.GetTarget()
+			fmt.Printf("Figure out how to save %+v\n", t)
+		}
+	}
 
 	// Unload user data.
 	if c.user != nil {
 		s.dataManager.CleanupUser(c.user.Username)
 	}
 
-	s.world.MessageChannel <- world.MessageRemoveClient{
+	// NOTE: We've adjusted the code so as to use a remove channel from client connection -> game server, so world no longer needs channel messaging since it is on the same goroutine now.
+	/*s.world.MessageChannel <- world.MessageRemoveClient{
 		Client: c,
-	}
+	}*/
+	s.world.RemovePlayerByConnection(c)
 
 	// Remove the client.
 	if err = s.RemoveClientByID(c.GetID()); err != nil {

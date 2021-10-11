@@ -1,12 +1,18 @@
 package server
 
 import (
-	log "github.com/sirupsen/logrus"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // Update runs update for the server world.
 func (server *GameServer) Update(delta time.Duration) error {
+	select {
+	case cc := <-server.CleanupClientChannel:
+		server.cleanupConnection(cc)
+	default:
+	}
 	server.world.Update(delta)
 	return nil
 }

@@ -59,6 +59,11 @@ func NewClientConnection(conn net.Conn, id int) *ClientConnection {
 	return &cc
 }
 
+// Cleanup is called when the client connection is to be removed.
+func (c *ClientConnection) Cleanup(s *GameServer) {
+	s.CleanupClientChannel <- c
+}
+
 // Receive handles receiving a network command from the connection.
 // It also handles error state and lower-level communications, such as
 // a disconnect statement.
@@ -73,9 +78,7 @@ func (c *ClientConnection) Receive(s *GameServer, cmd *network.Command) (isHandl
 	// Here is where we'd also handle GFX requests and otherwise
 	case network.CommandBasic:
 		if t.Type == network.Cya {
-			if err := s.cleanupConnection(c); err != nil {
-				c.log.Print(err)
-			}
+			c.Cleanup(s)
 			c.GetSocket().Close()
 			c.log.Println("Client left faithfully.")
 			isHandled = true
@@ -342,7 +345,7 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 			// If the client has already requested this animation, boot it. NOTE: It would be better to limit requests first rather than immediately booting -- as well as to warn the player that it should stop requesting.
 			if _, alreadyRequested := c.requestedAnimationIDs[t.AnimationID]; alreadyRequested {
 				c.log.Warnln("Kicking client due to multiple animation request")
-				s.RemoveClientByID(c.GetID())
+				c.Cleanup(s)
 				c.GetSocket().Close()
 				return
 			}
@@ -376,7 +379,7 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 			// If the client has already requested this audio, boot it. NOTE: It would be better to limit requests first rather than immediately booting -- as well as to warn the player that it should stop requesting.
 			if _, alreadyRequested := c.requestedAudioIDs[t.AudioID]; alreadyRequested {
 				c.log.Warnln("Kicking client due to multiple audio request")
-				s.RemoveClientByID(c.GetID())
+				c.Cleanup(s)
 				c.GetSocket().Close()
 				return
 			}
@@ -408,7 +411,7 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 			if _, alreadyRequested := c.requestedSoundIDs[t.SoundID]; alreadyRequested {
 				c.log.Warnln("Kicking client due to multiple sound request")
 
-				s.RemoveClientByID(c.GetID())
+				c.Cleanup(s)
 				c.GetSocket().Close()
 				return
 			}
@@ -431,7 +434,7 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 			if _, alreadyRequested := c.requestedImageIDs[t.GraphicsID]; alreadyRequested {
 				c.log.Warnln("Kicking client due to multiple graphics request")
 
-				s.RemoveClientByID(c.GetID())
+				c.Cleanup(s)
 				c.GetSocket().Close()
 				return
 			}
@@ -460,7 +463,7 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 				s.SendPCMessageFrom(c, t)
 			default: // Bad message, boot.
 				c.log.Warnln("Client sent bad data, kicking")
-				s.RemoveClientByID(c.GetID())
+				c.Cleanup(s)
 				c.GetSocket().Close()
 			}
 		case network.CommandCmd:
@@ -543,7 +546,7 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 			c.Owner.SetViewSize(int(t.Height), int(t.Width), int(t.Depth))
 		default: // Boot the client if it sends anything else.
 			c.log.Warnln("Client sent bad data, kicking")
-			s.RemoveClientByID(c.GetID())
+			c.Cleanup(s)
 			c.GetSocket().Close()
 		}
 	}

@@ -90,7 +90,7 @@ func (w *World) Update(delta time.Duration) error {
 				log.Println("TODO: Kick player as we errored while adding them.")
 			}
 		case MessageRemoveClient:
-			w.removePlayerByConnection(t.Client)
+			w.RemovePlayerByConnection(t.Client)
 		default:
 		}
 	default:
@@ -261,7 +261,7 @@ func (w *World) addPlayerByConnection(conn clientConnectionI, character *data.Ch
 	return nil
 }
 
-func (w *World) removePlayerByConnection(conn clientConnectionI) {
+func (w *World) RemovePlayerByConnection(conn clientConnectionI) {
 	if index := w.getExistingPlayerConnectionIndex(conn); index >= 0 {
 		// TODO: Save ObjectCharacter to connection's associated Character data.
 		// Remove owner from map -- this also deletes the character object.

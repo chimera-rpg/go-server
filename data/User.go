@@ -159,7 +159,10 @@ func (m *Manager) GetUser(user string) (u *User, err error) {
 func (m *Manager) CleanupUser(user string) (err error) {
 	m.usersMutex.Lock()
 	defer m.usersMutex.Unlock()
-	log.Printf("Cleaning up user %s\n", user)
+	log.WithFields(log.Fields{
+		"user": user,
+	}).Println("CleanupUser")
+
 	if u, ok := m.loadedUsers[user]; ok {
 		err = m.unloadUser(u)
 		delete(m.loadedUsers, user)
