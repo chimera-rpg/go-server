@@ -1,7 +1,7 @@
 module github.com/chimera-rpg/go-server
 
 require (
-	github.com/chimera-rpg/go-common v0.0.0-20211009083832-d985dfd94628
+	github.com/chimera-rpg/go-common v0.0.0-20211011060606-a36a471afc6c
 	github.com/imdario/mergo v0.3.8
 	github.com/sirupsen/logrus v1.6.0
 	golang.org/x/crypto v0.0.0-20190605123033-f99c8df09eb5
