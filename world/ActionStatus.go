@@ -12,7 +12,7 @@ type ActionStatus struct {
 func NewActionStatus(status StatusI, duration time.Duration) *ActionStatus {
 	return &ActionStatus{
 		Action: Action{
-			channel: duration,
+			recovery: duration,
 		},
 		status: status,
 	}
