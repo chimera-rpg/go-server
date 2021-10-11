@@ -455,20 +455,20 @@ func (o *Object) CanHear(distance float64) bool {
 }
 
 // HandleSound processes a sound at a given coordinate to see if it should be heard.
-func (o *ObjectCharacter) HandleSound(audioID, soundID ID, y, x, z int, volume float64) {
+func (o *ObjectCharacter) HandleSound(audioID, soundID ID, y, x, z int, volume float32) {
 	d := o.GetDistance(y, x, z)
-	if d < 100*volume { // FIXME: Use a Sense + Focus(minor) derived value.
-		o.GetOwner().SendSound(audioID, soundID, 0, y, x, z)
+	if d < 100*float64(volume) { // FIXME: Use a Sense + Focus(minor) derived value.
+		o.GetOwner().SendSound(audioID, soundID, 0, y, x, z, volume)
 		// TODO: EventSound?
 	}
 }
 
 // HandleObjectSound processes a sound from a given object to see if it should be heard.
-func (o *ObjectCharacter) HandleObjectSound(audioID, soundID ID, o2 ObjectI, volume float64) {
+func (o *ObjectCharacter) HandleObjectSound(audioID, soundID ID, o2 ObjectI, volume float32) {
 	t2 := o.GetTile()
 	d := o.GetDistance(t2.y, t2.x, t2.z)
-	if d < 100*volume { // FIXME: Use a Sense + Focus(minor) derived value.
-		o.GetOwner().SendSound(audioID, soundID, o2.GetID(), 0, 0, 0)
+	if d < 100*float64(volume) { // FIXME: Use a Sense + Focus(minor) derived value.
+		o.GetOwner().SendSound(audioID, soundID, o2.GetID(), 0, 0, 0, volume)
 		// TODO: EventSound?
 	}
 }

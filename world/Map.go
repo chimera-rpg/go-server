@@ -470,8 +470,8 @@ func (gmap *Map) GetObjectPartTiles(o ObjectI, yDir, xDir, zDir int, force bool)
 
 // Sounds
 
-// EmitSound emits a sound at Y, X, Z to all characters at a volume. // FIXME: Sounds are strings at the moment, but should be replaced with a SoundID type.
-func (gmap *Map) EmitSound(audioID, soundID ID, y, x, z int, volume float64) {
+// EmitSound emits a sound at Y, X, Z to all characters at a volume.
+func (gmap *Map) EmitSound(audioID, soundID ID, y, x, z int, volume float32) {
 	for _, o := range gmap.activeObjects {
 		switch c := o.(type) {
 		case *ObjectCharacter:
@@ -480,8 +480,8 @@ func (gmap *Map) EmitSound(audioID, soundID ID, y, x, z int, volume float64) {
 	}
 }
 
-// EmitObjectSound emits a sound at an object to all characters at a volume. // FIXME: Sounds are strings at the moment, but should be replaced with a SoundID type.
-func (gmap *Map) EmitObjectSound(audioID, soundID ID, o ObjectI, volume float64) {
+// EmitObjectSound emits a sound at an object to all characters at a volume.
+func (gmap *Map) EmitObjectSound(audioID, soundID ID, o ObjectI, volume float32) {
 	for _, o := range gmap.activeObjects {
 		switch c := o.(type) {
 		case *ObjectCharacter:

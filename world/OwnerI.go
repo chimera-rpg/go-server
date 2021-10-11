@@ -24,7 +24,7 @@ type OwnerI interface {
 	//
 	SendMessage(string)
 	SendStatus(StatusI, bool)
-	SendSound(audioID ID, soundID ID, objectID ID, y, x, z int)
+	SendSound(audioID ID, soundID ID, objectID ID, y, x, z int, volume float32)
 	//
 	RepeatCommand() OwnerCommand
 	HasCommands() bool

@@ -307,7 +307,7 @@ func (player *OwnerPlayer) SendStatus(s StatusI, active bool) {
 }
 
 // SendSound sends the given sound to the player.
-func (player *OwnerPlayer) SendSound(audioID ID, soundID ID, objectID ID, y, x, z int) {
+func (player *OwnerPlayer) SendSound(audioID ID, soundID ID, objectID ID, y, x, z int, volume float32) {
 	player.ClientConnection.Send(network.CommandNoise{
 		Type:     network.GenericNoise,
 		AudioID:  audioID,
@@ -316,6 +316,6 @@ func (player *OwnerPlayer) SendSound(audioID ID, soundID ID, objectID ID, y, x, 
 		Y:        uint32(y),
 		X:        uint32(x),
 		Z:        uint32(z),
-		Volume:   1.0,
+		Volume:   volume,
 	})
 }
