@@ -316,5 +316,6 @@ func (player *OwnerPlayer) SendSound(audioID ID, soundID ID, objectID ID, y, x, 
 		Y:        uint32(y),
 		X:        uint32(x),
 		Z:        uint32(z),
+		Volume:   1.0,
 	})
 }
