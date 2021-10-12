@@ -14,17 +14,20 @@ import (
 type ObjectCharacter struct {
 	Object
 	//
-	name                  string
-	maxHp                 int
-	level                 int
-	race                  string
-	count                 int
-	value                 int
-	mapUpdateTime         uint8 // Corresponds to the map's updateTime -- if they are out of sync then the player will sample its view space.
-	resistances           data.AttackTypes
-	attacktypes           data.AttackTypes
-	attributes            data.AttributeSets
-	skills                []ObjectSkill
+	maxHp         int
+	race          string
+	count         int
+	value         int
+	mapUpdateTime uint8 // Corresponds to the map's updateTime -- if they are out of sync then the player will sample its view space.
+	// Fields that are pointers to the underlying archetype. In the case of NPCs, the archetypes should correspond to the instance of their on-map Archetype or the result of an archetype spawn. In the case of PCs, the archetype corresponds to the one embedded in their player data file.
+	name         *string
+	level        *int
+	resistances  *data.AttackTypes
+	attacktypes  *data.AttackTypes
+	attributes   *data.AttributeSets
+	competencies *map[data.CompetencyType]data.Competency
+	skills       []ObjectSkill
+	//
 	equipment             []ObjectI // Equipment is all equipped inventory items.
 	currentActionDuration time.Duration
 	// FIXME: Temporary code for testing a stamina system.
@@ -40,6 +43,12 @@ func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 		Object:                 NewObject(a),
 		speedPenaltyMultiplier: 1,
 	}
+	*o.name = *a.Name
+	*o.level = a.Level
+	*o.resistances = a.Resistances
+	*o.attacktypes = a.AttackTypes
+	*o.attributes = a.Attributes
+	*o.competencies = a.Competencies
 	o.maxStamina = o.CalculateStamina()
 
 	// Create a new Owner AI if it is an NPC.
@@ -58,11 +67,29 @@ func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 func NewObjectCharacterFromCharacter(c *data.Character) (o *ObjectCharacter) {
 	o = &ObjectCharacter{
 		Object:                 NewObject(&c.Archetype),
-		name:                   c.Name,
+		name:                   &c.Name,
+		level:                  &c.Archetype.Level,
+		resistances:            &c.Archetype.Resistances,
+		attacktypes:            &c.Archetype.AttackTypes,
+		attributes:             &c.Archetype.Attributes,
+		competencies:           &c.Archetype.Competencies,
 		speedPenaltyMultiplier: 1,
 	}
 	//o.maxStamina = time.Duration(o.CalculateStamina())
 	o.maxStamina = o.CalculateStamina()
+	// TODO: Move elsewhere.
+	/*for statusID, statusMap := range c.SaveInfo.Statuses {
+		if statusID == int(cdata.CrouchingStatus) {
+			s := &StatusCrouch{}
+			s.Deserialize(statusMap)
+		} else if statusID == int(cdata.SqueezingStatus) {
+			s := &StatusSqueeze{}
+			s.Deserialize(statusMap)
+		} else if statusID == int(cdata.FallingStatus) {
+			s := &StatusFalling{}
+			s.Deserialize(statusMap)
+		}
+	}*/
 	return
 }
 
@@ -343,7 +370,7 @@ func (o *ObjectCharacter) EquipWeapon(armor *ObjectWeapon) error {
 
 // Name returns the name of the character.
 func (o *ObjectCharacter) Name() string {
-	return o.name
+	return *o.name
 }
 
 // Stamina returns the object's stamina.

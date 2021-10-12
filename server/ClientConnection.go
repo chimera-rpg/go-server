@@ -522,9 +522,9 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 			}).Print("CommandStatus")
 			switch t.Type {
 			case cdata.SqueezingStatus:
-				c.Owner.GetCommandChannel() <- world.OwnerStatusCommand{Status: &world.StatusSqueeze{Activate: t.Active}}
+				c.Owner.GetCommandChannel() <- world.OwnerStatusCommand{Status: &world.StatusSqueeze{}}
 			case cdata.CrouchingStatus:
-				c.Owner.GetCommandChannel() <- world.OwnerStatusCommand{Status: &world.StatusCrouch{Activate: t.Active}}
+				c.Owner.GetCommandChannel() <- world.OwnerStatusCommand{Status: &world.StatusCrouch{}}
 			}
 		case network.CommandViewport:
 			// TODO: Make these limits configurable.

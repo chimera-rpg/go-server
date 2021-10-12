@@ -246,7 +246,7 @@ func (w *World) addPlayerByConnection(conn clientConnectionI, character *data.Ch
 		//
 		player.ClientConnection.Send(network.CommandMessage{
 			Type: network.ServerMessage,
-			Body: fmt.Sprintf("Welcome back, %s!", pc.name),
+			Body: fmt.Sprintf("Welcome back, %s!", pc.Name()),
 		})
 		for _, p := range w.players {
 			if p == player {
@@ -254,13 +254,14 @@ func (w *World) addPlayerByConnection(conn clientConnectionI, character *data.Ch
 			}
 			p.ClientConnection.Send(network.CommandMessage{
 				Type: network.ServerMessage,
-				Body: fmt.Sprintf("%s has materialized!", pc.name),
+				Body: fmt.Sprintf("%s has materialized!", pc.Name()),
 			})
 		}
 	}
 	return nil
 }
 
+// RemovePlayerByConnection does as it implies.
 func (w *World) RemovePlayerByConnection(conn clientConnectionI) {
 	if index := w.getExistingPlayerConnectionIndex(conn); index >= 0 {
 		// TODO: Save ObjectCharacter to connection's associated Character data.
