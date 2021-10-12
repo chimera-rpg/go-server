@@ -26,12 +26,13 @@ const (
 // Archetype represents a collection of data that should be used for the
 // creation of Objects.
 type Archetype struct {
-	ArchID  StringID    `yaml:"-"` // Archetype ID used for generating objects and inheriting from.
-	ArchIDs []MergeArch `yaml:"-"`
-	Archs   []string    `yaml:"Archs,omitempty"` // Archetypes to inherit from.
-	Arch    string      `yaml:"Arch,omitempty"`  // Archetype to inherit from. During post-parsing this is used to acquire and set the ArchID for inventory archetypes.
-	SelfID  StringID    `yaml:"-"`               // The Archetype's own SelfID
-	Name    *string     `yaml:"Name,omitempty"`  //
+	ArchID       StringID     `yaml:"-"` // Archetype ID used for generating objects and inheriting from.
+	ArchIDs      []MergeArch  `yaml:"-"`
+	Archs        []string     `yaml:"Archs,omitempty"` // Archetypes to inherit from.
+	ArchPointers []*Archetype `yaml:"-"`
+	Arch         string       `yaml:"Arch,omitempty"` // Archetype to inherit from. During post-parsing this is used to acquire and set the ArchID for inventory archetypes.
+	SelfID       StringID     `yaml:"-"`              // The Archetype's own SelfID
+	Name         *string      `yaml:"Name,omitempty"` //
 	//Name string
 	Description *string             `yaml:"Description,omitempty"`
 	Type        cdata.ArchetypeType `yaml:"Type,omitempty"`
@@ -68,6 +69,10 @@ type Archetype struct {
 	Resistances AttackTypes `yaml:"Resistances,omitempty"`
 	// AttackTypes represents the attack types of a weapon or a character.
 	AttackTypes AttackTypes `yaml:"AttackTypes,omitempty"`
+	// Damage represents the damage of a weapon or otherwise.
+	Damage       *string `yaml:"Damage,omitempty"`
+	ChannelTime  uint16  `yaml:"ChannelTime,omitempty"`
+	RecoveryTime uint16  `yaml:"RecoveryTime,omitempty"`
 	// Level represents the level of a skill or character.
 	Level int `yaml:"Level,omitempty"`
 	// Advancement represents the advancement of a skill or a character into the next level.
@@ -76,6 +81,8 @@ type Archetype struct {
 	Efficiency float32 `yaml:"Efficiency,omitempty"`
 	//
 	Attributes AttributeSets `yaml:"Attributes,omitempty"`
+	// Hmm
+	Statuses map[string]map[string]interface{} `yaml:"Statuses,omitempty"`
 	//
 	isCompiled bool `yaml:"-"`
 }

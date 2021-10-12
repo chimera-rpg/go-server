@@ -13,6 +13,7 @@ import (
 	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-common/network"
 	"github.com/chimera-rpg/go-server/data"
+	"github.com/jinzhu/copier"
 )
 
 // World contains and manages all map updating, loading, and otherwise.
@@ -217,10 +218,13 @@ func (w *World) addPlayerByConnection(conn clientConnectionI, character *data.Ch
 		player := NewOwnerPlayer(conn)
 		conn.SetOwner(player)
 		// Process and compile the character's Archetype so it inherits properly.
-		w.data.ProcessArchetype(&character.Archetype)
-		w.data.CompileArchetype(&character.Archetype)
+		// TODO: We actually want to keep the character's Archetype distinct from its ancestors. Perhaps we should have 2 copies of the archetype, one uncompiled and the other compiled. Any requested stat changes, skill changes, and similar all go to the uncompiled one, while the compiled one is rebuilt upon each of those changes and used for data?
+		var completeArchetype data.Archetype
+		copier.Copy(&completeArchetype, &character.Archetype)
+		w.data.ProcessArchetype(&completeArchetype)
+		w.data.CompileArchetype(&completeArchetype)
 		// Create character object.
-		pc := NewObjectCharacterFromCharacter(character)
+		pc := NewObjectCharacterFromCharacter(character, &completeArchetype)
 		pc.id = w.objectIDs.acquire()
 		w.objects[pc.id] = pc
 		player.SetTarget(pc)
@@ -258,6 +262,51 @@ func (w *World) addPlayerByConnection(conn clientConnectionI, character *data.Ch
 			})
 		}
 	}
+	return nil
+}
+
+func (w *World) SyncPlayerSaveInfo(conn clientConnectionI) error {
+	fmt.Println("Syncing, it would seem")
+	index := w.getExistingPlayerConnectionIndex(conn)
+	if index < 0 {
+		return fmt.Errorf("couldn't find player matching connection to save")
+	}
+	p := w.players[index]
+	u := conn.GetUser()
+	if u == nil {
+		return fmt.Errorf("couldn't find connection's user to save")
+	}
+	o := p.GetTarget()
+	if o == nil {
+		return fmt.Errorf("user %s has no target to save", u.Username)
+	}
+	t := o.GetTile()
+	if t == nil {
+		return fmt.Errorf("player object %s has no owning tile", o.Name())
+	}
+	m := t.GetMap()
+	if m == nil {
+		return fmt.Errorf("player object %s's tile has no map", o.Name())
+	}
+	s := u.Characters[o.Name()].SaveInfo
+	s.Map = m.name
+	s.X = t.x
+	s.Y = t.y
+	s.Z = t.z
+	u.Characters[o.Name()].SaveInfo = s
+	fmt.Println("Set SaveInfo")
+	return nil
+}
+func (w *World) SavePlayerByUsername(username string) error {
+	p := w.GetPlayerByUsername(username)
+	if p == nil {
+		return fmt.Errorf("couldn't find username to save: %s", username)
+	}
+	t := p.GetTarget()
+	if t == nil {
+		return fmt.Errorf("username %s has no target to save", username)
+	}
+
 	return nil
 }
 

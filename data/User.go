@@ -53,9 +53,13 @@ func (m *Manager) CheckUserPassword(u *User, password string) (match bool, err e
 func (m *Manager) writeUser(u *User) (err error) {
 	u.mutex.Lock()
 	defer u.mutex.Unlock()
-	if !u.hasChanges {
-		return
+	fmt.Printf("SAVE: %+v\n", u)
+	for k, c := range u.Characters {
+		fmt.Printf("%s: %+v\n", k, c)
 	}
+	/*if !u.hasChanges {
+		return
+	}*/
 	filePath := path.Join(m.usersPath, u.Username+".user.yaml")
 
 	var bytes []byte

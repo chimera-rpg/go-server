@@ -18,6 +18,7 @@ type ObjectI interface {
 	SetTile(*Tile)
 	setArchetype(*data.Archetype)
 	GetArchetype() *data.Archetype
+	GetAltArchetype() *data.Archetype
 	update(time.Duration)
 	getType() cdata.ArchetypeType
 	AddStatus(StatusI)

@@ -102,7 +102,8 @@ func (m *Manager) ProcessArchetype(archetype *Archetype) error {
 			isAdd = true
 		}
 		targetID := m.Strings.Acquire(archname)
-		if _, err := m.GetArchetype(targetID); err != nil {
+		ancestorArchetype, err := m.GetArchetype(targetID)
+		if err != nil {
 			return fmt.Errorf("\"%s\" does not exist", archname)
 		}
 		mergeArch := MergeArch{
@@ -113,8 +114,9 @@ func (m *Manager) ProcessArchetype(archetype *Archetype) error {
 			mergeArch.Type = ArchAdd
 		}
 		archetype.ArchIDs = append(archetype.ArchIDs, mergeArch)
+		archetype.ArchPointers = append(archetype.ArchPointers, ancestorArchetype)
 	}
-	archetype.Archs = nil
+	//archetype.Archs = nil // Might as well keep the Archs references, I suppose
 
 	// Process Inventory.
 	for i := range archetype.Inventory {

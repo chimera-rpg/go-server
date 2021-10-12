@@ -80,3 +80,13 @@ func (a *Attributes) Add(o Attributes) {
 	a.Haste += o.Haste
 	a.Reaction += o.Reaction
 }
+
+// GetSpeedBonus gets the speed bonus for these attributes.
+func (a *Attributes) GetSpeedBonus() AttributeValue {
+	return a.Haste*5 + a.Reaction/4*5
+}
+
+// GetHealthBonus gets the health bonus for these attributes.
+func (a *Attributes) GetHealthBonus() AttributeValue {
+	return a.Prowess*8 + a.Might*2
+}

@@ -35,6 +35,10 @@ type ObjectCharacter struct {
 	maxStamina             int
 	currentAction          ActionI
 	speedPenaltyMultiplier int // The speed penalty multiplier, for status penalties to action duration costs.
+	//
+	shouldRecalculate bool
+	speed             int
+	health            int
 }
 
 // NewObjectCharacter creates a new ObjectCharacter from the given archetype.
@@ -64,9 +68,9 @@ func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 }
 
 // NewObjectCharacterFromCharacter creates a new ObjectCharacter from the given character data.
-func NewObjectCharacterFromCharacter(c *data.Character) (o *ObjectCharacter) {
+func NewObjectCharacterFromCharacter(c *data.Character, completeArchetype *data.Archetype) (o *ObjectCharacter) {
 	o = &ObjectCharacter{
-		Object:                 NewObject(&c.Archetype),
+		Object:                 NewObject(completeArchetype),
 		name:                   &c.Name,
 		level:                  &c.Archetype.Level,
 		resistances:            &c.Archetype.Resistances,
@@ -75,8 +79,10 @@ func NewObjectCharacterFromCharacter(c *data.Character) (o *ObjectCharacter) {
 		competencies:           &c.Archetype.Competencies,
 		speedPenaltyMultiplier: 1,
 	}
+	o.AltArchetype = &c.Archetype
 	//o.maxStamina = time.Duration(o.CalculateStamina())
 	o.maxStamina = o.CalculateStamina()
+	o.Recalculate()
 	// TODO: Move elsewhere.
 	/*for statusID, statusMap := range c.SaveInfo.Statuses {
 		if statusID == int(cdata.CrouchingStatus) {
@@ -107,6 +113,11 @@ func (o *ObjectCharacter) setArchetype(targetArch *data.Archetype) {
 }
 
 func (o *ObjectCharacter) update(delta time.Duration) {
+	if o.shouldRecalculate {
+		o.Recalculate()
+		o.shouldRecalculate = false
+	}
+
 	doTilesBlock := func(targetTiles []*Tile) bool {
 		isBlocked := false
 		matter := o.GetArchetype().Matter
@@ -171,7 +182,7 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 			switch c := cmd.Command.(type) {
 			case OwnerMoveCommand:
 				// Cap movement duration cost to a minimum of 20 millisecond
-				duration := calcDuration(100*time.Millisecond, 20*time.Millisecond, time.Duration(o.CalculateSpeed())*time.Millisecond)
+				duration := calcDuration(100*time.Millisecond, 20*time.Millisecond, time.Duration(o.speed)*time.Millisecond)
 				o.currentAction = NewActionMove(c.Y, c.X, c.Z, duration, true)
 				o.currentActionDuration = 0 // TODO: Add remainder from last operation if possible.
 			}
@@ -179,11 +190,11 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 			cmd := o.GetOwner().ShiftCommand()
 			switch c := cmd.(type) {
 			case OwnerMoveCommand:
-				duration := calcDuration(100*time.Millisecond, 20*time.Millisecond, time.Duration(o.CalculateSpeed())*time.Millisecond)
+				duration := calcDuration(100*time.Millisecond, 20*time.Millisecond, time.Duration(o.speed)*time.Millisecond)
 				o.currentAction = NewActionMove(c.Y, c.X, c.Z, duration, false)
 				o.currentActionDuration = 0 // TODO: Add remainder from last operation if possible.
 			case OwnerStatusCommand:
-				duration := calcDuration(200*time.Millisecond, 50*time.Millisecond, time.Duration(o.CalculateSpeed())*time.Millisecond)
+				duration := calcDuration(200*time.Millisecond, 50*time.Millisecond, time.Duration(o.speed)*time.Millisecond)
 				o.currentAction = NewActionStatus(c.Status, duration)
 				o.currentActionDuration = 0 // TODO: Add remainder from last operation if possible.
 			}
@@ -393,6 +404,12 @@ func (o *ObjectCharacter) RestoreStamina() {
 	}
 }
 
+// Recalculate caches all the stats of the player.
+func (o *ObjectCharacter) Recalculate() {
+	o.speed = o.CalculateSpeed()
+	o.health = o.CalculateHealth()
+}
+
 // CalculateStamina calculates the maximum stamina based upon our attributes.
 func (o *ObjectCharacter) CalculateStamina() int {
 	result := 1 // Baseline 1, so the player can always somewhat move.
@@ -407,12 +424,14 @@ func (o *ObjectCharacter) CalculateStamina() int {
 
 // CalculateSpeed calculates the speed a character has.
 func (o *ObjectCharacter) CalculateSpeed() int {
-	result := 10
+	result := 10 // Baseline 10.
 
-	h, _ := o.GetAttributeValue(data.PhysicalAttributes, data.Haste)
-	r, _ := o.GetAttributeValue(data.PhysicalAttributes, data.Reaction)
-
-	result += int(h)*5 + int(r)/4*5
+	// Add any bonuses from our ancestry.
+	for _, a := range o.Archetype.ArchPointers {
+		result += int(a.Attributes.Physical.GetSpeedBonus())
+	}
+	// Add from our own archetype.
+	result += int(o.AltArchetype.Attributes.Physical.GetSpeedBonus())
 
 	return result
 }
@@ -421,11 +440,12 @@ func (o *ObjectCharacter) CalculateSpeed() int {
 func (o *ObjectCharacter) CalculateHealth() int {
 	result := 0
 
-	p, _ := o.GetAttributeValue(data.PhysicalAttributes, data.Prowess)
-	m, _ := o.GetAttributeValue(data.PhysicalAttributes, data.Might)
-
-	result += int(p) * 8
-	result += int(m) * 2
+	// Add any bonuses from our ancestry.
+	for _, a := range o.Archetype.ArchPointers {
+		result += int(a.Attributes.Physical.GetHealthBonus())
+	}
+	// Add from our own archetype.
+	result += int(o.AltArchetype.Attributes.Physical.GetHealthBonus())
 
 	return result
 }

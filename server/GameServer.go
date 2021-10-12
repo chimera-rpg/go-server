@@ -8,6 +8,7 @@ import (
 	"github.com/chimera-rpg/go-server/config"
 	"github.com/chimera-rpg/go-server/data"
 	"github.com/chimera-rpg/go-server/world"
+	log "github.com/sirupsen/logrus"
 )
 
 // GameServer is our main server for the game. It contains the client
@@ -65,16 +66,13 @@ func (s *GameServer) cleanupConnection(c *ClientConnection) (err error) {
 	s.connectedClientsMutex.Lock()
 	defer s.connectedClientsMutex.Unlock()
 
-	// Remove object and owner data.
-	if c.user != nil {
-		if p := s.world.GetPlayerByUsername(c.user.Username); p != nil {
-			t := p.GetTarget()
-			fmt.Printf("Figure out how to save %+v\n", t)
-		}
-	}
-
 	// Unload user data.
 	if c.user != nil {
+		fmt.Println("About to call SyncPlayerSaveInfo")
+		if err = s.world.SyncPlayerSaveInfo(c); err != nil {
+			log.Errorln(err)
+		}
+		fmt.Println("About to call CleanupUser")
 		s.dataManager.CleanupUser(c.user.Username)
 	}
 
