@@ -16,6 +16,7 @@ import (
 type Map struct {
 	mapID         data.StringID
 	name          string
+	dataName      string
 	playerCount   int
 	owners        []OwnerI
 	world         *World // I guess it is okay to reference the World.
@@ -49,6 +50,7 @@ func NewMap(world *World, name string) (*Map, error) {
 		world:         world,
 		mapID:         gd.MapID,
 		name:          gd.Name,
+		dataName:      gd.DataName,
 		activeObjects: make(map[ID]ObjectI),
 	}
 	gmap.owners = make([]OwnerI, 0)
