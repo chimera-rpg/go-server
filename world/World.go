@@ -360,9 +360,7 @@ func (w *World) CreateObjectFromArch(arch *data.Archetype) (o ObjectI, err error
 		o = NewObjectFood(arch)
 	default:
 		gameobj := ObjectGeneric{
-			Object: Object{
-				Archetype: arch,
-			},
+			Object: NewObject(arch),
 		}
 		// TODO: Create/use a simple scripting language for rolling dynamic values.
 		if arch.Value != nil {
