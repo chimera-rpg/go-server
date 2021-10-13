@@ -122,7 +122,7 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 		isBlocked := false
 		matter := o.GetArchetype().Matter
 		for _, tT := range targetTiles {
-			for _, tO := range tT.objects {
+			for _, tO := range tT.objectParts {
 				switch tO := tO.(type) {
 				case *ObjectBlock:
 					// Check if the target object blocks our matter.
