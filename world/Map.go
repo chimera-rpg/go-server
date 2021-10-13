@@ -247,14 +247,14 @@ func (gmap *Map) RemoveObject(o ObjectI) (err error) {
 		return errors.New("attempted to remove a nil object")
 	}
 
-	tile := o.GetTile()
-	if tile != nil {
-		tile.removeObject(o)
-	}
-
 	tiles, _, err := gmap.GetObjectPartTiles(o, 0, 0, 0, false)
 	for _, t := range tiles {
 		t.removeObjectPart(o)
+	}
+
+	tile := o.GetTile()
+	if tile != nil {
+		tile.removeObject(o)
 	}
 
 	for _, owner := range gmap.owners {
