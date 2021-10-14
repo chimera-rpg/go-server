@@ -50,7 +50,7 @@ type Archetype struct {
 	AudioID    StringID `yaml:"-"`
 	SoundSet   string   `yaml:"SoundSet,omitempty"`
 	SoundSetID StringID `yaml:"-"`
-	SoundIndex int8     `yaml:"SoundIndex"`
+	SoundIndex int8     `yaml:"SoundIndex,omitempty"`
 	//
 	Worth      *string             `yaml:"Worth,omitempty"`
 	Value      *string             `yaml:"Value,omitempty"`
