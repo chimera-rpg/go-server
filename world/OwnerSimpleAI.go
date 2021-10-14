@@ -124,3 +124,11 @@ func (owner *OwnerSimpleAI) SendStatus(s StatusI, active bool) {
 // SendSound does nothing.
 func (owner *OwnerSimpleAI) SendSound(audioID, soundID ID, objectID ID, y, x, z int, volume float32) {
 }
+
+// SendMusic does nothing.
+func (owner *OwnerSimpleAI) SendMusic(audioID, soundID ID, soundIndex int8, objectID ID, y, x, z int, volume float32, loopCount int8) {
+}
+
+// StopMusic does nothing.
+func (owner *OwnerSimpleAI) StopMusic(objectID ID) {
+}

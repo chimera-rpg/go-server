@@ -2,6 +2,7 @@ package world
 
 import (
 	"strconv"
+	"time"
 
 	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-server/data"
@@ -10,24 +11,66 @@ import (
 // ObjectAudio represents audio for in-map sound and music playback.
 type ObjectAudio struct {
 	Object
-	loopCount int
-	volume    int
+	loopCount int8
+	volume    float32
+	elapsed   time.Duration
+	listeners map[ID]struct{}
 }
 
 // NewObjectAudio creates a sound and music playback object from the given archetype.
 func NewObjectAudio(a *data.Archetype) (o *ObjectAudio) {
 	o = &ObjectAudio{
-		Object: NewObject(a),
+		Object:    NewObject(a),
+		listeners: make(map[ID]struct{}),
 	}
 	// Use count for loops and value for volume.
 	if a.Count != nil {
-		o.loopCount, _ = strconv.Atoi(*a.Count)
+		v, _ := strconv.Atoi(*a.Count)
+		o.loopCount = int8(v)
 	}
 	if a.Value != nil {
-		o.volume, _ = strconv.Atoi(*a.Value)
+		v, _ := strconv.ParseFloat(*a.Value, 32)
+		o.volume = float32(v)
 	}
 
 	return
+}
+
+func (o *ObjectAudio) update(delta time.Duration) {
+	o.elapsed += delta
+	if o.elapsed >= 2*time.Second {
+		t := o.GetTile()
+		// Clean up listeners that don't exist
+		for id := range o.listeners {
+			if _, ok := t.GetMap().activeObjects[id]; !ok {
+				delete(o.listeners, id)
+			}
+		}
+		// Check for new listeners.
+		for _, ao := range t.GetMap().activeObjects {
+			id := ao.GetID()
+			_, exists := o.listeners[id]
+
+			switch obj := ao.(type) {
+			case *ObjectCharacter:
+				if obj.CanHear(obj.GetDistance(t.y, t.x, t.z)) {
+					if !exists {
+						obj.GetOwner().SendMusic(o.Audio(), o.SoundSet(), o.SoundIndex(), o.id, t.y, t.x, t.z, o.Volume(), o.LoopCount())
+						o.listeners[id] = struct{}{}
+					}
+				} else {
+					if exists {
+						obj.GetOwner().StopMusic(o.id)
+						delete(o.listeners, id)
+					}
+				}
+			}
+		}
+
+		o.elapsed = 0
+	}
+
+	o.Object.update(delta)
 }
 
 // getType returns the Archetype type.
@@ -36,12 +79,12 @@ func (o *ObjectAudio) getType() cdata.ArchetypeType {
 }
 
 // Volume does an obvious thing.
-func (o *ObjectAudio) Volume() int {
+func (o *ObjectAudio) Volume() float32 {
 	return o.volume
 }
 
 // LoopCount returns the loop count of the object. -1 means loop, 0 means do nothing, 1 means play once, and so on.
-func (o *ObjectAudio) LoopCount() int {
+func (o *ObjectAudio) LoopCount() int8 {
 	return o.loopCount
 }
 

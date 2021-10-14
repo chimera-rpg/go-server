@@ -235,6 +235,8 @@ func (gmap *Map) PlaceObject(o ObjectI, y int, x int, z int) (err error) {
 	switch o.(type) {
 	case *ObjectCharacter:
 		gmap.activeObjects[o.GetID()] = o
+	case *ObjectAudio:
+		gmap.activeObjects[o.GetID()] = o
 	}
 
 	gmap.updateTime++

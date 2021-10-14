@@ -327,3 +327,27 @@ func (player *OwnerPlayer) SendSound(audioID ID, soundID ID, objectID ID, y, x, 
 		Volume:   volume,
 	})
 }
+
+// SendMusic sends music.
+func (player *OwnerPlayer) SendMusic(audioID, soundID ID, soundIndex int8, objectID ID, y, x, z int, volume float32, loopCount int8) {
+	player.ClientConnection.Send(network.CommandMusic{
+		Type:     network.MapNoise,
+		AudioID:  audioID,
+		SoundID:  soundID,
+		ObjectID: objectID,
+		Y:        uint32(y),
+		X:        uint32(x),
+		Z:        uint32(z),
+		Volume:   volume,
+		Loop:     loopCount,
+	})
+}
+
+// StopMusic stops music playing from a source.
+func (player *OwnerPlayer) StopMusic(objectID ID) {
+	player.ClientConnection.Send(network.CommandMusic{
+		Type:     network.MapNoise,
+		ObjectID: objectID,
+		Stop:     true,
+	})
+}
