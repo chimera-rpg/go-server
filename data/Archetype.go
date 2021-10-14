@@ -46,6 +46,12 @@ type Archetype struct {
 	Matter      cdata.MatterType    `yaml:"Matter,omitempty"`
 	Blocking    cdata.MatterType    `yaml:"Blocking,omitempty"`
 	//
+	Audio      string   `yaml:"Audio,omitempty"`
+	AudioID    StringID `yaml:"-"`
+	SoundSet   string   `yaml:"SoundSet,omitempty"`
+	SoundSetID StringID `yaml:"-"`
+	SoundIndex int8     `yaml:"SoundIndex"`
+	//
 	Worth      *string             `yaml:"Worth,omitempty"`
 	Value      *string             `yaml:"Value,omitempty"`
 	Count      *string             `yaml:"Count,omitempty"`

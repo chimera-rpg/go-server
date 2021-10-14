@@ -94,6 +94,16 @@ func (m *Manager) ProcessArchetype(archetype *Archetype) error {
 		archetype.Arch = ""
 	}
 
+	// Process audio
+	if archetype.Audio != "" {
+		archetype.AudioID = m.Strings.Acquire(archetype.Audio)
+		archetype.Audio = ""
+	}
+	if archetype.SoundSet != "" {
+		archetype.SoundSetID = m.Strings.Acquire(archetype.SoundSet)
+		archetype.SoundSet = ""
+	}
+
 	// Convert Archs into ArchIDs
 	for _, archname := range archetype.Archs {
 		isAdd := false
@@ -497,7 +507,7 @@ func (m *Manager) buildSoundsMap() error {
 			return err
 		}
 		if !info.IsDir() {
-			if path.Ext(fpath) == ".flac" {
+			if path.Ext(fpath) == ".flac" || path.Ext(fpath) == ".ogg" {
 				shortpath := filepath.ToSlash(fpath[len(m.audioPath)+1:])
 				id := m.Strings.Acquire(shortpath)
 				_, err := m.soundFileMap.BuildCRC(id, fpath)

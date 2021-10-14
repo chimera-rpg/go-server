@@ -1,6 +1,7 @@
 package world
 
 import (
+	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-common/network"
 	"github.com/chimera-rpg/go-server/data"
 
@@ -162,9 +163,16 @@ func (player *OwnerPlayer) checkVisibleTiles() error {
 					}
 					player.view[yi][xi][zi].modTime = mapTile.modTime
 					// NOTE: We could maintain a list of known objects on a tile in the player's tile view and send the difference instead. For large stacks of infrequently changing tiles, this would be more bandwidth efficient, though at the expense of server-side RAM and CPU time.
-					tileObjectIDs := make([]ID, len(mapTile.GetObjects()))
+					// Filter out things we don't want to send to the client.
+					filteredMapObjects := make([]ObjectI, 0)
+					for _, o := range mapTile.GetObjects() {
+						if o.getType() != cdata.ArchetypeAudio {
+							filteredMapObjects = append(filteredMapObjects, o)
+						}
+					}
+					tileObjectIDs := make([]ID, len(filteredMapObjects))
 					// Send any objects unknown to the client (and collect their IDs).
-					for i, o := range mapTile.GetObjects() {
+					for i, o := range filteredMapObjects {
 						oID := o.GetID()
 						if _, isObjectKnown := player.knownIDs[oID]; !isObjectKnown {
 							// Let the client know of the object(s). NOTE: We could send a collection of object creation commands so as to reduce TCP overhead for bulk updates.
