@@ -2,6 +2,8 @@ package world
 
 import (
 	"errors"
+
+	cdata "github.com/chimera-rpg/go-common/data"
 )
 
 // Tile represents a location on the ground.
@@ -11,6 +13,8 @@ type Tile struct {
 	objects     []ObjectI // objects contains Objects that origin from this tile. This data is used in network transmission.
 	objectParts []ObjectI // objectParts contains Object pointers that are used for collisions, pathing, and otherwise. This data is never sent over the network.
 	brightness  int
+	blocking    cdata.MatterType
+	opaque      bool
 	modTime     uint16 // Last time this tile was updated.
 }
 
@@ -68,6 +72,8 @@ func (tile *Tile) insertObjectPart(object ObjectI, index int) {
 			tile.objectParts = append(tile.objectParts[:index], append([]ObjectI{object}, tile.objectParts[index:]...)...)
 		}
 	}
+
+	tile.updateBlocking()
 }
 
 // removeObjectPart removes a collision object reference.
@@ -76,6 +82,7 @@ func (tile *Tile) removeObjectPart(object ObjectI) {
 	if i >= 0 {
 		tile.objectParts = append(tile.objectParts[:i], tile.objectParts[i+1:]...)
 	}
+	tile.updateBlocking()
 }
 
 func (tile *Tile) getObjectPartIndex(object ObjectI) int {
@@ -114,4 +121,16 @@ func (tile *Tile) CheckObjects(f func(ObjectI) bool) bool {
 		}
 	}
 	return false
+}
+
+func (tile *Tile) updateBlocking() {
+	tile.blocking = 0
+	tile.opaque = false
+	for _, o := range tile.objects {
+		a := o.GetArchetype()
+		tile.blocking |= a.Blocking
+		if a.Matter.Is(cdata.OpaqueMatter) {
+			tile.opaque = true
+		}
+	}
 }
