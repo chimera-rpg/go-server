@@ -310,6 +310,7 @@ func (player *OwnerPlayer) sendTile(tile *Tile) {
 						Height:      oArch.Height,
 						Width:       oArch.Width,
 						Depth:       oArch.Depth,
+						Opaque:      oArch.Matter.Is(cdata.OpaqueMatter),
 					},
 				})
 			} else {
