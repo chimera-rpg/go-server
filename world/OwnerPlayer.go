@@ -1,6 +1,8 @@
 package world
 
 import (
+	"math"
+
 	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-common/network"
 	"github.com/chimera-rpg/go-server/data"
@@ -107,7 +109,8 @@ func (player *OwnerPlayer) CreateView() {
 // CheckView checks the view around the player and calls any associated network functions to update the client.
 func (player *OwnerPlayer) CheckView() {
 	// Map has changed in some way, so let's check our viewable tiles for updates.
-	player.checkVisibleTiles()
+	//player.checkVisibleTiles()
+	player.checkVisionRing()
 }
 
 // SetViewSize sets the viewport limits of the player.
@@ -121,6 +124,211 @@ func (player *OwnerPlayer) SetViewSize(h, w, d int) {
 func (player *OwnerPlayer) GetViewSize() (h, w, d int) {
 	// TODO: Probably conditionally replace with target object's vision.
 	return player.viewHeight, player.viewWidth, player.viewDepth
+}
+
+// getVisionRing returns an array of coordinates matching the outermost edge of the player's vision.
+func (player *OwnerPlayer) getVisionRing() (c [][3]int) {
+	tile := player.GetTarget().GetTile()
+	m := tile.GetMap()
+	vh, vw, vd := player.GetViewSize()
+	vhh := vh / 2
+	vwh := vw / 2
+	vdh := vd / 2
+	y1 := tile.y + int(player.GetTarget().GetArchetype().Height)
+	// TODO: Use target object's statistics for vision range.
+	add := func(y, x, z int) {
+		if y < 0 || x < 0 || z < 0 || y >= m.height || x >= m.width || z >= m.depth {
+			return
+		}
+		c = append(c, [3]int{y, x, z})
+	}
+	// bottom & top
+	for x := tile.x - vwh; x < tile.x+vwh; x++ {
+		for z := tile.z - vdh; z < tile.z+vdh; z++ {
+			add(y1-vhh, x, z)
+			add(y1+vhh, x, z)
+		}
+	}
+	// left & right
+	for y := tile.y - vhh; y < tile.y+vhh; y++ {
+		for z := tile.z - vdh; z < tile.z+vdh; z++ {
+			add(y, tile.x-vwh, z)
+			add(y, tile.x+vwh, z)
+		}
+	}
+	// back & front
+	for y := tile.y - vhh; y < tile.y+vhh; y++ {
+		for x := tile.x - vwh; x < tile.x+vwh; x++ {
+			add(y, x, tile.z-vdh)
+			add(y, x, tile.z+vdh)
+		}
+	}
+	return
+}
+
+func (player *OwnerPlayer) checkVisionRing() error {
+	gmap := player.GetMap()
+	tile := player.GetTarget().GetTile()
+	coords := player.getVisionRing()
+
+	// Ensure our own tile is updated.
+	player.sendTile(tile)
+
+	// TODO: We should also shoot rays from the target's feet a short distance to ensure close objects are visible.
+	// Amanatides & Woo
+	y1 := float64(tile.y + int(player.GetTarget().GetArchetype().Height))
+	if y1 >= float64(gmap.height) {
+		y1 = float64(gmap.height - 1)
+	}
+	x1 := float64(tile.x)
+	z1 := float64(tile.z)
+	for _, c := range coords {
+		var tMaxX, tMaxY, tMaxZ, tDeltaX, tDeltaY, tDeltaZ float64
+		y2 := float64(c[0])
+		x2 := float64(c[1])
+		z2 := float64(c[2])
+		var dy, dx, dz int
+		var y, x, z int
+
+		sign := func(x float64) int {
+			if x > 0 {
+				return 1
+			} else if x < 0 {
+				return -1
+			}
+			return 0
+		}
+		frac0 := func(x float64) float64 {
+			return x - math.Floor(x)
+		}
+		frac1 := func(x float64) float64 {
+			return 1 - x + math.Floor(x)
+		}
+
+		dy = sign(y2 - y1)
+		if dy != 0 {
+			tDeltaY = math.Min(float64(dy)/(y2-y1), 10000)
+		} else {
+			tDeltaY = 10000
+		}
+		if dy > 0 {
+			tMaxY = tDeltaY * frac1(y1)
+		} else {
+			tMaxY = tDeltaY * frac0(y1)
+		}
+		y = int(y1)
+
+		dx = sign(x2 - x1)
+		if dx != 0 {
+			tDeltaX = math.Min(float64(dx)/(x2-x1), 10000)
+		} else {
+			tDeltaX = 10000
+		}
+		if dx > 0 {
+			tMaxX = tDeltaX * frac1(x1)
+		} else {
+			tMaxX = tDeltaX * frac0(x1)
+		}
+		x = int(x1)
+
+		dz = sign(z2 - z1)
+		if dz != 0 {
+			tDeltaZ = math.Min(float64(dz)/(z2-z1), 10000)
+		} else {
+			tDeltaZ = 10000
+		}
+		if dz > 0 {
+			tMaxZ = tDeltaZ * frac1(z1)
+		} else {
+			tMaxZ = tDeltaZ * frac0(z1)
+		}
+		z = int(z1)
+
+		for {
+			if tMaxX < tMaxY {
+				if tMaxX < tMaxZ {
+					x += dx
+					tMaxX += tDeltaX
+				} else {
+					z += dz
+					tMaxZ += tDeltaZ
+				}
+			} else {
+				if tMaxY < tMaxZ {
+					y += dy
+					tMaxY += tDeltaY
+				} else {
+					z += dz
+					tMaxZ += tDeltaZ
+				}
+			}
+			if tMaxY > 1 && tMaxX > 1 && tMaxZ > 1 {
+				break
+			}
+			if y < 0 || x < 0 || z < 0 || y >= gmap.height || x >= gmap.width || z >= gmap.depth {
+				continue
+				//break
+			}
+			tile := gmap.GetTile(y, x, z)
+			player.sendTile(tile)
+			if tile.opaque {
+				break
+			}
+		}
+	}
+	return nil
+}
+
+func (player *OwnerPlayer) sendTile(tile *Tile) {
+	// TODO: Actually calculate which tiles are visible for the owner.
+	if tile.modTime == player.view[tile.y][tile.x][tile.z].modTime {
+		return
+	}
+	player.view[tile.y][tile.x][tile.z].modTime = tile.modTime
+	// NOTE: We could maintain a list of known objects on a tile in the player's tile view and send the difference instead. For large stacks of infrequently changing tiles, this would be more bandwidth efficient, though at the expense of server-side RAM and CPU time.
+	// Filter out things we don't want to send to the client.
+	filteredMapObjects := make([]ObjectI, 0)
+	for _, o := range tile.GetObjects() {
+		if o.getType() != cdata.ArchetypeAudio {
+			filteredMapObjects = append(filteredMapObjects, o)
+		}
+	}
+	tileObjectIDs := make([]ID, len(filteredMapObjects))
+	// Send any objects unknown to the client (and collect their IDs).
+	for i, o := range filteredMapObjects {
+		oID := o.GetID()
+		if _, isObjectKnown := player.knownIDs[oID]; !isObjectKnown {
+			// Let the client know of the object(s). NOTE: We could send a collection of object creation commands so as to reduce TCP overhead for bulk updates.
+			oArch := o.GetArchetype()
+			if oArch != nil {
+				player.ClientConnection.Send(network.CommandObject{
+					ObjectID: o.GetID(),
+					Payload: network.CommandObjectPayloadCreate{
+						TypeID:      o.getType().AsUint8(),
+						AnimationID: oArch.AnimID,
+						FaceID:      oArch.FaceID,
+						Height:      oArch.Height,
+						Width:       oArch.Width,
+						Depth:       oArch.Depth,
+					},
+				})
+			} else {
+				player.ClientConnection.Send(network.CommandObject{
+					ObjectID: o.GetID(),
+					Payload:  network.CommandObjectPayloadCreate{},
+				})
+			}
+			player.knownIDs[oID] = struct{}{}
+		}
+		tileObjectIDs[i] = oID
+	}
+	// Update the client's perception of the given tile.
+	player.ClientConnection.Send(network.CommandTile{
+		Y:         uint32(tile.y),
+		X:         uint32(tile.x),
+		Z:         uint32(tile.z),
+		ObjectIDs: tileObjectIDs,
+	})
 }
 
 // checkVisibleTiles gets the initial view of the player. This sends tile information equal to how far the owner's PC can see.
@@ -156,56 +364,7 @@ func (player *OwnerPlayer) checkVisibleTiles() error {
 		for yi := sy; yi < ey; yi++ {
 			for xi := sx; xi < ex; xi++ {
 				for zi := sz; zi < ez; zi++ {
-					// TODO: Actually calculate which tiles are visible for the owner.
-					mapTile := gmap.GetTile(yi, xi, zi)
-					if mapTile.modTime == player.view[yi][xi][zi].modTime {
-						continue
-					}
-					player.view[yi][xi][zi].modTime = mapTile.modTime
-					// NOTE: We could maintain a list of known objects on a tile in the player's tile view and send the difference instead. For large stacks of infrequently changing tiles, this would be more bandwidth efficient, though at the expense of server-side RAM and CPU time.
-					// Filter out things we don't want to send to the client.
-					filteredMapObjects := make([]ObjectI, 0)
-					for _, o := range mapTile.GetObjects() {
-						if o.getType() != cdata.ArchetypeAudio {
-							filteredMapObjects = append(filteredMapObjects, o)
-						}
-					}
-					tileObjectIDs := make([]ID, len(filteredMapObjects))
-					// Send any objects unknown to the client (and collect their IDs).
-					for i, o := range filteredMapObjects {
-						oID := o.GetID()
-						if _, isObjectKnown := player.knownIDs[oID]; !isObjectKnown {
-							// Let the client know of the object(s). NOTE: We could send a collection of object creation commands so as to reduce TCP overhead for bulk updates.
-							oArch := o.GetArchetype()
-							if oArch != nil {
-								player.ClientConnection.Send(network.CommandObject{
-									ObjectID: o.GetID(),
-									Payload: network.CommandObjectPayloadCreate{
-										TypeID:      o.getType().AsUint8(),
-										AnimationID: oArch.AnimID,
-										FaceID:      oArch.FaceID,
-										Height:      oArch.Height,
-										Width:       oArch.Width,
-										Depth:       oArch.Depth,
-									},
-								})
-							} else {
-								player.ClientConnection.Send(network.CommandObject{
-									ObjectID: o.GetID(),
-									Payload:  network.CommandObjectPayloadCreate{},
-								})
-							}
-							player.knownIDs[oID] = struct{}{}
-						}
-						tileObjectIDs[i] = oID
-					}
-					// Update the client's perception of the given tile.
-					player.ClientConnection.Send(network.CommandTile{
-						Y:         uint32(yi),
-						X:         uint32(xi),
-						Z:         uint32(zi),
-						ObjectIDs: tileObjectIDs,
-					})
+					player.sendTile(gmap.GetTile(yi, xi, zi))
 				}
 			}
 		}
