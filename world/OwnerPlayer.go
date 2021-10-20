@@ -166,10 +166,57 @@ func (player *OwnerPlayer) getVisionRing() (c [][3]int) {
 	return
 }
 
+func (player *OwnerPlayer) getVisionCube() (c [][3]int) {
+	tile := player.GetTarget().GetTile()
+	m := tile.GetMap()
+	vh, vw, vd := player.GetViewSize()
+	vhh := vh / 2
+	vwh := vw / 2
+	vdh := vd / 2
+	y1 := tile.y + int(player.GetTarget().GetArchetype().Height)
+
+	ymin := y1 - vhh
+	if ymin < 0 {
+		ymin = 0
+	}
+	ymax := y1 + vhh
+	if ymax > m.height {
+		ymax = m.height - 1
+	}
+
+	xmin := tile.x - vwh
+	if xmin < 0 {
+		xmin = 0
+	}
+	xmax := tile.x + vwh
+	if xmax > m.width {
+		xmax = m.width - 1
+	}
+
+	zmin := tile.z - vdh
+	if zmin < 0 {
+		zmin = 0
+	}
+	zmax := tile.z + vdh
+	if zmax > m.depth {
+		zmax = m.depth - 1
+	}
+
+	for y := ymin; y < ymax; y += 2 {
+		for x := xmin; x < xmax; x++ {
+			for z := zmin; z < zmax; z++ {
+				c = append(c, [3]int{y, x, z})
+			}
+		}
+	}
+	return
+}
+
 func (player *OwnerPlayer) checkVisionRing() error {
 	gmap := player.GetMap()
 	tile := player.GetTarget().GetTile()
-	coords := player.getVisionRing()
+	//coords := player.getVisionRing()
+	coords := player.getVisionCube()
 
 	// Ensure our own tile is updated.
 	player.sendTile(tile)
