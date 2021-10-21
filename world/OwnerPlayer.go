@@ -85,7 +85,7 @@ func NewOwnerPlayer(cc clientConnectionI) *OwnerPlayer {
 		ClientConnection: cc,
 		knownIDs:         make(map[ID]struct{}),
 		viewWidth:        32,
-		viewHeight:       16,
+		viewHeight:       32,
 		viewDepth:        32,
 	}
 }
@@ -228,7 +228,7 @@ func (player *OwnerPlayer) checkVisionRing() error {
 		y1 = float64(gmap.height - 1)
 	}
 	x1 := float64(tile.x)
-	z1 := float64(tile.z)
+	z1 := float64(tile.z + 2)
 	for _, c := range coords {
 		var tMaxX, tMaxY, tMaxZ, tDeltaX, tDeltaY, tDeltaZ float64
 		y2 := float64(c[0])
