@@ -221,14 +221,16 @@ func (player *OwnerPlayer) checkVisionRing() error {
 	// Ensure our own tile is updated.
 	player.sendTile(tile)
 
+	a := player.GetTarget().GetArchetype()
+
 	// TODO: We should also shoot rays from the target's feet a short distance to ensure close objects are visible.
 	// Amanatides & Woo
-	y1 := float64(tile.y + int(player.GetTarget().GetArchetype().Height))
+	y1 := float64(tile.y + int(a.Height))
 	if y1 >= float64(gmap.height) {
 		y1 = float64(gmap.height - 1)
 	}
-	x1 := float64(tile.x)
-	z1 := float64(tile.z + 2)
+	x1 := float64(tile.x) + float64(a.Width)/2
+	z1 := float64(tile.z) + float64(a.Depth)/2
 	for _, c := range coords {
 		var tMaxX, tMaxY, tMaxZ, tDeltaX, tDeltaY, tDeltaZ float64
 		y2 := float64(c[0])
