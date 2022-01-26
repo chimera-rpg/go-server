@@ -84,9 +84,9 @@ func NewOwnerPlayer(cc clientConnectionI) *OwnerPlayer {
 		commandChannel:   make(chan OwnerCommand),
 		ClientConnection: cc,
 		knownIDs:         make(map[ID]struct{}),
-		viewWidth:        32,
+		viewWidth:        48,
 		viewHeight:       32,
-		viewDepth:        32,
+		viewDepth:        48,
 	}
 }
 
