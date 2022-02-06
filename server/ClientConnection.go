@@ -417,12 +417,20 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 			}
 			c.requestedSoundIDs[t.SoundID] = struct{}{}
 			if soundData, err := s.dataManager.GetSoundData(t.SoundID); err == nil {
-				c.Send(network.CommandSound{
-					Type:     network.Set,
-					SoundID:  t.SoundID,
-					DataType: network.SoundFlac, // For now...
-					Data:     soundData,
-				})
+				dataType := -1
+				if string(soundData[:4]) == "fLaC" {
+					dataType = network.SoundFlac
+				} else if string(soundData[:4]) == "OggS" {
+					dataType = network.SoundOgg
+				}
+				if dataType != -1 {
+					c.Send(network.CommandSound{
+						Type:     network.Set,
+						SoundID:  t.SoundID,
+						DataType: uint8(dataType),
+						Data:     soundData,
+					})
+				}
 			} else {
 				// Let client know that no such graphics exists.
 				c.Send(network.CommandSound{
