@@ -136,13 +136,12 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 	}
 
 	// Add a falling timer if we've moved and should fall.
-	var s *StatusFalling
-	if o.hasMoved && !o.HasStatus(s) {
+	if o.hasMoved && !o.HasStatus(StatusFallingRef) {
 		m := o.tile.gameMap
 		if m != nil {
 			_, fallingTiles, err := m.GetObjectPartTiles(o, -1, 0, 0, false)
 
-			if !doTilesBlock(fallingTiles) && err == nil {
+			if !o.HasStatus(StatusFlyingRef) && !doTilesBlock(fallingTiles) && err == nil {
 				o.AddStatus(&StatusFalling{})
 			}
 		}
