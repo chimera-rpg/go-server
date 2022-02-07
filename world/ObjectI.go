@@ -28,6 +28,7 @@ type ObjectI interface {
 	GetStatus(StatusI) StatusI
 	ResolveEvent(EventI) bool
 	Blocks(cdata.MatterType) bool
+	Matter() cdata.MatterType
 	Name() string
 	GetDimensions() (h, w, d int)
 	GetDistance(y, x, z int) float64

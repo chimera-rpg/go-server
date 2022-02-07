@@ -160,6 +160,12 @@ func (o *Object) Blocks(matter cdata.MatterType) bool {
 	return o.blocking.Is(matter)
 }
 
+// Matter returns the object's matter, acquired from its archetype.
+func (o *Object) Matter() cdata.MatterType {
+	a := o.GetArchetype()
+	return a.Matter
+}
+
 // Name returns the name of the object, if available.
 func (o *Object) Name() string {
 	return ""

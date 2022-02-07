@@ -294,7 +294,7 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 	}
 
 	doTilesBlock := func(targetTiles []*Tile) bool {
-		matter := o.GetArchetype().Matter
+		matter := o.Matter()
 		for _, tT := range targetTiles {
 			for _, tO := range tT.objectParts {
 				if tO == o {
