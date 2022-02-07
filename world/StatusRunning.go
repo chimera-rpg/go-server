@@ -9,6 +9,8 @@ type StatusRunning struct {
 	Status
 }
 
+var StatusRunningRef = &StatusRunning{}
+
 // StatusType returns cdata.CrouchingStatus
 func (s *StatusRunning) StatusType() cdata.StatusType {
 	return cdata.RunningStatus

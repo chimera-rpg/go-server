@@ -9,6 +9,8 @@ type StatusFlying struct {
 	Status
 }
 
+var StatusFlyingRef = &StatusFlying{}
+
 // StatusType returns cdata.FlyingStatus
 func (s *StatusFlying) StatusType() cdata.StatusType {
 	return cdata.FlyingStatus

@@ -13,6 +13,8 @@ type StatusFalling struct {
 	fallDistance int
 }
 
+var StatusFallingRef = &StatusFalling{}
+
 func (s *StatusFalling) update(delta time.Duration) {
 	const fallRate = 4717 * time.Microsecond * 10 // 53 meters/second or 212 units/second or 1 unit/4717 microseconds. We multiply this by 10 so you don't just reach terminal instantly (and so it feels nicer).
 

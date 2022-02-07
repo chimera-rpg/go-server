@@ -16,6 +16,8 @@ type StatusSqueeze struct {
 	Remove    bool
 }
 
+var StatusSqueezeRef = &StatusSqueeze{}
+
 func (s *StatusSqueeze) update(delta time.Duration) {
 	s.Status.update(delta)
 	if s.target == nil {

@@ -9,6 +9,8 @@ type StatusSwimming struct {
 	Status
 }
 
+var StatusSwimmingRef = &StatusSwimming{}
+
 // StatusType returns cdata.SwimmingStatus
 func (s *StatusSwimming) StatusType() cdata.StatusType {
 	return cdata.SwimmingStatus

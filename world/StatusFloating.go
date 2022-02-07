@@ -9,6 +9,8 @@ type StatusFloating struct {
 	Status
 }
 
+var StatusFloatingRef = &StatusFloating{}
+
 // StatusType returns cdata.FloatingStatus
 func (s *StatusFloating) StatusType() cdata.StatusType {
 	return cdata.FloatingStatus

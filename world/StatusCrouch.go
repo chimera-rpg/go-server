@@ -17,6 +17,8 @@ type StatusCrouch struct {
 	Remove    bool
 }
 
+var StatusCrouchRef = &StatusCrouch{}
+
 func (s *StatusCrouch) update(delta time.Duration) {
 	s.Status.update(delta)
 	if s.target == nil {
