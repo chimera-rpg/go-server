@@ -1,7 +1,7 @@
 module github.com/chimera-rpg/go-server
 
 require (
-	github.com/chimera-rpg/go-common v0.0.0-20220207083843-2c331b23a58b
+	github.com/chimera-rpg/go-common v0.0.0-20220207090613-3de2fecc5157
 	github.com/imdario/mergo v0.3.8
 	github.com/jinzhu/copier v0.3.2 // indirect
 	github.com/sirupsen/logrus v1.6.0
