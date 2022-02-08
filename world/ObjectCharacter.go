@@ -124,12 +124,20 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 		for _, tT := range targetTiles {
 			for _, tO := range tT.objectParts {
 				switch tO := tO.(type) {
-				case *ObjectBlock:
-					// Check if the target object blocks our matter.
+				case *ObjectTile:
 					if tO.blocking.Is(matter) {
 						isBlocked = true
+						break
+					}
+				case *ObjectBlock:
+					if tO.blocking.Is(matter) {
+						isBlocked = true
+						break
 					}
 				}
+			}
+			if isBlocked {
+				break
 			}
 		}
 		return isBlocked
