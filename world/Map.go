@@ -7,6 +7,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-common/network"
 	"github.com/chimera-rpg/go-server/data"
 )
@@ -276,8 +277,7 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 	}
 
 	if !force {
-		var fall *StatusFalling
-		if o.HasStatus(fall) {
+		if o.HasStatus(StatusFallingRef) {
 			return false, nil
 		}
 	}
@@ -308,9 +308,22 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 		return false
 	}
 
+	isInLiquid := func(targetTiles []*Tile) bool {
+		liquidThreshold := len(targetTiles) - len(targetTiles)/3
+		liquidCount := 0
+		for _, tT := range targetTiles {
+			if tT.matter.Is(cdata.LiquidMatter) {
+				liquidCount++
+			}
+			if liquidCount >= liquidThreshold {
+				return true
+			}
+		}
+		return false
+	}
+
 	// Check if we're uncrouching or should be crouched.
-	var crouch *StatusCrouch
-	if crouch := o.GetStatus(crouch); crouch != nil {
+	if crouch := o.GetStatus(StatusCrouchRef); crouch != nil {
 		s := crouch.(*StatusCrouch)
 		if s.Remove {
 			o.RemoveStatus(crouch)
@@ -338,8 +351,7 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 	}
 
 	// Check if we're unsqueezing or should be squeezed.
-	var squeeze *StatusSqueeze
-	if squeeze := o.GetStatus(squeeze); squeeze != nil {
+	if squeeze := o.GetStatus(StatusSqueezeRef); squeeze != nil {
 		s := squeeze.(*StatusSqueeze)
 		if s.Remove {
 			o.RemoveStatus(squeeze)
@@ -411,6 +423,16 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 					targetTiles = targetDownTiles
 				}
 			}
+		}
+	}
+	// If we're physical, not swimming, and moving into liquid, mark it as such.
+	if o.Matter().Is(cdata.PhysicalMatter | cdata.SolidMatter) {
+		if o.HasStatus(StatusSwimmingRef) {
+			if !isInLiquid(targetTiles) {
+				o.RemoveStatus(StatusSwimmingRef)
+			}
+		} else if isInLiquid(targetTiles) {
+			o.AddStatus(&StatusSwimming{})
 		}
 	}
 	// If we got here then the move ended up being valid, so let's update our tiles.
