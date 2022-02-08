@@ -14,6 +14,7 @@ type Tile struct {
 	objectParts []ObjectI // objectParts contains Object pointers that are used for collisions, pathing, and otherwise. This data is never sent over the network.
 	brightness  int
 	blocking    cdata.MatterType
+	matter      cdata.MatterType
 	opaque      bool
 	modTime     uint16 // Last time this tile was updated.
 }
@@ -124,11 +125,13 @@ func (tile *Tile) CheckObjects(f func(ObjectI) bool) bool {
 }
 
 func (tile *Tile) updateBlocking() {
+	tile.matter = 0
 	tile.blocking = 0
 	tile.opaque = false
 	for _, o := range tile.objects {
 		a := o.GetArchetype()
 		tile.blocking |= a.Blocking
+		tile.matter |= o.Matter()
 		if a.Matter.Is(cdata.OpaqueMatter) {
 			tile.opaque = true
 		}
