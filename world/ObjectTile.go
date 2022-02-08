@@ -15,7 +15,7 @@ type ObjectTile struct {
 // NewObjectTile creates a floor object from the given archetype.
 func NewObjectTile(a *data.Archetype) (o *ObjectTile) {
 	o = &ObjectTile{
-		Object: Object{Archetype: a},
+		Object: NewObject(a),
 	}
 
 	//o.setArchetype(a)
