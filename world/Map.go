@@ -465,6 +465,12 @@ func (gmap *Map) GetObjectPartTiles(o ObjectI, yDir, xDir, zDir int, force bool)
 	h, w, d := o.GetDimensions()
 	// Check each potential move position.
 	getTargets := force || yDir != 0 || xDir != 0 || zDir != 0
+
+	// FIXME: We're treating tile types as having their part(s) one Y step below their actual position. This is so that tile types provide collision that matches their visual position. This feels Wrong(tm).
+	if o.getType() == cdata.ArchetypeTile {
+		oY--
+	}
+
 	// Iterate through our box.
 	for sY := 0; sY < h; sY++ {
 		olY := oY + sY
