@@ -15,28 +15,29 @@ import (
 // Map is a live instance of a map that contains and updates all objects
 // and tiles within it.
 type Map struct {
-	mapID         data.StringID
-	name          string
-	dataName      string
-	playerCount   int
-	owners        []OwnerI
-	world         *World // I guess it is okay to reference the World.
-	shouldSleep   bool
-	shouldExpire  bool
-	lifeTime      time.Duration // Time in us of how long this map has been alive
-	north         *Map
-	east          *Map
-	south         *Map
-	west          *Map
-	tiles         [][][]Tile
-	activeTiles   []*Tile
-	activeObjects map[ID]ObjectI
-	width         int
-	height        int
-	depth         int
-	updateTime    uint8         // Whenever this is updated, owners will check their surroundings for updates.
-	turnTime      time.Duration // Time until the next map turn (when characters have their actions restored)
-	turnElapsed   time.Duration
+	mapID          data.StringID
+	name           string
+	dataName       string
+	playerCount    int
+	owners         []OwnerI
+	world          *World // I guess it is okay to reference the World.
+	shouldSleep    bool
+	shouldExpire   bool
+	lifeTime       time.Duration // Time in us of how long this map has been alive
+	north          *Map
+	east           *Map
+	south          *Map
+	west           *Map
+	tiles          [][][]Tile
+	activeTiles    []*Tile
+	activeObjects  map[ID]ObjectI
+	width          int
+	height         int
+	depth          int
+	updateTime     uint8         // Whenever this is updated, owners will check their surroundings for updates.
+	turnTime       time.Duration // Time until the next map turn (when characters have their actions restored)
+	turnElapsed    time.Duration
+	refreshObjects []ID
 }
 
 // NewMap loads the given map file from the data manager.
@@ -119,6 +120,16 @@ func (gmap *Map) sizeMap(height int, width int, depth int) error {
 // Update updates all active tiles and objects within the map.
 func (gmap *Map) Update(gm *World, delta time.Duration) error {
 	gmap.lifeTime += delta
+
+	// Force owners to forget about objects in the refreshObjects list.
+	if len(gmap.refreshObjects) > 0 {
+		for _, oID := range gmap.refreshObjects {
+			for _, owner := range gmap.owners {
+				owner.ForgetObject(oID)
+			}
+		}
+		gmap.refreshObjects = make([]uint32, 0)
+	}
 
 	for _, owner := range gmap.owners {
 		owner.OnMapUpdate(delta)
@@ -238,6 +249,10 @@ func (gmap *Map) PlaceObject(o ObjectI, y int, x int, z int) (err error) {
 		gmap.activeObjects[o.GetID()] = o
 	case *ObjectAudio:
 		gmap.activeObjects[o.GetID()] = o
+	default:
+		if o.Updates() {
+			gmap.activeObjects[o.GetID()] = o
+		}
 	}
 
 	gmap.updateTime++
@@ -471,6 +486,27 @@ func (gmap *Map) GetObjectPartTiles(o ObjectI, yDir, xDir, zDir int, force bool)
 		}
 	}
 	return
+}
+
+// RefreshObject marks the given object to be refreshed.
+func (gmap *Map) RefreshObject(oID ID) {
+	if o, ok := gmap.world.objects[oID]; ok {
+		o.GetTile().modTime++
+		gmap.refreshObjects = append(gmap.refreshObjects, oID)
+		gmap.updateTime++
+	}
+}
+
+// InactivateObject removes the given object from the active objects map.
+func (gmap *Map) InactiveObject(oID ID) {
+	delete(gmap.activeObjects, oID)
+}
+
+// ActivateObject adds the given object to the active objects map.
+func (gmap *Map) ActivateObject(oID ID) {
+	if o, ok := gmap.world.objects[oID]; ok {
+		gmap.activeObjects[oID] = o
+	}
 }
 
 // Sounds
