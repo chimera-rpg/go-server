@@ -607,3 +607,8 @@ func (player *OwnerPlayer) handleWizardCommand(args ...string) {
 		}
 	}
 }
+
+// ForgotObject makes the player forget a given object. This will force the object to be resent to the player if it still exists.
+func (player *OwnerPlayer) ForgetObject(oID ID) {
+	delete(player.knownIDs, oID)
+}

@@ -32,3 +32,6 @@ func (owner *Owner) RepeatCommand() OwnerCommand {
 func (owner *Owner) Wizard() bool {
 	return owner.wizard
 }
+
+func (owner *Owner) ForgetObject(oID ID) {
+}

@@ -34,4 +34,6 @@ type OwnerI interface {
 	ShiftCommand() OwnerCommand
 	ClearCommands()
 	Wizard() bool
+	//
+	ForgetObject(ID)
 }
