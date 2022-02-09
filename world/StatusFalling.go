@@ -24,23 +24,6 @@ func (s *StatusFalling) update(delta time.Duration) {
 		return
 	}
 
-	doTilesBlock := func(targetTiles []*Tile) bool {
-		isBlocked := false
-		matter := s.target.GetArchetype().Matter
-		for _, tT := range targetTiles {
-			for _, tO := range tT.objects {
-				switch tO := tO.(type) {
-				case *ObjectBlock:
-					// Check if the target object blocks our matter.
-					if tO.blocking.Is(matter) {
-						isBlocked = true
-					}
-				}
-			}
-		}
-		return isBlocked
-	}
-
 	// Handle if we are falling or should be falling.
 	s.aggregate += delta
 	for s.aggregate >= fallRate {
@@ -49,7 +32,17 @@ func (s *StatusFalling) update(delta time.Duration) {
 		if m != nil {
 			_, fallingTiles, err := m.GetObjectPartTiles(s.target, -1, 0, 0, false)
 
-			if doTilesBlock(fallingTiles) && err == nil {
+			// If we fall into sufficient liquid, resolve the fall.
+			if IsInLiquid(fallingTiles) && err == nil {
+				if s.fallDistance >= 4 {
+					s.target.ResolveEvent(EventFell{
+						distance: int(s.elapsed / fallRate),
+						matter:   cdata.LiquidMatter,
+					})
+				}
+				s.shouldRemove = true
+				return
+			} else if DoTilesBlock(s.target, fallingTiles) && err == nil {
 				if s.fallDistance >= 4 {
 					s.target.ResolveEvent(EventFell{
 						distance: int(s.elapsed / fallRate),

@@ -118,39 +118,23 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 		o.shouldRecalculate = false
 	}
 
-	doTilesBlock := func(targetTiles []*Tile) bool {
-		isBlocked := false
-		matter := o.GetArchetype().Matter
-		for _, tT := range targetTiles {
-			for _, tO := range tT.objectParts {
-				switch tO := tO.(type) {
-				case *ObjectTile:
-					if tO.blocking.Is(matter) {
-						isBlocked = true
-						break
-					}
-				case *ObjectBlock:
-					if tO.blocking.Is(matter) {
-						isBlocked = true
-						break
-					}
-				}
-			}
-			if isBlocked {
-				break
-			}
-		}
-		return isBlocked
-	}
-
 	// Add a falling timer if we've moved and should fall.
-	if o.hasMoved && !o.HasStatus(StatusFallingRef) {
+	if o.hasMoved {
 		m := o.tile.gameMap
 		if m != nil {
-			_, fallingTiles, err := m.GetObjectPartTiles(o, -1, 0, 0, false)
+			_, tiles, err := m.GetObjectPartTiles(o, -1, 0, 0, false)
+			// Check if we should be swimming.
+			if err == nil {
+				inLiquid := IsInLiquid(tiles)
 
-			if !o.HasStatus(StatusFlyingRef) && !doTilesBlock(fallingTiles) && err == nil {
-				o.AddStatus(&StatusFalling{})
+				if inLiquid && !o.HasStatus(StatusSwimmingRef) {
+					o.AddStatus(&StatusSwimming{})
+				} else if !inLiquid && o.HasStatus(StatusSwimmingRef) {
+					o.RemoveStatus(StatusSwimmingRef)
+				}
+				if !o.HasStatus(StatusSwimmingRef) && !o.HasStatus(StatusFlyingRef) && !o.HasStatus(StatusFallingRef) && !DoTilesBlock(o, tiles) {
+					o.AddStatus(&StatusFalling{})
+				}
 			}
 		}
 	}
@@ -308,8 +292,14 @@ func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 			o.GetOwner().SendMessage(e.String())
 			t := o.GetTile()
 			_, w, d := o.GetDimensions()
-			audioID := t.GetMap().world.data.Strings.Acquire("thump")
-			soundID := t.GetMap().world.data.Strings.Acquire("default")
+			var audioID, soundID uint32
+			if e.matter.Is(cdata.LiquidMatter) {
+				audioID = t.GetMap().world.data.Strings.Acquire("splash")
+				soundID = t.GetMap().world.data.Strings.Acquire("default")
+			} else {
+				audioID = t.GetMap().world.data.Strings.Acquire("thump")
+				soundID = t.GetMap().world.data.Strings.Acquire("default")
+			}
 			t.GetMap().EmitSound(audioID, soundID, t.y-1, t.x+w/2, t.z+d/2, 0.25)
 		}
 		// TODO: If we're not invisible or very quiet, notify other creatures in a radius that we've cratered our legs.

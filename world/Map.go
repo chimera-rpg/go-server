@@ -293,35 +293,6 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 		return false, errors.New("somehow no tiles could be targeted")
 	}
 
-	doTilesBlock := func(targetTiles []*Tile) bool {
-		matter := o.Matter()
-		for _, tT := range targetTiles {
-			for _, tO := range tT.objectParts {
-				if tO == o {
-					continue
-				}
-				if tO.Blocks(matter) {
-					return true
-				}
-			}
-		}
-		return false
-	}
-
-	isInLiquid := func(targetTiles []*Tile) bool {
-		liquidThreshold := len(targetTiles) - len(targetTiles)/3
-		liquidCount := 0
-		for _, tT := range targetTiles {
-			if tT.matter.Is(cdata.LiquidMatter) {
-				liquidCount++
-			}
-			if liquidCount >= liquidThreshold {
-				return true
-			}
-		}
-		return false
-	}
-
 	// Check if we're uncrouching or should be crouched.
 	if crouch := o.GetStatus(StatusCrouchRef); crouch != nil {
 		s := crouch.(*StatusCrouch)
@@ -331,7 +302,7 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 			if err != nil {
 				return false, err
 			}
-			if doTilesBlock(targetTiles) {
+			if DoTilesBlock(o, targetTiles) {
 				s.Remove = false
 				o.AddStatus(s)
 				o.GetOwner().SendMessage("There is not enough space to stand here!") // TODO: Replace with an Event or something.
@@ -359,7 +330,7 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 			if err != nil {
 				return false, err
 			}
-			if doTilesBlock(targetTiles) {
+			if DoTilesBlock(o, targetTiles) {
 				s.Remove = false
 				o.AddStatus(s)
 				o.GetOwner().SendMessage("There is not enough space to unsqueeze here!") // TODO: Replace with an Event or something.
@@ -401,7 +372,7 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 
 	// If it is blocked, check if a vertical move would solve it (if we aren't already moving vertical) -- this is for stepping up 1 unit blocks.
 	if yDir == 0 {
-		if doTilesBlock(targetTiles) {
+		if DoTilesBlock(o, targetTiles) {
 			// Check if it is blocked by a character and handle that appropriately.
 			if len(characterObjects) > 0 {
 				log.Println("TODO: Handle character interaction")
@@ -409,7 +380,7 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 			}
 			// Otherwise see if we can step down.
 			_, targetUpTiles, err := gmap.GetObjectPartTiles(o, yDir+1, xDir, zDir, false)
-			if !doTilesBlock(targetUpTiles) && err == nil {
+			if !DoTilesBlock(o, targetUpTiles) && err == nil {
 				targetTiles = targetUpTiles
 			} else {
 				return false, nil
@@ -417,24 +388,15 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 		} else {
 			// Check if we have to step down.
 			_, targetDownTiles, err := gmap.GetObjectPartTiles(o, yDir-1, xDir, zDir, false)
-			if !doTilesBlock(targetDownTiles) && err == nil {
+			if !DoTilesBlock(o, targetDownTiles) && err == nil {
 				_, targetStepTiles, err := gmap.GetObjectPartTiles(o, yDir-2, xDir, zDir, false)
-				if doTilesBlock(targetStepTiles) && err == nil {
+				if DoTilesBlock(o, targetStepTiles) && err == nil {
 					targetTiles = targetDownTiles
 				}
 			}
 		}
 	}
-	// If we're physical, not swimming, and moving into liquid, mark it as such.
-	if o.Matter().Is(cdata.PhysicalMatter | cdata.SolidMatter) {
-		if o.HasStatus(StatusSwimmingRef) {
-			if !isInLiquid(targetTiles) {
-				o.RemoveStatus(StatusSwimmingRef)
-			}
-		} else if isInLiquid(targetTiles) {
-			o.AddStatus(&StatusSwimming{})
-		}
-	}
+
 	// If we got here then the move ended up being valid, so let's update our tiles.
 	// First we clear collisions from old intersection tiles.
 	for _, t := range oldTiles {
@@ -520,4 +482,37 @@ func (gmap *Map) EmitObjectSound(audioID, soundID ID, o ObjectI, volume float32)
 			c.HandleObjectSound(audioID, soundID, o, volume)
 		}
 	}
+}
+
+// TODO: Move these helper functions
+
+func DoTilesBlock(o ObjectI, targetTiles []*Tile) bool {
+	matter := o.Matter()
+	for _, tT := range targetTiles {
+		for _, tO := range tT.objectParts {
+			if tO == o {
+				continue
+			}
+			if tO.Blocks(matter) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func IsInLiquid(targetTiles []*Tile) bool {
+	liquidThreshold := len(targetTiles) - len(targetTiles)/3
+	liquidCount := 0
+	for _, tT := range targetTiles {
+		if tT.matter.Is(cdata.LiquidMatter) {
+			liquidCount++
+		}
+		fmt.Println("Okay, we got", liquidCount, liquidThreshold, liquidCount >= liquidThreshold)
+		if liquidCount >= liquidThreshold {
+			fmt.Println("Returning true")
+			return true
+		}
+	}
+	return false
 }
