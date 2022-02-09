@@ -374,7 +374,8 @@ func (m *Manager) parseAnimationFile(filepath string) error {
 		animID := m.Strings.Acquire(k)
 
 		parsedAnimation := &Animation{
-			Faces: make(map[StringID][]AnimationFrame),
+			Faces:       make(map[StringID][]AnimationFrame),
+			RandomFrame: animation.RandomFrame,
 		}
 
 		for faceKey, face := range animation.Faces {
@@ -775,8 +776,8 @@ func (m *Manager) GetString(name string) StringID {
 
 // GetAnimation returns a pointer to an Animation that corresponds to the passed animation ID. Returns nil if none is found.
 func (m *Manager) GetAnimation(animID StringID) (*Animation, error) {
-	if _, ok := m.animations[animID]; ok {
-		return m.animations[animID], nil
+	if anim, ok := m.animations[animID]; ok {
+		return anim, nil
 	}
 	return nil, errors.New("Animation does not exist")
 }

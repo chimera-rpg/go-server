@@ -3,7 +3,8 @@ package data
 // AnimationPre represents a collection of data that is used for managing Object animation.
 type AnimationPre struct {
 	//	AnimID StringID
-	Faces map[string][]AnimationFramePre `yaml:"Faces"`
+	Faces       map[string][]AnimationFramePre `yaml:"Faces"`
+	RandomFrame bool                           `yaml:"RandomFrame"`
 }
 
 // AnimationFramePre represents an individual frame of an animation.
@@ -17,7 +18,8 @@ type AnimationFramePre struct {
 // Animation represents a collection of data that is used for managing Object animation.
 type Animation struct {
 	//	AnimID StringID
-	Faces map[StringID][]AnimationFrame
+	Faces       map[StringID][]AnimationFrame
+	RandomFrame bool
 }
 
 // AnimationFrame represents an individual frame of an animation.

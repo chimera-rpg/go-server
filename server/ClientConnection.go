@@ -367,6 +367,7 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 
 				c.Send(network.CommandAnimation{
 					AnimationID: t.AnimationID,
+					RandomFrame: anim.RandomFrame,
 					Faces:       faces,
 				})
 			} else {
