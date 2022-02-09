@@ -314,16 +314,17 @@ func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 		if o.GetOwner() != nil {
 			o.GetOwner().SendMessage(e.String())
 			t := o.GetTile()
-			_, w, d := o.GetDimensions()
+			h, w, d := o.GetDimensions()
 			var audioID, soundID uint32
 			if e.matter.Is(cdata.LiquidMatter) {
 				audioID = t.GetMap().world.data.Strings.Acquire("splash")
 				soundID = t.GetMap().world.data.Strings.Acquire("default")
+				t.GetMap().EmitSound(audioID, soundID, t.y+h-h/3, t.x+w/2, t.z+d/2, 0.25)
 			} else {
 				audioID = t.GetMap().world.data.Strings.Acquire("thump")
 				soundID = t.GetMap().world.data.Strings.Acquire("default")
+				t.GetMap().EmitSound(audioID, soundID, t.y-1, t.x+w/2, t.z+d/2, 0.25)
 			}
-			t.GetMap().EmitSound(audioID, soundID, t.y-1, t.x+w/2, t.z+d/2, 0.25)
 		}
 		// TODO: If we're not invisible or very quiet, notify other creatures in a radius that we've cratered our legs.
 		return true
