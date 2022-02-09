@@ -495,6 +495,10 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 				c.Owner.GetCommandChannel() <- world.OwnerMoveCommand{X: 1, Z: 1}
 			case network.Southwest:
 				c.Owner.GetCommandChannel() <- world.OwnerMoveCommand{X: -1, Z: 1}
+			case network.Up:
+				c.Owner.GetCommandChannel() <- world.OwnerMoveCommand{Y: 1}
+			case network.Down:
+				c.Owner.GetCommandChannel() <- world.OwnerMoveCommand{Y: -1}
 			case network.Wizard:
 				if c.user.Wizard {
 					c.Owner.GetCommandChannel() <- world.OwnerWizardCommand{}
