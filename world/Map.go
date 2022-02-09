@@ -395,6 +395,17 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 				}
 			}
 		}
+	} else {
+		// If we're requesting to move up/down, only allow it if the object swims or flies.
+		if o.HasStatus(StatusFlyingRef) {
+			if DoTilesBlock(o, targetTiles) {
+				return false, nil
+			}
+		} else if o.HasStatus(StatusSwimmingRef) {
+			if !IsInLiquid(targetTiles) {
+				return false, nil
+			}
+		}
 	}
 
 	// If we got here then the move ended up being valid, so let's update our tiles.
