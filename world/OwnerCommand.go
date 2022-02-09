@@ -24,3 +24,12 @@ type OwnerRepeatCommand struct {
 
 // OwnerClearCommand clears the owner's commands.
 type OwnerClearCommand struct{}
+
+// OwnerWizardCommand toggles wizard mode.
+type OwnerWizardCommand struct{}
+
+// OwnerExtCommand handles extended commands.
+type OwnerExtCommand struct {
+	Command string
+	Args    []string
+}

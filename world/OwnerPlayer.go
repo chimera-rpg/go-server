@@ -438,6 +438,13 @@ func (player *OwnerPlayer) Update(delta time.Duration) error {
 				}
 			case OwnerClearCommand:
 				player.ClearCommands()
+			case OwnerWizardCommand:
+				player.wizard = !player.wizard
+				player.SendStatus(&StatusWizard{}, player.wizard)
+			case OwnerExtCommand:
+				if c.Command == "wiz" && player.wizard {
+					player.handleWizardCommand(c.Args...)
+				}
 			default:
 				player.PushCommand(c)
 			}
@@ -559,4 +566,44 @@ func (player *OwnerPlayer) StopMusic(objectID ID) {
 		ObjectID: objectID,
 		Stop:     true,
 	})
+}
+
+func (player *OwnerPlayer) handleWizardCommand(args ...string) {
+	if len(args) == 0 {
+		return
+	}
+	cmd := args[0]
+	args = args[1:]
+	switch cmd {
+	case "status":
+		if len(args) == 0 {
+			return
+		}
+		if status, ok := cdata.StringToStatusMap[args[0]]; ok {
+			var s StatusI
+			switch status {
+			case cdata.FallingStatus:
+				s = StatusFallingRef
+			case cdata.SqueezingStatus:
+				s = StatusSqueezeRef
+			case cdata.CrouchingStatus:
+				s = StatusCrouchRef
+			case cdata.RunningStatus:
+				s = StatusRunningRef
+			case cdata.SwimmingStatus:
+				s = StatusSwimmingRef
+			case cdata.FlyingStatus:
+				s = StatusFlyingRef
+			case cdata.FloatingStatus:
+				s = StatusFloatingRef
+			}
+			if s != nil {
+				if player.target.HasStatus(s) {
+					player.target.RemoveStatus(s)
+				} else {
+					player.target.AddStatus(s)
+				}
+			}
+		}
+	}
 }

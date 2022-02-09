@@ -495,6 +495,10 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 				c.Owner.GetCommandChannel() <- world.OwnerMoveCommand{X: 1, Z: 1}
 			case network.Southwest:
 				c.Owner.GetCommandChannel() <- world.OwnerMoveCommand{X: -1, Z: 1}
+			case network.Wizard:
+				if c.user.Wizard {
+					c.Owner.GetCommandChannel() <- world.OwnerWizardCommand{}
+				}
 			}
 		case network.CommandClearCmd:
 			c.Owner.GetCommandChannel() <- world.OwnerClearCommand{}
@@ -502,6 +506,10 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 			c.log.WithFields(log.Fields{
 				"cmd": t,
 			}).Print("CommandExtCmd")
+			c.Owner.GetCommandChannel() <- world.OwnerExtCommand{
+				Command: t.Cmd,
+				Args:    t.Args,
+			}
 		case network.CommandRepeatCmd:
 			switch t.Cmd {
 			case network.North:

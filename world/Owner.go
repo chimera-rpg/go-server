@@ -3,6 +3,7 @@ package world
 type Owner struct {
 	commandQueue  []OwnerCommand
 	repeatCommand OwnerCommand
+	wizard        bool
 }
 
 func (owner *Owner) HasCommands() bool {
@@ -26,4 +27,8 @@ func (owner *Owner) ClearCommands() {
 
 func (owner *Owner) RepeatCommand() OwnerCommand {
 	return owner.repeatCommand
+}
+
+func (owner *Owner) Wizard() bool {
+	return owner.wizard
 }

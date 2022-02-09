@@ -33,4 +33,5 @@ type OwnerI interface {
 	PushCommand(c OwnerCommand)
 	ShiftCommand() OwnerCommand
 	ClearCommands()
+	Wizard() bool
 }
