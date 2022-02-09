@@ -508,9 +508,7 @@ func IsInLiquid(targetTiles []*Tile) bool {
 		if tT.matter.Is(cdata.LiquidMatter) {
 			liquidCount++
 		}
-		fmt.Println("Okay, we got", liquidCount, liquidThreshold, liquidCount >= liquidThreshold)
 		if liquidCount >= liquidThreshold {
-			fmt.Println("Returning true")
 			return true
 		}
 	}
