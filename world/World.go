@@ -360,6 +360,8 @@ func (w *World) CreateObjectFromArch(arch *data.Archetype) (o ObjectI, err error
 		o = NewObjectFood(arch)
 	case cdata.ArchetypeAudio:
 		o = NewObjectAudio(arch)
+	case cdata.ArchetypeFlora:
+		o = NewObjectFlora(arch)
 	default:
 		gameobj := ObjectGeneric{
 			Object: NewObject(arch),
