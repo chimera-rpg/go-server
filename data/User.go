@@ -19,6 +19,7 @@ type User struct {
 	Password   string                `yaml:"Password"`
 	Email      string                `yaml:"Email"`
 	Characters map[string]*Character `yaml:"Characters"`
+	Wizard     bool                  `yaml:"Wizard"`
 	hasChanges bool                  // if there are changes needing to be saved.
 	userPath   string                // filepath of the given user file.
 	mutex      sync.Mutex
@@ -96,6 +97,7 @@ func (m *Manager) CreateUser(user string, pass string, email string) (err error)
 		Password:   encodedHash,
 		Email:      email,
 		hasChanges: true,
+		Wizard:     false,
 	}
 	if err = m.writeUser(u); err != nil {
 		err = &userError{err: err.Error()}
