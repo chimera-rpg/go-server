@@ -142,6 +142,13 @@ func (m *Manager) ProcessArchetype(archetype *Archetype) error {
 		}
 	}
 
+	// Process next.
+	for i := range archetype.Next.Archetypes {
+		if err := m.ProcessArchetype(&archetype.Next.Archetypes[i].Archetype); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -188,6 +195,13 @@ func (m *Manager) CompileArchetype(archetype *Archetype) error {
 	// Ensure skills are compiled.
 	for i := range archetype.Skills {
 		if err := m.CompileArchetype(&archetype.Skills[i]); err != nil {
+			return err
+		}
+	}
+
+	// Ensure next is compiled.
+	for i := range archetype.Next.Archetypes {
+		if err := m.CompileArchetype(&archetype.Next.Archetypes[i].Archetype); err != nil {
 			return err
 		}
 	}

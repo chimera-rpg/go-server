@@ -23,6 +23,17 @@ const (
 	ArchAdd
 )
 
+type RandomArchetype struct {
+	Weight    float32   `yaml:"Weight,omitempty"`
+	Archetype Archetype `yaml:"Archetype,omitempty"`
+}
+
+type Next struct {
+	MinTime    uint16            `yaml:"MinTime,omitempty"`
+	MaxTime    uint16            `yaml:"MaxTime,omitempty"`
+	Archetypes []RandomArchetype `yaml:"Archetypes,omitempty"`
+}
+
 // Archetype represents a collection of data that should be used for the
 // creation of Objects.
 type Archetype struct {
@@ -57,6 +68,8 @@ type Archetype struct {
 	Count      *string             `yaml:"Count,omitempty"`
 	Weight     *string             `yaml:"Weight,omitempty"`
 	Properties map[string]Variable `yaml:"Properties,omitempty"`
+	//
+	Next Next `yaml:"Next,omitempty"`
 	//
 	Inventory []Archetype `yaml:"Inventory,omitempty"`
 	// Skill is the skill name that a skill archetype will target.
