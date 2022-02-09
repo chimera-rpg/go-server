@@ -386,25 +386,25 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 				return false, nil
 			}
 		} else {
-			// Check if we have to step down.
-			_, targetDownTiles, err := gmap.GetObjectPartTiles(o, yDir-1, xDir, zDir, false)
-			if !DoTilesBlock(o, targetDownTiles) && err == nil {
-				_, targetStepTiles, err := gmap.GetObjectPartTiles(o, yDir-2, xDir, zDir, false)
-				if DoTilesBlock(o, targetStepTiles) && err == nil {
-					targetTiles = targetDownTiles
+			// Only attempt to move down if we're not flying or floating.
+			if !o.HasStatus(StatusFlyingRef) && !o.HasStatus(StatusFloatingRef) {
+				// Check if we have to step down.
+				_, targetDownTiles, err := gmap.GetObjectPartTiles(o, yDir-1, xDir, zDir, false)
+				if !DoTilesBlock(o, targetDownTiles) && err == nil {
+					_, targetStepTiles, err := gmap.GetObjectPartTiles(o, yDir-2, xDir, zDir, false)
+					if DoTilesBlock(o, targetStepTiles) && err == nil {
+						targetTiles = targetDownTiles
+					}
 				}
 			}
 		}
-	} else {
+	} else if !force {
 		// If we're requesting to move up/down, only allow it if the object swims or flies.
-		if o.HasStatus(StatusFlyingRef) {
-			if DoTilesBlock(o, targetTiles) {
-				return false, nil
-			}
-		} else if o.HasStatus(StatusSwimmingRef) {
-			if !IsInLiquid(targetTiles) {
-				return false, nil
-			}
+		if !o.HasStatus(StatusFlyingRef) && !o.HasStatus(StatusSwimmingRef) {
+			return false, nil
+		}
+		if DoTilesBlock(o, targetTiles) {
+			return false, nil
 		}
 	}
 
