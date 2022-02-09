@@ -251,6 +251,12 @@ func (o *ObjectCharacter) AddStatus(s StatusI) {
 		o.speedPenaltyMultiplier++
 	case *StatusCrouch:
 		o.speedPenaltyMultiplier += 2
+	case *StatusSwimming:
+		t := o.GetTile()
+		h, w, d := o.GetDimensions()
+		audioID := t.GetMap().world.data.Strings.Acquire("water")
+		soundID := t.GetMap().world.data.Strings.Acquire("enter")
+		t.GetMap().EmitSound(audioID, soundID, t.y+h-h/3, t.x+w/2, t.z+d/2, 0.25)
 	}
 }
 
@@ -262,6 +268,12 @@ func (o *ObjectCharacter) RemoveStatus(s StatusI) StatusI {
 			o.speedPenaltyMultiplier--
 		case *StatusCrouch:
 			o.speedPenaltyMultiplier -= 2
+		case *StatusSwimming:
+			t := o.GetTile()
+			h, w, d := o.GetDimensions()
+			audioID := t.GetMap().world.data.Strings.Acquire("water")
+			soundID := t.GetMap().world.data.Strings.Acquire("leave")
+			t.GetMap().EmitSound(audioID, soundID, t.y+h/2, t.x+w/2, t.z+d/2, 0.25)
 		}
 	}
 	return s
@@ -317,9 +329,9 @@ func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 			h, w, d := o.GetDimensions()
 			var audioID, soundID uint32
 			if e.matter.Is(cdata.LiquidMatter) {
-				audioID = t.GetMap().world.data.Strings.Acquire("splash")
-				soundID = t.GetMap().world.data.Strings.Acquire("default")
-				t.GetMap().EmitSound(audioID, soundID, t.y+h-h/3, t.x+w/2, t.z+d/2, 0.25)
+				audioID = t.GetMap().world.data.Strings.Acquire("water")
+				soundID = t.GetMap().world.data.Strings.Acquire("sploosh")
+				t.GetMap().EmitSound(audioID, soundID, t.y+h-h/3, t.x+w/2, t.z+d/2, 1.0)
 			} else {
 				audioID = t.GetMap().world.data.Strings.Acquire("thump")
 				soundID = t.GetMap().world.data.Strings.Acquire("default")
