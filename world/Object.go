@@ -23,6 +23,7 @@ type Object struct {
 	statuses   []StatusI
 	inventory  []ObjectI
 	hasMoved   bool
+	updates    bool
 	blocking   cdata.MatterType
 	actions    int // Actions are the amount of actions that a player can take within 1 second
 	maxActions int // Max actions are the amount of actions that a player can take within 1 second.
@@ -207,4 +208,8 @@ func (o *Object) RestoreStamina() {}
 func (o *Object) GetDistance(y, x, z int) float64 {
 	t := o.GetTile()
 	return math.Sqrt(math.Pow(float64(y-t.y), 2) + math.Pow(float64(x-t.x), 2) + math.Pow(float64(z-t.z), 2))
+}
+
+func (o *Object) Updates() bool {
+	return o.updates
 }

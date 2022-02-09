@@ -37,4 +37,6 @@ type ObjectI interface {
 	MaxStamina() int
 	//
 	RestoreStamina()
+	//
+	Updates() bool
 }
