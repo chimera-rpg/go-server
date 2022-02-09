@@ -172,8 +172,19 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 			cmd := cmd.(OwnerRepeatCommand)
 			switch c := cmd.Command.(type) {
 			case OwnerMoveCommand:
+				base := 100 * time.Millisecond
+				// If we're swimming, double the movement time.
+				if o.HasStatus(StatusSwimmingRef) {
+					// TODO: Adjust via a swimming speed.
+					base *= 2
+				} else if o.HasStatus(StatusFlyingRef) {
+					// TODO: Adjust via a flying speed.
+				} else if o.HasStatus(StatusFloatingRef) {
+					// TODO: Also adjust via a floating speed.
+					base *= 4 // For now, quadruple if we're floating.
+				}
 				// Cap movement duration cost to a minimum of 20 millisecond
-				duration := calcDuration(100*time.Millisecond, 20*time.Millisecond, time.Duration(o.speed)*time.Millisecond)
+				duration := calcDuration(base, 20*time.Millisecond, time.Duration(o.speed)*time.Millisecond)
 				o.currentAction = NewActionMove(c.Y, c.X, c.Z, duration, true)
 				o.currentActionDuration = 0 // TODO: Add remainder from last operation if possible.
 			}
@@ -181,7 +192,19 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 			cmd := o.GetOwner().ShiftCommand()
 			switch c := cmd.(type) {
 			case OwnerMoveCommand:
-				duration := calcDuration(100*time.Millisecond, 20*time.Millisecond, time.Duration(o.speed)*time.Millisecond)
+				base := 100 * time.Millisecond
+				// If we're swimming, double the movement time.
+				if o.HasStatus(StatusSwimmingRef) {
+					// TODO: Adjust via a swimming speed.
+					base *= 2
+				} else if o.HasStatus(StatusFlyingRef) {
+					// TODO: Adjust via a flying speed.
+				} else if o.HasStatus(StatusFloatingRef) {
+					// TODO: Also adjust via a floating speed.
+					base *= 4 // For now, quadruple if we're floating.
+				}
+				// Cap movement duration cost to a minimum of 20 millisecond
+				duration := calcDuration(base, 20*time.Millisecond, time.Duration(o.speed)*time.Millisecond)
 				o.currentAction = NewActionMove(c.Y, c.X, c.Z, duration, false)
 				o.currentActionDuration = 0 // TODO: Add remainder from last operation if possible.
 			case OwnerStatusCommand:
