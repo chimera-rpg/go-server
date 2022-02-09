@@ -132,7 +132,7 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 				} else if !inLiquid && o.HasStatus(StatusSwimmingRef) {
 					o.RemoveStatus(StatusSwimmingRef)
 				}
-				if !o.HasStatus(StatusSwimmingRef) && !o.HasStatus(StatusFlyingRef) && !o.HasStatus(StatusFallingRef) && !DoTilesBlock(o, tiles) {
+				if !o.HasStatus(StatusFloatingRef) && !o.HasStatus(StatusSwimmingRef) && !o.HasStatus(StatusFlyingRef) && !o.HasStatus(StatusFallingRef) && !DoTilesBlock(o, tiles) {
 					o.AddStatus(&StatusFalling{})
 				}
 			}
