@@ -69,7 +69,7 @@ type Archetype struct {
 	Weight     *string             `yaml:"Weight,omitempty"`
 	Properties map[string]Variable `yaml:"Properties,omitempty"`
 	//
-	Next Next `yaml:"Next,omitempty"`
+	Timers []ArchetypeTimer `yaml:"Timers,omitempty"`
 	//
 	Inventory []Archetype `yaml:"Inventory,omitempty"`
 	// Skill is the skill name that a skill archetype will target.
@@ -102,6 +102,8 @@ type Archetype struct {
 	Attributes AttributeSets `yaml:"Attributes,omitempty"`
 	// Hmm
 	Statuses map[string]map[string]interface{} `yaml:"Statuses,omitempty"`
+	// Events are maps of EventIDs to EventResponses.
+	Events *Events `yaml:"Events,omitempty"`
 	//
 	isCompiled bool `yaml:"-"`
 }
