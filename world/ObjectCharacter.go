@@ -351,6 +351,8 @@ func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 			}
 			return true*/
 	}
+	// Resolve normal events.
+	o.Object.ResolveEvent(e)
 	return false
 }
 
