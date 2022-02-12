@@ -68,6 +68,7 @@ func NewMap(world *World, name string) (*Map, error) {
 						continue
 					}
 					err = gmap.PlaceObject(object, y, x, z)
+					object.ResolveEvent(EventBirth{})
 					if err != nil {
 						log.Warn("PlaceObject", err)
 					}
@@ -251,6 +252,10 @@ func (gmap *Map) PlaceObject(o ObjectI, y int, x int, z int) (err error) {
 		gmap.activeObjects[o.GetID()] = o
 	default:
 		if o.Updates() {
+			gmap.activeObjects[o.GetID()] = o
+		}
+		// If the object has timers, add it.
+		if len(*o.Timers()) > 0 {
 			gmap.activeObjects[o.GetID()] = o
 		}
 	}

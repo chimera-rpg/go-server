@@ -2,6 +2,7 @@ package world
 
 import (
 	"math"
+	"math/rand"
 	"reflect"
 	"time"
 
@@ -27,6 +28,8 @@ type Object struct {
 	blocking   cdata.MatterType
 	actions    int // Actions are the amount of actions that a player can take within 1 second
 	maxActions int // Max actions are the amount of actions that a player can take within 1 second.
+	//
+	timers []Timer
 }
 
 // NewObject returns a new Object that references the given Archetype.
@@ -35,11 +38,41 @@ func NewObject(a *data.Archetype) Object {
 		blocking:  a.Blocking,
 		Archetype: a,
 	}
+
+	o.addTimers(a.Timers)
+
 	return o
 }
 
 // update updates the given object.
 func (o *Object) update(delta time.Duration) {
+	// Handle timers.
+	if len(o.timers) > 0 {
+		temp := o.timers[:0]
+		for _, t := range o.timers {
+			t.elapsed += delta
+			if t.elapsed >= t.target {
+				// Process
+				t.elapsed -= t.target
+
+				if t.repeat <= t.repeatCount {
+					temp = append(temp, t)
+				}
+				t.repeatCount++
+				// Trigger associated event.
+				switch t.event {
+				case "Birth":
+					o.ResolveEvent(EventBirth{})
+				case "Advance":
+					o.ResolveEvent(EventAdvance{})
+				}
+			} else {
+				temp = append(temp, t)
+			}
+		}
+		o.timers = temp
+	}
+
 	for i := 0; i < len(o.statuses); i++ {
 		o.statuses[i].update(delta)
 		if o.statuses[i].ShouldRemove() {
@@ -142,8 +175,95 @@ func (o *Object) SetStatus(t StatusI) bool {
 
 // ResolveEvent is the default handler for object events.
 func (o *Object) ResolveEvent(e EventI) bool {
+	if o.Archetype != nil && o.Archetype.Events != nil {
+		events := o.Archetype.Events
+		switch e.(type) {
+		case EventBirth:
+			if events.Birth != nil {
+				o.processEventResponses(events.Birth)
+			}
+		case EventAdvance:
+			if events.Advance != nil {
+				o.processEventResponses(events.Advance)
+			}
+		}
+	}
 	// Do nothing per default.
 	return true
+}
+
+func (o *Object) processEventResponses(r *data.EventResponses) {
+	// Replace replaces the given object's underline archetype with a randomly weighted one. Note that replace removes other running timers!
+	if r.Replace != nil {
+		// Do nothing if we have no actual archetype list to use.
+		if len(*r.Replace) == 0 {
+			return
+		}
+		var archetype *data.Archetype
+		sum := 0.0
+		for _, a := range *r.Replace {
+			sum += float64(a.Chance)
+		}
+		// If sum is zero, assign archetype to the first index entry.
+		if sum == 0 {
+			archetype = (*r.Replace)[0].Archetype
+		} else {
+			nextRand := rand.Float64() * sum
+			for _, a := range *r.Replace {
+				if nextRand < float64(a.Chance) {
+					archetype = a.Archetype
+					break
+				}
+				nextRand -= float64(a.Chance)
+			}
+		}
+
+		// We got an archetype, let's replace.
+		if archetype != nil {
+			o.replaceArchetype(archetype)
+		}
+	}
+	/*if r.Spawn != nil {
+	}
+	if r.Trigger != nil {
+	}*/
+}
+
+func (o *Object) replaceArchetype(a *data.Archetype) {
+	o.Archetype = a
+	o.blocking = o.Archetype.Blocking
+
+	// Force a refresh.
+	o.tile.gameMap.RefreshObject(o.id)
+
+	// Clear old timers.
+	o.timers = make([]Timer, 0)
+	// Inactive object if we have no timers.
+	if len(o.Archetype.Timers) == 0 {
+		o.tile.gameMap.InactiveObject(o.id)
+	} else {
+		// Otherwise add timers!
+		o.addTimers(o.Archetype.Timers)
+	}
+}
+
+func (o *Object) addTimers(timers []data.ArchetypeTimer) {
+	for _, t := range timers {
+		o.timers = append(o.timers,
+			Timer{
+				elapsed:     0,
+				target:      t.Time.Random(),
+				event:       t.Event,
+				repeat:      t.Repeat,
+				repeatCount: 0,
+			},
+		)
+	}
+}
+
+// Timers returns the object's timers.
+func (o *Object) Timers() *[]Timer {
+	return &o.timers
 }
 
 // GetStatus returns the associated status.
