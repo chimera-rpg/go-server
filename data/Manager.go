@@ -142,9 +142,37 @@ func (m *Manager) ProcessArchetype(archetype *Archetype) error {
 		}
 	}
 
-	// Process next.
-	for i := range archetype.Next.Archetypes {
-		if err := m.ProcessArchetype(&archetype.Next.Archetypes[i].Archetype); err != nil {
+	// Process Events' archetypes.
+	processEventResponses := func(e *EventResponses) error {
+		if e == nil {
+			return nil
+		}
+		if e.Spawn != nil {
+			for _, a := range e.Spawn.Items {
+				if err := m.ProcessArchetype(a.Archetype); err != nil {
+					return err
+				}
+			}
+		} else if e.Replace != nil {
+			for _, a := range *e.Replace {
+				if err := m.ProcessArchetype(a.Archetype); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+	if archetype.Events != nil {
+		if err := processEventResponses(archetype.Events.Birth); err != nil {
+			return err
+		}
+		if err := processEventResponses(archetype.Events.Death); err != nil {
+			return err
+		}
+		if err := processEventResponses(archetype.Events.Advance); err != nil {
+			return err
+		}
+		if err := processEventResponses(archetype.Events.Hit); err != nil {
 			return err
 		}
 	}
@@ -199,11 +227,26 @@ func (m *Manager) CompileArchetype(archetype *Archetype) error {
 		}
 	}
 
-	// Ensure next is compiled.
-	for i := range archetype.Next.Archetypes {
-		if err := m.CompileArchetype(&archetype.Next.Archetypes[i].Archetype); err != nil {
-			return err
+	// Ensure Events' archetypes are compiled.
+	compileEventResponses := func(e *EventResponses) {
+		if e == nil {
+			return
 		}
+		if e.Spawn != nil {
+			for _, a := range e.Spawn.Items {
+				m.CompileArchetype(a.Archetype)
+			}
+		} else if e.Replace != nil {
+			for _, a := range *e.Replace {
+				m.CompileArchetype(a.Archetype)
+			}
+		}
+	}
+	if archetype.Events != nil {
+		compileEventResponses(archetype.Events.Birth)
+		compileEventResponses(archetype.Events.Death)
+		compileEventResponses(archetype.Events.Advance)
+		compileEventResponses(archetype.Events.Hit)
 	}
 
 	archetype.isCompiled = true
