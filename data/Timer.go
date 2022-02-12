@@ -23,5 +23,5 @@ func (t TimeRange) Random() time.Duration {
 type ArchetypeTimer struct {
 	Event  string    `yaml:"Event,omitempty"`
 	Repeat int       `yaml:"Repeat,omitempty"`
-	Time   TimeRange `yaml:"Time,omitempty"`
+	Wait   TimeRange `yaml:"Wait,omitempty"`
 }

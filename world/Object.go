@@ -252,7 +252,7 @@ func (o *Object) addTimers(timers []data.ArchetypeTimer) {
 		o.timers = append(o.timers,
 			Timer{
 				elapsed:     0,
-				target:      t.Time.Random(),
+				target:      t.Wait.Random(),
 				event:       t.Event,
 				repeat:      t.Repeat,
 				repeatCount: 0,
