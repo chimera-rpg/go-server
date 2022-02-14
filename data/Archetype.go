@@ -105,7 +105,9 @@ type Archetype struct {
 	// Events are maps of EventIDs to EventResponses.
 	Events *Events `yaml:"Events,omitempty"`
 	//
-	isCompiled bool `yaml:"-"`
+	isCompiled   bool `yaml:"-"`
+	isProcessing bool `yaml:"-"`
+	isCompiling  bool `yaml:"-"`
 }
 
 // NewArchetype creates a new, blank archetype.

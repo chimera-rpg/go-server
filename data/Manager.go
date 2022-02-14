@@ -80,6 +80,10 @@ func (m *Manager) parseArchetypeFile(filepath string) error {
 
 // ProcessArchetype converts certain fields of an Archetype into optimized versions. This converts Anim, Face, Arch, and Archs to their ID representation. This also processes any Inventory archetypes.
 func (m *Manager) ProcessArchetype(archetype *Archetype) error {
+	if archetype.isProcessing {
+		return nil
+	}
+	archetype.isProcessing = true
 	if archetype.Anim != "" {
 		archetype.AnimID = m.Strings.Acquire(archetype.Anim)
 		archetype.Anim = ""
@@ -153,7 +157,8 @@ func (m *Manager) ProcessArchetype(archetype *Archetype) error {
 					return err
 				}
 			}
-		} else if e.Replace != nil {
+		}
+		if e.Replace != nil {
 			for _, a := range *e.Replace {
 				if err := m.ProcessArchetype(a.Archetype); err != nil {
 					return err
@@ -182,10 +187,11 @@ func (m *Manager) ProcessArchetype(archetype *Archetype) error {
 
 // CompileArchetype compiles a given archetype if it has not been compiled yet. This handles dependency resolution and will throw if an archetype has circular dependencies.
 func (m *Manager) CompileArchetype(archetype *Archetype) error {
-	// Bail early if already compiled.
-	if archetype.isCompiled {
+	// Bail early if already compiled or is compiling.
+	if archetype.isCompiled || archetype.isCompiling {
 		return nil
 	}
+	archetype.isCompiling = true
 
 	// Ensure there are no circular deps.
 	err := m.resolveArchetype(archetype)
@@ -236,7 +242,8 @@ func (m *Manager) CompileArchetype(archetype *Archetype) error {
 			for _, a := range e.Spawn.Items {
 				m.CompileArchetype(a.Archetype)
 			}
-		} else if e.Replace != nil {
+		}
+		if e.Replace != nil {
 			for _, a := range *e.Replace {
 				m.CompileArchetype(a.Archetype)
 			}
