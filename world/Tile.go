@@ -42,6 +42,7 @@ func (tile *Tile) insertObject(object ObjectI, index int) error {
 	// Update object's tile reference.
 	object.SetTile(tile)
 
+	tile.updateBlocking()
 	tile.modTime++
 
 	return nil
@@ -53,6 +54,7 @@ func (tile *Tile) removeObject(object ObjectI) error {
 		tile.objects = append(tile.objects[:i], tile.objects[i+1:]...)
 		object.SetTile(nil)
 		tile.modTime++
+		tile.updateBlocking()
 		return nil
 	}
 	return errors.New("object to remove does not exist")
@@ -87,8 +89,8 @@ func (tile *Tile) removeObjectPart(object ObjectI) {
 }
 
 func (tile *Tile) getObjectPartIndex(object ObjectI) int {
-	for i := range tile.objectParts {
-		if tile.objectParts[i] == object {
+	for i, o := range tile.objectParts {
+		if o.GetID() == object.GetID() {
 			return i
 		}
 	}
@@ -96,8 +98,8 @@ func (tile *Tile) getObjectPartIndex(object ObjectI) int {
 }
 
 func (tile *Tile) getObjectIndex(object ObjectI) int {
-	for i := range tile.objects {
-		if tile.objects[i] == object {
+	for i, o := range tile.objects {
+		if o.GetID() == object.GetID() {
 			return i
 		}
 	}
