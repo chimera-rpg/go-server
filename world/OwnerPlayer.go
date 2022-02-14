@@ -1,6 +1,7 @@
 package world
 
 import (
+	"fmt"
 	"math"
 
 	cdata "github.com/chimera-rpg/go-common/data"
@@ -372,6 +373,18 @@ func (player *OwnerPlayer) sendTile(tile *Tile) {
 		}
 		tileObjectIDs[i] = oID
 	}
+
+	// Check the given previous knownIDs and see if any were deleted. FIXME: This is kind of inefficient and should probably be handled by the Map.
+	for _, oID := range player.view[tile.y][tile.x][tile.z].knownIDs {
+		if o := tile.gameMap.world.GetObject(oID); o == nil {
+			fmt.Println("Sending delete", oID)
+			player.ClientConnection.Send(network.CommandObject{
+				ObjectID: oID,
+				Payload:  network.CommandObjectPayloadDelete{},
+			})
+		}
+	}
+	player.view[tile.y][tile.x][tile.z].knownIDs = tileObjectIDs
 	// Update the client's perception of the given tile.
 	player.ClientConnection.Send(network.CommandTile{
 		Y:         uint32(tile.y),
