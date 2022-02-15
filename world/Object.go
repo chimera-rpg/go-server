@@ -1,7 +1,6 @@
 package world
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 	"reflect"
@@ -329,7 +328,6 @@ func (o *Object) processEventResponses(r *data.EventResponses, e EventI) {
 					}
 					if spawnItem.Placement.Surface.Blocking != nil {
 						if !checkMatter(y-1, x, z, spawnItem.Placement.Surface.Blocking, false) {
-							fmt.Println("Surface match failed")
 							continue
 						}
 					}
