@@ -131,5 +131,5 @@ type EventResponses struct {
 	Spawn   *SpawnEventResponse   `yaml:"Spawn,omitempty"`
 	Replace *[]SpawnArchetype     `yaml:"Replace,omitempty"`
 	Trigger *TriggerEventResponse `yaml:"Trigger,omitempty"`
-	// Script *ScriptEventResponse `yaml:"Script,omitempty"`
+	Script  *ScriptEventResponse  `yaml:"Script,omitempty"`
 }

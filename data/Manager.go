@@ -60,6 +60,17 @@ type objectVariable struct {
 
 // parse, process, compile
 func (m *Manager) parseArchetypeFile(filepath string) error {
+	defer func() {
+		if err := recover(); err != nil {
+			switch err := err.(type) {
+			case ScriptError:
+				log.Errorf("Script: %s %d:%d: %s\n", filepath, err.lineIndex, err.charIndex, err.s)
+				for _, s := range err.lines {
+					log.Errorln(s)
+				}
+			}
+		}
+	}()
 	r, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		return err
