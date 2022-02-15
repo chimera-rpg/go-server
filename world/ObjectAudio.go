@@ -53,9 +53,9 @@ func (o *ObjectAudio) update(delta time.Duration) {
 
 			switch obj := ao.(type) {
 			case *ObjectCharacter:
-				if obj.CanHear(obj.GetDistance(t.y, t.x, t.z)) {
+				if obj.CanHear(obj.GetDistance(t.Y, t.X, t.Z)) {
 					if !exists {
-						obj.GetOwner().SendMusic(o.Audio(), o.SoundSet(), o.SoundIndex(), o.id, t.y, t.x, t.z, o.Volume(), o.LoopCount())
+						obj.GetOwner().SendMusic(o.Audio(), o.SoundSet(), o.SoundIndex(), o.id, t.Y, t.X, t.Z, o.Volume(), o.LoopCount())
 						o.listeners[id] = struct{}{}
 					}
 				} else {

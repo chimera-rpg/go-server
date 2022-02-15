@@ -31,14 +31,15 @@ type World struct {
 
 // Setup loads our initial starting world location and starts the
 // map cleanup goroutine.
-func (w *World) Setup(data *data.Manager) error {
+func (w *World) Setup(manager *data.Manager) error {
 	w.MessageChannel = make(chan MessageI)
-	w.data = data
+	w.data = manager
 	w.players = make([]*OwnerPlayer, 0)
 	w.objects = make(map[ID]ObjectI)
 	w.LoadMap("Chamber of Origins")
 	// FIXME: Create a temporary dummy map
 	// Create a timer for doing cleanup.
+
 	cleanupTicker := time.NewTicker(time.Second * 60)
 	go func() {
 		for {
@@ -290,9 +291,9 @@ func (w *World) SyncPlayerSaveInfo(conn clientConnectionI) error {
 	}
 	s := u.Characters[o.Name()].SaveInfo
 	s.Map = m.dataName
-	s.X = t.x
-	s.Y = t.y
-	s.Z = t.z
+	s.X = t.Y
+	s.Y = t.Y
+	s.Z = t.Z
 	u.Characters[o.Name()].SaveInfo = s
 	fmt.Println("Set SaveInfo")
 	return nil
@@ -331,6 +332,15 @@ func (w *World) getExistingPlayerConnectionIndex(conn clientConnectionI) int {
 		}
 	}
 	return -1
+}
+
+// CreateObject looks up an archetype matching a string and then calls CreateObjectFromArch.
+func (w *World) CreateObject(s string) (o ObjectI, err error) {
+	if a, err := w.data.GetArchetypeByName(s); err != nil {
+		return nil, err
+	} else {
+		return w.CreateObjectFromArch(a)
+	}
 }
 
 // CreateObjectFromArch will attempt to create an Object by an archetype, merging the result with the archetype's target Arch if possible.

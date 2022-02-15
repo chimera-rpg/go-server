@@ -104,9 +104,9 @@ func (gmap *Map) sizeMap(height int, width int, depth int) error {
 			for z := range gmap.tiles[y][x] {
 				gmap.tiles[y][x][z] = Tile{
 					gameMap: gmap,
-					y:       y,
-					x:       x,
-					z:       z,
+					Y:       y,
+					X:       x,
+					Z:       z,
 				}
 			}
 		}
@@ -329,7 +329,7 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 				h, w, d := o.GetDimensions()
 				audioID := gmap.world.data.Strings.Acquire("bonk")
 				soundID := gmap.world.data.Strings.Acquire("default")
-				gmap.EmitSound(audioID, soundID, targetTiles[0].y+h, targetTiles[0].x+w/2, targetTiles[0].z+d/2, 0.25)
+				gmap.EmitSound(audioID, soundID, targetTiles[0].Y+h, targetTiles[0].X+w/2, targetTiles[0].Z+d/2, 0.25)
 				return false, nil
 			}
 		} else if !s.Crouching {
@@ -453,7 +453,7 @@ func (gmap *Map) GetObjectPartTiles(o ObjectI, yDir, xDir, zDir int, force bool)
 		return
 	}
 	// Get our origin.
-	oY, oX, oZ := tile.y, tile.x, tile.z
+	oY, oX, oZ := tile.Y, tile.X, tile.Z
 	// Get our object's height, width, and depth.
 	h, w, d := o.GetDimensions()
 	// Check each potential move position.

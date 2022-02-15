@@ -9,7 +9,7 @@ import (
 // Tile represents a location on the ground.
 type Tile struct {
 	gameMap     *Map      // I guess this okay.
-	y, x, z     int       // Location of the tile.
+	Y, X, Z     int       // Location of the tile.
 	objects     []ObjectI // objects contains Objects that origin from this tile. This data is used in network transmission.
 	objectParts []ObjectI // objectParts contains Object pointers that are used for collisions, pathing, and otherwise. This data is never sent over the network.
 	brightness  int

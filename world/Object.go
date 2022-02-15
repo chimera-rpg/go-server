@@ -195,11 +195,11 @@ func (o *Object) ResolveEvent(e EventI) bool {
 		switch e.(type) {
 		case EventBirth:
 			if events.Birth != nil {
-				o.processEventResponses(events.Birth)
+				o.processEventResponses(events.Birth, e)
 			}
 		case EventAdvance:
 			if events.Advance != nil {
-				o.processEventResponses(events.Advance)
+				o.processEventResponses(events.Advance, e)
 			}
 		}
 	}
@@ -207,7 +207,32 @@ func (o *Object) ResolveEvent(e EventI) bool {
 	return true
 }
 
-func (o *Object) processEventResponses(r *data.EventResponses) {
+func (o *Object) processEventResponses(r *data.EventResponses, e EventI) {
+	// Handle scripting if needed.
+	if r.Script != nil {
+		svo := data.Interpreter.ValueOf("self")
+		sins := svo.Addr().Interface().(*ObjectI)
+		*sins = o
+
+		// It's kind of redundant to set tile, but it is somewhat convenient.
+		tvo := data.Interpreter.ValueOf("tile")
+		tins := tvo.Addr().Interface().(**Tile)
+		*tins = o.tile
+
+		// Same with map.
+		mvo := data.Interpreter.ValueOf("gamemap")
+		mins := mvo.Addr().Interface().(**Map)
+		*mins = o.tile.gameMap
+
+		switch e := e.(type) {
+		case EventAdvance:
+			evo := data.Interpreter.ValueOf("advanceEvent")
+			eins := evo.Addr().Interface().(*EventAdvance)
+			*eins = e
+		}
+
+		data.Interpreter.RunExpr(r.Script.Expr)
+	}
 	if r.Spawn != nil && len(r.Spawn.Items) != 0 {
 		var spawnItem *data.SpawnArchetype
 		sum := 0.0
@@ -236,12 +261,12 @@ func (o *Object) processEventResponses(r *data.EventResponses) {
 			for i := 0; i < count; i++ {
 				failed := false
 				for i := -1; i < spawnItem.Retry; i++ {
-					x := t.x + spawnItem.Placement.X.Random()
-					y := t.y + spawnItem.Placement.Y.Random()
-					z := t.z + spawnItem.Placement.Z.Random()
+					x := t.X + spawnItem.Placement.X.Random()
+					y := t.Y + spawnItem.Placement.Y.Random()
+					z := t.Z + spawnItem.Placement.Z.Random()
 
 					// Deny spawning at same coord
-					if y == t.y && x == t.x && z == t.z {
+					if y == t.Y && x == t.X && z == t.Z {
 						continue
 					}
 
@@ -358,14 +383,15 @@ func (o *Object) processEventResponses(r *data.EventResponses) {
 
 		// We got an archetype, let's replace.
 		if archetype != nil {
-			o.replaceArchetype(archetype)
+			o.ReplaceArchetype(archetype)
 		}
 	}
 	/*if r.Trigger != nil {
 	}*/
 }
 
-func (o *Object) replaceArchetype(a *data.Archetype) {
+// ReplaceArchetype replaces the object's given archetype.
+func (o *Object) ReplaceArchetype(a *data.Archetype) {
 	o.Archetype = a
 	o.blocking = o.Archetype.Blocking
 
@@ -463,7 +489,7 @@ func (o *Object) RestoreStamina() {}
 // GetDistance gets the distance from the object to the target coordinates.
 func (o *Object) GetDistance(y, x, z int) float64 {
 	t := o.GetTile()
-	return math.Sqrt(math.Pow(float64(y-t.y), 2) + math.Pow(float64(x-t.x), 2) + math.Pow(float64(z-t.z), 2))
+	return math.Sqrt(math.Pow(float64(y-t.Y), 2) + math.Pow(float64(x-t.X), 2) + math.Pow(float64(z-t.Z), 2))
 }
 
 func (o *Object) Updates() bool {

@@ -3,11 +3,13 @@ package server
 import (
 	"fmt"
 	"net"
+	"reflect"
 	"sync"
 
 	"github.com/chimera-rpg/go-server/config"
 	"github.com/chimera-rpg/go-server/data"
 	"github.com/chimera-rpg/go-server/world"
+	"github.com/cosmos72/gomacro/imports"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -41,6 +43,35 @@ func New() *GameServer {
 
 // Setup sets up the server for use.
 func (s *GameServer) Setup(cfg *config.Config) error {
+	// Set up our interpreter globals. NOTE: All objects share the same interpreter, but use different compiled Expr for each scripting event defined. The interpreter is stored in the data package for now.
+	var o world.ObjectI
+	var m world.Map
+	imports.Packages["chimera"] = imports.Package{
+		Binds:    map[string]reflect.Value{},
+		Types:    map[string]reflect.Type{},
+		Proxies:  map[string]reflect.Type{},
+		Untypeds: map[string]string{},
+		Wrappers: map[string][]string{},
+	}
+	//data.Interpreter.DeclVar("self", nil, o)
+	//data.Interpreter.DeclVar("self", nil, o)
+	//imports.Packages["chimera"].Binds["self"] = reflect.ValueOf(&o).Addr().Elem()
+	imports.Packages["chimera"].Binds["self"] = reflect.ValueOf(&o).Elem()
+
+	data.Interpreter.ImportPackage("lname", "chimera")
+	data.Interpreter.ChangePackage("lname", "chimera")
+
+	data.Interpreter.DeclType(data.Interpreter.Comp.TypeOf(world.Object{}))
+	data.Interpreter.DeclType(data.Interpreter.Comp.TypeOf(world.ObjectFlora{}))
+	//data.Interpreter.DeclVar("self", nil, &o)
+
+	data.Interpreter.DeclVar("tile", nil, &world.Tile{})
+	data.Interpreter.DeclVar("advanceEvent", nil, world.EventAdvance{})
+	//data.Interpreter.DeclVar("event", data.Interpreter.TypeOf(world.EventI(nil)), &world.EventAdvance{})
+	data.Interpreter.DeclVar("world", nil, &s.world)
+	data.Interpreter.DeclVar("gamemap", nil, &m)
+	data.Interpreter.DeclVar("data", nil, &s.dataManager)
+
 	if err := s.dataManager.Setup(cfg); err != nil {
 		return err
 	}

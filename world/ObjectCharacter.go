@@ -256,7 +256,7 @@ func (o *ObjectCharacter) AddStatus(s StatusI) {
 		h, w, d := o.GetDimensions()
 		audioID := t.GetMap().world.data.Strings.Acquire("water")
 		soundID := t.GetMap().world.data.Strings.Acquire("enter")
-		t.GetMap().EmitSound(audioID, soundID, t.y+h-h/3, t.x+w/2, t.z+d/2, 0.25)
+		t.GetMap().EmitSound(audioID, soundID, t.Y+h-h/3, t.X+w/2, t.Z+d/2, 0.25)
 	}
 }
 
@@ -273,7 +273,7 @@ func (o *ObjectCharacter) RemoveStatus(s StatusI) StatusI {
 			h, w, d := o.GetDimensions()
 			audioID := t.GetMap().world.data.Strings.Acquire("water")
 			soundID := t.GetMap().world.data.Strings.Acquire("leave")
-			t.GetMap().EmitSound(audioID, soundID, t.y+h/2, t.x+w/2, t.z+d/2, 0.25)
+			t.GetMap().EmitSound(audioID, soundID, t.Y+h/2, t.X+w/2, t.Z+d/2, 0.25)
 		}
 	}
 	return s
@@ -331,11 +331,11 @@ func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 			if e.matter.Is(cdata.LiquidMatter) {
 				audioID = t.GetMap().world.data.Strings.Acquire("water")
 				soundID = t.GetMap().world.data.Strings.Acquire("sploosh")
-				t.GetMap().EmitSound(audioID, soundID, t.y+h-h/3, t.x+w/2, t.z+d/2, 1.0)
+				t.GetMap().EmitSound(audioID, soundID, t.Y+h-h/3, t.X+w/2, t.Z+d/2, 1.0)
 			} else {
 				audioID = t.GetMap().world.data.Strings.Acquire("thump")
 				soundID = t.GetMap().world.data.Strings.Acquire("default")
-				t.GetMap().EmitSound(audioID, soundID, t.y-1, t.x+w/2, t.z+d/2, 0.25)
+				t.GetMap().EmitSound(audioID, soundID, t.Y-1, t.X+w/2, t.Z+d/2, 0.25)
 			}
 		}
 		// TODO: If we're not invisible or very quiet, notify other creatures in a radius that we've cratered our legs.
@@ -548,7 +548,7 @@ func (o *ObjectCharacter) HandleSound(audioID, soundID ID, y, x, z int, volume f
 // HandleObjectSound processes a sound from a given object to see if it should be heard.
 func (o *ObjectCharacter) HandleObjectSound(audioID, soundID ID, o2 ObjectI, volume float32) {
 	t2 := o.GetTile()
-	d := o.GetDistance(t2.y, t2.x, t2.z)
+	d := o.GetDistance(t2.Y, t2.X, t2.Z)
 	if d < 100*float64(volume) { // FIXME: Use a Sense + Focus(minor) derived value.
 		o.GetOwner().SendSound(audioID, soundID, o2.GetID(), 0, 0, 0, volume)
 		// TODO: EventSound?

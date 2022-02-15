@@ -135,7 +135,7 @@ func (player *OwnerPlayer) getVisionRing() (c [][3]int) {
 	vhh := vh / 2
 	vwh := vw / 2
 	vdh := vd / 2
-	y1 := tile.y + int(player.GetTarget().GetArchetype().Height)
+	y1 := tile.Y + int(player.GetTarget().GetArchetype().Height)
 	// TODO: Use target object's statistics for vision range.
 	add := func(y, x, z int) {
 		if y < 0 || x < 0 || z < 0 || y >= m.height || x >= m.width || z >= m.depth {
@@ -144,24 +144,24 @@ func (player *OwnerPlayer) getVisionRing() (c [][3]int) {
 		c = append(c, [3]int{y, x, z})
 	}
 	// bottom & top
-	for x := tile.x - vwh; x < tile.x+vwh; x++ {
-		for z := tile.z - vdh; z < tile.z+vdh; z++ {
+	for x := tile.X - vwh; x < tile.X+vwh; x++ {
+		for z := tile.Z - vdh; z < tile.Z+vdh; z++ {
 			add(y1-vhh, x, z)
 			add(y1+vhh, x, z)
 		}
 	}
 	// left & right
-	for y := tile.y - vhh; y < tile.y+vhh; y++ {
-		for z := tile.z - vdh; z < tile.z+vdh; z++ {
-			add(y, tile.x-vwh, z)
-			add(y, tile.x+vwh, z)
+	for y := tile.Y - vhh; y < tile.Y+vhh; y++ {
+		for z := tile.Z - vdh; z < tile.Z+vdh; z++ {
+			add(y, tile.X-vwh, z)
+			add(y, tile.X+vwh, z)
 		}
 	}
 	// back & front
-	for y := tile.y - vhh; y < tile.y+vhh; y++ {
-		for x := tile.x - vwh; x < tile.x+vwh; x++ {
-			add(y, x, tile.z-vdh)
-			add(y, x, tile.z+vdh)
+	for y := tile.Y - vhh; y < tile.Y+vhh; y++ {
+		for x := tile.X - vwh; x < tile.X+vwh; x++ {
+			add(y, x, tile.Z-vdh)
+			add(y, x, tile.Z+vdh)
 		}
 	}
 	return
@@ -174,7 +174,7 @@ func (player *OwnerPlayer) getVisionCube() (c [][3]int) {
 	vhh := vh / 2
 	vwh := vw / 2
 	vdh := vd / 2
-	y1 := tile.y + int(player.GetTarget().GetArchetype().Height)
+	y1 := tile.Y + int(player.GetTarget().GetArchetype().Height)
 
 	ymin := y1 - vhh
 	if ymin < 0 {
@@ -185,20 +185,20 @@ func (player *OwnerPlayer) getVisionCube() (c [][3]int) {
 		ymax = m.height - 1
 	}
 
-	xmin := tile.x - vwh
+	xmin := tile.X - vwh
 	if xmin < 0 {
 		xmin = 0
 	}
-	xmax := tile.x + vwh
+	xmax := tile.X + vwh
 	if xmax > m.width {
 		xmax = m.width - 1
 	}
 
-	zmin := tile.z - vdh
+	zmin := tile.Z - vdh
 	if zmin < 0 {
 		zmin = 0
 	}
-	zmax := tile.z + vdh
+	zmax := tile.Z + vdh
 	if zmax > m.depth {
 		zmax = m.depth - 1
 	}
@@ -226,12 +226,12 @@ func (player *OwnerPlayer) checkVisionRing() error {
 
 	// TODO: We should also shoot rays from the target's feet a short distance to ensure close objects are visible.
 	// Amanatides & Woo
-	y1 := float64(tile.y + int(a.Height))
+	y1 := float64(tile.Y + int(a.Height))
 	if y1 >= float64(gmap.height) {
 		y1 = float64(gmap.height - 1)
 	}
-	x1 := float64(tile.x) + float64(a.Width)/2
-	z1 := float64(tile.z) + float64(a.Depth)/2
+	x1 := float64(tile.X) + float64(a.Width)/2
+	z1 := float64(tile.Z) + float64(a.Depth)/2
 	for _, c := range coords {
 		var tMaxX, tMaxY, tMaxZ, tDeltaX, tDeltaY, tDeltaZ float64
 		y2 := float64(c[0])
@@ -331,10 +331,10 @@ func (player *OwnerPlayer) checkVisionRing() error {
 
 func (player *OwnerPlayer) sendTile(tile *Tile) {
 	// TODO: Actually calculate which tiles are visible for the owner.
-	if tile.modTime == player.view[tile.y][tile.x][tile.z].modTime {
+	if tile.modTime == player.view[tile.Y][tile.X][tile.Z].modTime {
 		return
 	}
-	player.view[tile.y][tile.x][tile.z].modTime = tile.modTime
+	player.view[tile.Y][tile.X][tile.Z].modTime = tile.modTime
 	// NOTE: We could maintain a list of known objects on a tile in the player's tile view and send the difference instead. For large stacks of infrequently changing tiles, this would be more bandwidth efficient, though at the expense of server-side RAM and CPU time.
 	// Filter out things we don't want to send to the client.
 	filteredMapObjects := make([]ObjectI, 0)
@@ -375,7 +375,7 @@ func (player *OwnerPlayer) sendTile(tile *Tile) {
 	}
 
 	// Check the given previous knownIDs and see if any were deleted. FIXME: This is kind of inefficient and should probably be handled by the Map.
-	for _, oID := range player.view[tile.y][tile.x][tile.z].knownIDs {
+	for _, oID := range player.view[tile.Y][tile.X][tile.Z].knownIDs {
 		if o := tile.gameMap.world.GetObject(oID); o == nil {
 			fmt.Println("Sending delete", oID)
 			player.ClientConnection.Send(network.CommandObject{
@@ -384,12 +384,12 @@ func (player *OwnerPlayer) sendTile(tile *Tile) {
 			})
 		}
 	}
-	player.view[tile.y][tile.x][tile.z].knownIDs = tileObjectIDs
+	player.view[tile.Y][tile.X][tile.Z].knownIDs = tileObjectIDs
 	// Update the client's perception of the given tile.
 	player.ClientConnection.Send(network.CommandTile{
-		Y:         uint32(tile.y),
-		X:         uint32(tile.x),
-		Z:         uint32(tile.z),
+		Y:         uint32(tile.Y),
+		X:         uint32(tile.X),
+		Z:         uint32(tile.Z),
 		ObjectIDs: tileObjectIDs,
 	})
 }
@@ -405,22 +405,22 @@ func (player *OwnerPlayer) checkVisibleTiles() error {
 	// Get tile where owner is, then send from negative half owner object's viewport to positive half in y, x, and z.
 	if tile := player.target.GetTile(); tile != nil {
 		var sy, sx, sz, ey, ex, ez int
-		if sy = tile.y - vhh; sy < 0 {
+		if sy = tile.Y - vhh; sy < 0 {
 			sy = 0
 		}
-		if sx = tile.x - vwh; sx < 0 {
+		if sx = tile.X - vwh; sx < 0 {
 			sx = 0
 		}
-		if sz = tile.z - vdh; sz < 0 {
+		if sz = tile.Z - vdh; sz < 0 {
 			sz = 0
 		}
-		if ey = tile.y + vhh; ey > len(player.view) {
+		if ey = tile.Y + vhh; ey > len(player.view) {
 			ey = len(player.view)
 		}
-		if ex = tile.x + vwh; ex > len(player.view[0]) {
+		if ex = tile.X + vwh; ex > len(player.view[0]) {
 			ex = len(player.view[0])
 		}
-		if ez = tile.z + vdh; ez > len(player.view[0][0]) {
+		if ez = tile.Z + vdh; ez > len(player.view[0][0]) {
 			ez = len(player.view[0][0])
 		}
 
