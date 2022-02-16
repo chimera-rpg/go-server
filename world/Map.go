@@ -324,6 +324,32 @@ func (gmap *Map) RemoveObject(o ObjectI) (err error) {
 	return
 }
 
+// TeleportObject teleports the given object from its current position to an absolute position.
+func (gmap *Map) TeleportObject(o ObjectI, y, x, z int, force bool) error {
+	yDir := y - o.GetTile().Y
+	xDir := x - o.GetTile().X
+	zDir := z - o.GetTile().Z
+
+	oldTiles, targetTiles, err := gmap.GetObjectPartTiles(o, yDir, xDir, zDir, force)
+	if err != nil {
+		return err
+	}
+
+	for _, t := range oldTiles {
+		t.removeObjectPart(o)
+	}
+	// Second we add collisions to new intersection tiles.
+	for _, t := range targetTiles {
+		t.insertObjectPart(o, -1)
+	}
+	// Add the object to the main tile.
+	targetTiles[0].insertObject(o, -1)
+	gmap.updateTime++
+	o.SetMoved(true)
+
+	return nil
+}
+
 // MoveObject attempts to move the given object from its current position by a relative coordinate adjustment.
 func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, error) {
 	if o == nil {
@@ -421,31 +447,11 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 	if _, ok := o.(*ObjectCharacter); ok {
 		for _, tO := range uniqueObjects {
 			if t, ok := tO.(*ObjectExit); ok {
-				fmt.Printf("%+v\n", t.Archetype.Exit)
 				if t.Archetype.Exit != nil && t.Archetype.Exit.Touch {
-					// Let's attempt to get our target.
-					// If name is empty, presume teleporting in the same map.
-					if t.Archetype.Exit.Name == "" {
-						log.Printf("TODO: Teleport within map")
+					if err := t.Teleport(o); err == nil {
+						return true, nil
 					} else {
-						if gmap, err := gmap.world.LoadMap(t.Archetype.Exit.Name); err == nil {
-							y := gmap.y
-							x := gmap.x
-							z := gmap.z
-							if t.Archetype.Exit.Y != nil {
-								y = *t.Archetype.Exit.Y
-							}
-							if t.Archetype.Exit.X != nil {
-								x = *t.Archetype.Exit.X
-							}
-							if t.Archetype.Exit.Z != nil {
-								z = *t.Archetype.Exit.Z
-							}
-							gmap.AddOwner(o.GetOwner(), y, x, z)
-							return true, nil
-						} else {
-							log.Printf("Couldn't exit to %s: %s\n", t.Archetype.Exit.Name, err)
-						}
+						log.Printf("Couldn't use touch teleporter: %s\n", err)
 					}
 				}
 			}
