@@ -2,6 +2,7 @@ package world
 
 import (
 	"math"
+	"strings"
 
 	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-common/network"
@@ -74,6 +75,8 @@ func (player *OwnerPlayer) SetMap(m *Map) {
 			Depth:  m.depth,
 		})
 	}
+	// Reset player's known IDs... TODO: Probably manage IDs on the client.
+	player.knownIDs = make(map[uint32]struct{})
 	// Create a fresh view corresponding to our new map.
 	player.CreateView()
 }
@@ -586,6 +589,14 @@ func (player *OwnerPlayer) handleWizardCommand(args ...string) {
 	cmd := args[0]
 	args = args[1:]
 	switch cmd {
+	case "goto":
+		mapName := strings.Join(args, " ")
+		if gmap, err := player.GetMap().world.LoadMap(mapName); err == nil {
+			// TODO: gmap.default Y, X, Z
+			gmap.AddOwner(player, 3, 3, 3)
+		} else {
+			log.Printf("Couldn't goto %s: %s\n", mapName, err)
+		}
 	case "status":
 		if len(args) == 0 {
 			return
