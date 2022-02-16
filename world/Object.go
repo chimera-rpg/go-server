@@ -223,12 +223,10 @@ func (o *Object) processEventResponses(r *data.EventResponses, e EventI) {
 		mins := mvo.Addr().Interface().(**Map)
 		*mins = o.tile.gameMap
 
-		switch e := e.(type) {
-		case EventAdvance:
-			evo := data.Interpreter.ValueOf("advanceEvent")
-			eins := evo.Addr().Interface().(*EventAdvance)
-			*eins = e
-		}
+		// Set the event.
+		evo := data.Interpreter.ValueOf("event")
+		eins := evo.Addr().Interface().(*EventI)
+		*eins = e
 
 		data.Interpreter.RunExpr(r.Script.Expr)
 	}
