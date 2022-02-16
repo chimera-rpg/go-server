@@ -250,7 +250,7 @@ func (w *World) addPlayerByConnection(conn clientConnectionI, character *data.Ch
 				"name": character.SaveInfo.Map,
 			}).Warnln("Could not load character's map, falling back to default")
 			if gmap, err := w.LoadMap("Chamber of Origins"); err == nil {
-				gmap.AddOwner(player, 0, 1, 1)
+				gmap.AddOwner(player, gmap.y, gmap.x, gmap.z)
 			} else {
 				return err
 			}

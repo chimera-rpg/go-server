@@ -592,8 +592,7 @@ func (player *OwnerPlayer) handleWizardCommand(args ...string) {
 	case "goto":
 		mapName := strings.Join(args, " ")
 		if gmap, err := player.GetMap().world.LoadMap(mapName); err == nil {
-			// TODO: gmap.default Y, X, Z
-			gmap.AddOwner(player, 3, 3, 3)
+			gmap.AddOwner(player, gmap.y, gmap.x, gmap.z)
 		} else {
 			log.Printf("Couldn't goto %s: %s\n", mapName, err)
 		}

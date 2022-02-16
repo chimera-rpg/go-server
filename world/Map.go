@@ -35,6 +35,7 @@ type Map struct {
 	width          int
 	height         int
 	depth          int
+	y, x, z        int           // Default entry point.
 	updateTime     uint8         // Whenever this is updated, owners will check their surroundings for updates.
 	turnTime       time.Duration // Time until the next map turn (when characters have their actions restored)
 	turnElapsed    time.Duration
@@ -57,6 +58,9 @@ func NewMap(world *World, name string) (*Map, error) {
 		name:          gd.Name,
 		dataName:      gd.DataName,
 		activeObjects: make(map[ID]ObjectI),
+		y:             gd.Y,
+		x:             gd.X,
+		z:             gd.Z,
 	}
 	gmap.owners = make([]OwnerI, 0)
 	// Size map and populate it with the data tiles
