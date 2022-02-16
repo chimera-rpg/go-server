@@ -17,7 +17,7 @@ type ScriptError struct {
 }
 
 // Error returns the main error string.
-func (e *ScriptError) Error() string {
+func (e ScriptError) Error() string {
 	return e.s
 }
 
