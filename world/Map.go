@@ -416,6 +416,42 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 		}
 	}
 
+	// If we will intersect with a touch exit, the object should be teleported(?).
+	// TODO: Move to ObjectCharacter.update?
+	if _, ok := o.(*ObjectCharacter); ok {
+		for _, tO := range uniqueObjects {
+			if t, ok := tO.(*ObjectExit); ok {
+				fmt.Printf("%+v\n", t.Archetype.Exit)
+				if t.Archetype.Exit != nil && t.Archetype.Exit.Touch {
+					// Let's attempt to get our target.
+					// If name is empty, presume teleporting in the same map.
+					if t.Archetype.Exit.Name == "" {
+						log.Printf("TODO: Teleport within map")
+					} else {
+						if gmap, err := gmap.world.LoadMap(t.Archetype.Exit.Name); err == nil {
+							y := gmap.y
+							x := gmap.x
+							z := gmap.z
+							if t.Archetype.Exit.Y != nil {
+								y = *t.Archetype.Exit.Y
+							}
+							if t.Archetype.Exit.X != nil {
+								x = *t.Archetype.Exit.X
+							}
+							if t.Archetype.Exit.Z != nil {
+								z = *t.Archetype.Exit.Z
+							}
+							gmap.AddOwner(o.GetOwner(), y, x, z)
+							return true, nil
+						} else {
+							log.Printf("Couldn't exit to %s: %s\n", t.Archetype.Exit.Name, err)
+						}
+					}
+				}
+			}
+		}
+	}
+
 	// Get our character objects.
 	var characterObjects []*ObjectCharacter
 	for _, tO := range uniqueObjects {

@@ -57,7 +57,7 @@ func (w *World) cleanupMaps() {
 	// Here we iterate over our activeMaps and move any maps that should
 	// enter a sleep to the inactiveMaps slices.
 	inactivated := 0
-	w.activeMapsMutex.Lock()
+	//w.activeMapsMutex.Lock()
 	for i := range w.activeMaps {
 		j := i - inactivated
 		if w.activeMaps[j].playerCount == 0 && w.activeMaps[j].shouldSleep == true {
@@ -69,10 +69,10 @@ func (w *World) cleanupMaps() {
 			}
 		}
 	}
-	w.activeMapsMutex.Unlock()
+	//w.activeMapsMutex.Unlock()
 	// Now we iterate over our inactiveMaps and remove any that have expired.
 	expired := 0
-	w.inactiveMapsMutex.Lock()
+	//w.inactiveMapsMutex.Lock()
 	for i := range w.inactiveMaps {
 		j := i - expired
 		if w.inactiveMaps[j].shouldExpire == true {
@@ -84,7 +84,7 @@ func (w *World) cleanupMaps() {
 			expired++
 		}
 	}
-	w.inactiveMapsMutex.Unlock()
+	//w.inactiveMapsMutex.Unlock()
 }
 
 // Update processes updates for each player then updates each map as necessary.
@@ -108,11 +108,11 @@ func (w *World) Update(delta time.Duration) error {
 		player.Update(delta)
 	}
 	// Update all our active maps.
-	w.activeMapsMutex.Lock()
+	//w.activeMapsMutex.Lock()
 	for _, activeMap := range w.activeMaps {
 		activeMap.Update(w, delta)
 	}
-	w.activeMapsMutex.Unlock()
+	//w.activeMapsMutex.Unlock()
 	return nil
 }
 
@@ -157,8 +157,8 @@ func (w *World) GetMap(name string) *Map {
 
 // addMap adds the provided Map to the active maps slice.
 func (w *World) addMap(gm *Map) {
-	w.activeMapsMutex.Lock()
-	defer w.activeMapsMutex.Unlock()
+	//w.activeMapsMutex.Lock()
+	//defer w.activeMapsMutex.Unlock()
 	w.activeMaps = append(w.activeMaps, gm)
 	log.WithFields(log.Fields{
 		"name": gm.name,
@@ -167,10 +167,10 @@ func (w *World) addMap(gm *Map) {
 
 // activateMap activates and returns an inactive map given by its index.
 func (w *World) activateMap(inactiveIndex int) *Map {
-	w.inactiveMapsMutex.Lock()
-	w.activeMapsMutex.Lock()
-	defer w.activeMapsMutex.Unlock()
-	defer w.inactiveMapsMutex.Unlock()
+	//w.inactiveMapsMutex.Lock()
+	//w.activeMapsMutex.Lock()
+	//defer w.activeMapsMutex.Unlock()
+	//defer w.inactiveMapsMutex.Unlock()
 
 	if inactiveIndex > len(w.inactiveMaps) {
 		log.WithFields(log.Fields{
@@ -190,10 +190,10 @@ func (w *World) activateMap(inactiveIndex int) *Map {
 
 // inactivateMap moves the given active map by index to the inactive map slice.
 func (w *World) inactivateMap(activeIndex int) *Map {
-	w.activeMapsMutex.Lock()
-	w.inactiveMapsMutex.Lock()
-	defer w.inactiveMapsMutex.Unlock()
-	defer w.activeMapsMutex.Unlock()
+	//w.activeMapsMutex.Lock()
+	//w.inactiveMapsMutex.Lock()
+	//defer w.inactiveMapsMutex.Unlock()
+	//defer w.activeMapsMutex.Unlock()
 
 	if activeIndex > len(w.activeMaps) {
 		log.WithFields(log.Fields{
@@ -208,15 +208,15 @@ func (w *World) inactivateMap(activeIndex int) *Map {
 
 // isMapLoaded returns the index and active status of a given map.
 func (w *World) isMapLoaded(name string) (mapIndex int, isActive bool) {
-	w.activeMapsMutex.Lock()
-	defer w.activeMapsMutex.Unlock()
+	//w.activeMapsMutex.Lock()
+	//defer w.activeMapsMutex.Unlock()
 	for i := range w.activeMaps {
 		if w.activeMaps[i].mapID == w.data.Strings.Acquire(name) {
 			return i, true
 		}
 	}
-	w.inactiveMapsMutex.Lock()
-	defer w.inactiveMapsMutex.Unlock()
+	//w.inactiveMapsMutex.Lock()
+	//defer w.inactiveMapsMutex.Unlock()
 	for i := range w.inactiveMaps {
 		if w.inactiveMaps[i].mapID == w.data.Strings.Acquire(name) {
 			return i, false
@@ -383,6 +383,8 @@ func (w *World) CreateObjectFromArch(arch *data.Archetype) (o ObjectI, err error
 		o = NewObjectAudio(arch)
 	case cdata.ArchetypeFlora:
 		o = NewObjectFlora(arch)
+	case cdata.ArchetypeExit:
+		o = NewObjectExit(arch)
 	default:
 		gameobj := ObjectGeneric{
 			Object: NewObject(arch),
