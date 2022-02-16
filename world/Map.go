@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos72/gomacro/fast"
 	log "github.com/sirupsen/logrus"
 
 	cdata "github.com/chimera-rpg/go-common/data"
@@ -38,6 +39,8 @@ type Map struct {
 	turnTime       time.Duration // Time until the next map turn (when characters have their actions restored)
 	turnElapsed    time.Duration
 	refreshObjects []ID
+	interpreter    *fast.Interp
+	handlers       MapHandlers
 }
 
 // NewMap loads the given map file from the data manager.
@@ -76,6 +79,12 @@ func NewMap(world *World, name string) (*Map, error) {
 			}
 		}
 	}
+
+	// Add interpreter as needed.
+	if gd.Script != "" {
+		gmap.addInterpreter(gd.Script)
+	}
+
 	return gmap, nil
 }
 
@@ -144,6 +153,12 @@ func (gmap *Map) Update(gm *World, delta time.Duration) error {
 		if i == 0 {
 		}
 	}
+
+	// This might be a bit heavy...
+	if gmap.handlers.updateFunc != nil {
+		gmap.handlers.updateFunc(delta)
+	}
+
 	/*for y := range gmap.tiles {
 	  for x := range gmap.tiles[y] {
 	  }
@@ -153,6 +168,10 @@ func (gmap *Map) Update(gm *World, delta time.Duration) error {
 
 // Cleanup cleans up the given map, readying it for unloading.
 func (gmap *Map) Cleanup(world *World) error {
+	if gmap.handlers.cleanupFunc != nil {
+		gmap.handlers.cleanupFunc()
+	}
+
 	for y := range gmap.tiles {
 		for x := range gmap.tiles[y] {
 			for z := range gmap.tiles[y][x] {
@@ -188,6 +207,12 @@ func (gmap *Map) AddOwner(owner OwnerI, y, x, z int) error {
 
 	// Add to our owners.
 	gmap.owners = append(gmap.owners, owner)
+
+	// Finally, call scripting.
+	if gmap.handlers.ownerJoinFunc != nil {
+		gmap.handlers.ownerJoinFunc(owner)
+	}
+
 	return nil
 }
 
@@ -195,6 +220,11 @@ func (gmap *Map) AddOwner(owner OwnerI, y, x, z int) error {
 func (gmap *Map) RemoveOwner(owner OwnerI) error {
 	if m := owner.GetMap(); m != gmap {
 		return errors.New("RemoveOwner called on non-owning map")
+	}
+
+	// Finally, call scripting.
+	if gmap.handlers.ownerLeaveFunc != nil {
+		gmap.handlers.ownerLeaveFunc(owner)
 	}
 
 	// Clear out map reference.

@@ -13,4 +13,5 @@ type Map struct {
 	Darkness    int               `yaml:"Darkness"`
 	ResetTime   int               `yaml:"ResetTime"`
 	Tiles       [][][][]Archetype `yaml:"Tiles"`
+	Script      string            `yaml:"Script"` // Script is stored as full code, as each map data instance holds its own complete interpreter.
 }

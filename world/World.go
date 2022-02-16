@@ -64,6 +64,9 @@ func (w *World) cleanupMaps() {
 			w.inactiveMaps = append(w.inactiveMaps, w.activeMaps[j])
 			w.activeMaps = w.activeMaps[:j+copy(w.activeMaps[j:], w.activeMaps[j+1:])]
 			inactivated++
+			if w.activeMaps[j].handlers.sleepFunc != nil {
+				w.activeMaps[j].handlers.sleepFunc()
+			}
 		}
 	}
 	w.activeMapsMutex.Unlock()
@@ -73,6 +76,9 @@ func (w *World) cleanupMaps() {
 	for i := range w.inactiveMaps {
 		j := i - expired
 		if w.inactiveMaps[j].shouldExpire == true {
+			if w.inactiveMaps[j].handlers.cleanupFunc != nil {
+				w.inactiveMaps[j].handlers.cleanupFunc()
+			}
 			w.inactiveMaps[j].Cleanup(w)
 			w.inactiveMaps = w.inactiveMaps[:j+copy(w.inactiveMaps[j:], w.inactiveMaps[j+1:])]
 			expired++
@@ -174,6 +180,11 @@ func (w *World) activateMap(inactiveIndex int) *Map {
 	}
 	w.activeMaps = append(w.activeMaps, w.inactiveMaps[inactiveIndex])
 	w.inactiveMaps = append(w.inactiveMaps[:inactiveIndex], w.inactiveMaps[inactiveIndex+1:]...)
+
+	if w.activeMaps[len(w.activeMaps)-1].handlers.wakeFunc != nil {
+		w.activeMaps[len(w.activeMaps)-1].handlers.wakeFunc()
+	}
+
 	return w.activeMaps[len(w.activeMaps)-1]
 }
 
@@ -291,7 +302,7 @@ func (w *World) SyncPlayerSaveInfo(conn clientConnectionI) error {
 	}
 	s := u.Characters[o.Name()].SaveInfo
 	s.Map = m.dataName
-	s.X = t.Y
+	s.X = t.X
 	s.Y = t.Y
 	s.Z = t.Z
 	u.Characters[o.Name()].SaveInfo = s
