@@ -34,6 +34,15 @@ type Next struct {
 	Archetypes []RandomArchetype `yaml:"Archetypes,omitempty"`
 }
 
+// ExitInfo represents the information used for simple exits and teleporters.
+type ExitInfo struct {
+	Name  string `yaml:"Name,omitempty"`
+	Y     *int   `yaml:"Y,omitempty"`
+	X     *int   `yaml:"X,omitempty"`
+	Z     *int   `yaml:"Z,omitempty"`
+	Touch bool   `yaml:"Touch,omitempty"`
+}
+
 // Archetype represents a collection of data that should be used for the
 // creation of Objects.
 type Archetype struct {
@@ -68,6 +77,8 @@ type Archetype struct {
 	Count      *string             `yaml:"Count,omitempty"`
 	Weight     *string             `yaml:"Weight,omitempty"`
 	Properties map[string]Variable `yaml:"Properties,omitempty"`
+	// Exit-related
+	Exit *ExitInfo `yaml:"Exit,omitempty"`
 	//
 	Timers []ArchetypeTimer `yaml:"Timers,omitempty"`
 	//
