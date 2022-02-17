@@ -36,14 +36,15 @@ type Next struct {
 
 // ExitInfo represents the information used for simple exits and teleporters.
 type ExitInfo struct {
-	Name      string  `yaml:"Name,omitempty"`
-	Y         *int    `yaml:"Y,omitempty"`
-	X         *int    `yaml:"X,omitempty"`
-	Z         *int    `yaml:"Z,omitempty"`
-	Touch     bool    `yaml:"Touch,omitempty"`
-	Cooldown  float64 `yaml:"Cooldown,omitempty"`
-	SizeRatio float64 `yaml:"SizeRatio,omitempty"`
-	Uses      int     `yaml:"Uses,omitempty"`
+	Name       string  `yaml:"Name,omitempty"`
+	Y          *int    `yaml:"Y,omitempty"`
+	X          *int    `yaml:"X,omitempty"`
+	Z          *int    `yaml:"Z,omitempty"`
+	Touch      bool    `yaml:"Touch,omitempty"`
+	Cooldown   float64 `yaml:"Cooldown,omitempty"`
+	SizeRatio  float64 `yaml:"SizeRatio,omitempty"`
+	Uses       int     `yaml:"Uses,omitempty"`
+	UniqueUses int     `yaml:"UniqueUses,omitempty"`
 }
 
 // Archetype represents a collection of data that should be used for the

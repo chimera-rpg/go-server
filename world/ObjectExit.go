@@ -12,8 +12,9 @@ import (
 // ObjectExit represents entrance/exit/teleporter objects.
 type ObjectExit struct {
 	Object
-	cooldown time.Duration
-	uses     int
+	cooldown   time.Duration
+	uses       int
+	uniqueUses map[uint32]int
 }
 
 // NewObjectExit returns an ObjectExit from the given Archetype.
@@ -23,6 +24,9 @@ func NewObjectExit(a *data.Archetype) (o *ObjectExit) {
 	}
 	if a.Exit != nil {
 		o.cooldown = time.Duration(a.Exit.Cooldown) * time.Second
+		if a.Exit.UniqueUses > 0 {
+			o.uniqueUses = make(map[uint32]int)
+		}
 	}
 	return
 }
@@ -49,8 +53,15 @@ func (o *ObjectExit) Teleport(target ObjectI) error {
 	if o.Archetype.Exit == nil {
 		return errors.New("nil exit")
 	}
-	if o.Archetype.Exit.Uses > 0 && o.uses > o.Archetype.Exit.Uses {
+	if o.Archetype.Exit.Uses > 0 && o.uses >= o.Archetype.Exit.Uses {
 		return errors.New("no more uses")
+	}
+	if o.Archetype.Exit.UniqueUses > 0 {
+		if uses, ok := o.uniqueUses[target.GetID()]; ok {
+			if uses >= o.Archetype.Exit.UniqueUses {
+				return errors.New("no more unique uses")
+			}
+		}
 	}
 	// Check if the target object is large enough to trigger/use the exit.
 	if o.Archetype.Exit.SizeRatio > 0 && o.Archetype.Exit.SizeRatio < 1 {
@@ -106,6 +117,13 @@ func (o *ObjectExit) Teleport(target ObjectI) error {
 		o.tile.gameMap.ActivateObject(o.id)
 	}
 	o.uses++
+	if o.Archetype.Exit.UniqueUses > 0 {
+		if uses, ok := o.uniqueUses[target.GetID()]; ok {
+			o.uniqueUses[target.GetID()] = uses + 1
+		} else {
+			o.uniqueUses[target.GetID()] = 1
+		}
+	}
 	return nil
 }
 
