@@ -43,6 +43,7 @@ type ExitInfo struct {
 	Touch     bool    `yaml:"Touch,omitempty"`
 	Cooldown  float64 `yaml:"Cooldown,omitempty"`
 	SizeRatio float64 `yaml:"SizeRatio,omitempty"`
+	Uses      int     `yaml:"Uses,omitempty"`
 }
 
 // Archetype represents a collection of data that should be used for the

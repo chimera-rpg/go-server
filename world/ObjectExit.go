@@ -2,6 +2,8 @@ package world
 
 import (
 	"errors"
+	"fmt"
+	"time"
 
 	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-server/data"
@@ -10,7 +12,8 @@ import (
 // ObjectExit represents entrance/exit/teleporter objects.
 type ObjectExit struct {
 	Object
-	cooldown int
+	cooldown time.Duration
+	uses     int
 }
 
 // NewObjectExit returns an ObjectExit from the given Archetype.
@@ -18,7 +21,23 @@ func NewObjectExit(a *data.Archetype) (o *ObjectExit) {
 	o = &ObjectExit{
 		Object: NewObject(a),
 	}
+	if a.Exit != nil {
+		o.cooldown = time.Duration(a.Exit.Cooldown) * time.Second
+	}
 	return
+}
+
+func (o *ObjectExit) Updates() bool {
+	return o.cooldown > 0
+}
+
+func (o *ObjectExit) update(delta time.Duration) {
+	// Inactivate the exit object if its cooldown has reduced.
+	o.cooldown += delta
+	fmt.Println(o.cooldown, time.Duration(o.Archetype.Exit.Cooldown)*time.Second)
+	if o.cooldown >= time.Duration(o.Archetype.Exit.Cooldown)*time.Second {
+		o.tile.gameMap.InactiveObject(o.id)
+	}
 }
 
 // Teleport moves the target object based upon the rules of the exit archetype. Returns nil if the teleport was successful or an error on failure.
@@ -29,6 +48,9 @@ func (o *ObjectExit) Teleport(target ObjectI) error {
 	}
 	if o.Archetype.Exit == nil {
 		return errors.New("nil exit")
+	}
+	if o.Archetype.Exit.Uses > 0 && o.uses > o.Archetype.Exit.Uses {
+		return errors.New("no more uses")
 	}
 	// Check if the target object is large enough to trigger/use the exit.
 	if o.Archetype.Exit.SizeRatio > 0 && o.Archetype.Exit.SizeRatio < 1 {
@@ -78,12 +100,18 @@ func (o *ObjectExit) Teleport(target ObjectI) error {
 			}
 		}
 	}
+	// If the exit has a cooldown, make the object active.
+	if o.Archetype.Exit.Cooldown > 0 {
+		o.cooldown = 0
+		o.tile.gameMap.ActivateObject(o.id)
+	}
+	o.uses++
 	return nil
 }
 
 // IsReady returns if the exit is ready for use (its cooldown is greater/equal to its arch Cooldown value).
 func (o *ObjectExit) IsReady() bool {
-	return o.cooldown >= int(o.Archetype.Exit.Cooldown)
+	return o.cooldown >= time.Duration(o.Archetype.Exit.Cooldown)*time.Second
 }
 
 func (o *ObjectExit) getType() cdata.ArchetypeType {
