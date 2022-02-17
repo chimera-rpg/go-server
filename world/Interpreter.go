@@ -20,6 +20,7 @@ func SetupInterpreterTypes(interp *fast.Interp) {
 	interp.DeclType(interp.TypeOf(EventDestroy{}))
 	interp.DeclType(interp.TypeOf(EventFall{}))
 	interp.DeclType(interp.TypeOf(EventFell{}))
+	interp.DeclType(interp.TypeOf(EventExit{}))
 
 	interp.DeclType(interp.TypeOf(OwnerPlayer{}))
 	interp.DeclType(interp.TypeOf(OwnerSimpleAI{}))
@@ -29,6 +30,7 @@ func SetupInterpreterTypes(interp *fast.Interp) {
 	interp.DeclType(interp.TypeOf(ObjectAudio{}))
 	interp.DeclType(interp.TypeOf(ObjectBlock{}))
 	interp.DeclType(interp.TypeOf(ObjectCharacter{}))
+	interp.DeclType(interp.TypeOf(ObjectExit{}))
 	interp.DeclType(interp.TypeOf(ObjectFlora{}))
 	interp.DeclType(interp.TypeOf(ObjectFood{}))
 	interp.DeclType(interp.TypeOf(ObjectGeneric{}))

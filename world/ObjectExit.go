@@ -75,6 +75,19 @@ func (o *ObjectExit) Teleport(target ObjectI) error {
 		}
 	}
 
+	// Scripting check
+	if o.Archetype.Events != nil && o.Archetype.Events.Exit != nil && o.Archetype.Events.Exit.Script != nil {
+		e := EventExit{
+			Target:  target,
+			Prevent: false,
+			Message: "prevented by script",
+		}
+		o.processEventResponses(o.Archetype.Events.Exit, &e)
+		if e.Prevent {
+			return errors.New(e.Message)
+		}
+	}
+
 	if o.Archetype.Exit.Name == "" { // Same map teleport.
 		y := o.tile.GetMap().y
 		x := o.tile.GetMap().x

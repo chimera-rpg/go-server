@@ -124,6 +124,7 @@ type Events struct {
 	Death   *EventResponses `yaml:"Death,omitempty"`
 	Hit     *EventResponses `yaml:"Hit,omitempty"`
 	Advance *EventResponses `yaml:"Advance,omitempty"`
+	Exit    *EventResponses `yaml:"Exit,omitempty"`
 }
 
 // EventResponses are the valid responses that can be given for an event.
