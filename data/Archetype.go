@@ -28,12 +28,6 @@ type RandomArchetype struct {
 	Archetype Archetype `yaml:"Archetype,omitempty"`
 }
 
-type Next struct {
-	MinTime    uint16            `yaml:"MinTime,omitempty"`
-	MaxTime    uint16            `yaml:"MaxTime,omitempty"`
-	Archetypes []RandomArchetype `yaml:"Archetypes,omitempty"`
-}
-
 // ExitInfo represents the information used for simple exits and teleporters.
 type ExitInfo struct {
 	Name       string   `yaml:"Name,omitempty"`
