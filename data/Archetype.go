@@ -36,13 +36,13 @@ type Next struct {
 
 // ExitInfo represents the information used for simple exits and teleporters.
 type ExitInfo struct {
-	Name             string  `yaml:"Name,omitempty"`
-	Y                *int    `yaml:"Y,omitempty"`
-	X                *int    `yaml:"X,omitempty"`
-	Z                *int    `yaml:"Z,omitempty"`
-	Touch            bool    `yaml:"Touch,omitempty"`
-	Cooldown         float64 `yaml:"Cooldown,omitempty"`
-	TriggerSizeRatio float64 `yaml:"TriggerSize,omitempty"`
+	Name      string  `yaml:"Name,omitempty"`
+	Y         *int    `yaml:"Y,omitempty"`
+	X         *int    `yaml:"X,omitempty"`
+	Z         *int    `yaml:"Z,omitempty"`
+	Touch     bool    `yaml:"Touch,omitempty"`
+	Cooldown  float64 `yaml:"Cooldown,omitempty"`
+	SizeRatio float64 `yaml:"SizeRatio,omitempty"`
 }
 
 // Archetype represents a collection of data that should be used for the
@@ -264,6 +264,21 @@ func (arch *Archetype) Add(other *Archetype) error {
 	arch.Attributes.Physical.Add(other.Attributes.Physical)
 	arch.Attributes.Arcane.Add(other.Attributes.Arcane)
 	arch.Attributes.Spirit.Add(other.Attributes.Spirit)
+
+	if arch.Exit == nil && other.Exit != nil {
+		y := *other.Exit.Y
+		x := *other.Exit.X
+		z := *other.Exit.Z
+		arch.Exit = &ExitInfo{
+			Name:      other.Exit.Name,
+			Y:         &y,
+			X:         &x,
+			Z:         &z,
+			Touch:     other.Exit.Touch,
+			Cooldown:  other.Exit.Cooldown,
+			SizeRatio: other.Exit.SizeRatio,
+		}
+	}
 
 	return nil
 }
