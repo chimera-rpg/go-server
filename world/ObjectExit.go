@@ -30,6 +30,18 @@ func (o *ObjectExit) Teleport(target ObjectI) error {
 	if o.Archetype.Exit == nil {
 		return errors.New("nil exit")
 	}
+	// Check if the target object is large enough to trigger/use the exit.
+	if o.Archetype.Exit.SizeRatio > 0 && o.Archetype.Exit.SizeRatio < 1 {
+		h, w, d := o.GetDimensions()
+		t := float64(h + w + d)
+		th, tw, td := target.GetDimensions()
+		t2 := float64(th + tw + td)
+		r := t / t2
+		if r < o.Archetype.Exit.SizeRatio {
+			return errors.New("too large")
+		}
+	}
+
 	if o.Archetype.Exit.Name == "" { // Same map teleport.
 		y := o.tile.GetMap().y
 		x := o.tile.GetMap().x
@@ -71,10 +83,7 @@ func (o *ObjectExit) Teleport(target ObjectI) error {
 
 // IsReady returns if the exit is ready for use (its cooldown is greater/equal to its arch Cooldown value).
 func (o *ObjectExit) IsReady() bool {
-	if o.cooldown >= int(o.Archetype.Exit.Cooldown) {
-		return true
-	}
-	return false
+	return o.cooldown >= int(o.Archetype.Exit.Cooldown)
 }
 
 func (o *ObjectExit) getType() cdata.ArchetypeType {
