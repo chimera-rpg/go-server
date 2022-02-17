@@ -12,7 +12,7 @@ import (
 // ObjectExit represents entrance/exit/teleporter objects.
 type ObjectExit struct {
 	Object
-	cooldown   time.Duration
+	cooldown   data.Duration
 	uses       int
 	uniqueUses map[uint32]int
 }
@@ -23,7 +23,7 @@ func NewObjectExit(a *data.Archetype) (o *ObjectExit) {
 		Object: NewObject(a),
 	}
 	if a.Exit != nil {
-		o.cooldown = time.Duration(a.Exit.Cooldown) * time.Second
+		o.cooldown = a.Exit.Cooldown
 		if a.Exit.UniqueUses > 0 {
 			o.uniqueUses = make(map[uint32]int)
 		}
@@ -32,14 +32,14 @@ func NewObjectExit(a *data.Archetype) (o *ObjectExit) {
 }
 
 func (o *ObjectExit) Updates() bool {
-	return o.cooldown > 0
+	return o.cooldown.Duration > 0
 }
 
 func (o *ObjectExit) update(delta time.Duration) {
 	// Inactivate the exit object if its cooldown has reduced.
-	o.cooldown += delta
-	fmt.Println(o.cooldown, time.Duration(o.Archetype.Exit.Cooldown)*time.Second)
-	if o.cooldown >= time.Duration(o.Archetype.Exit.Cooldown)*time.Second {
+	o.cooldown.Duration += delta
+	fmt.Println(o.cooldown, o.Archetype.Exit.Cooldown.Duration)
+	if o.cooldown.Duration >= o.Archetype.Exit.Cooldown.Duration {
 		o.tile.gameMap.InactiveObject(o.id)
 	}
 }
@@ -125,8 +125,8 @@ func (o *ObjectExit) Teleport(target ObjectI) error {
 		}
 	}
 	// If the exit has a cooldown, make the object active.
-	if o.Archetype.Exit.Cooldown > 0 {
-		o.cooldown = 0
+	if o.Archetype.Exit.Cooldown.Duration > 0 {
+		o.cooldown.Duration = 0
 		o.tile.gameMap.ActivateObject(o.id)
 	}
 	o.uses++
@@ -142,7 +142,7 @@ func (o *ObjectExit) Teleport(target ObjectI) error {
 
 // IsReady returns if the exit is ready for use (its cooldown is greater/equal to its arch Cooldown value).
 func (o *ObjectExit) IsReady() bool {
-	return o.cooldown >= time.Duration(o.Archetype.Exit.Cooldown)*time.Second
+	return o.cooldown.Duration >= o.Archetype.Exit.Cooldown.Duration
 }
 
 func (o *ObjectExit) getType() cdata.ArchetypeType {
