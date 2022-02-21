@@ -1,6 +1,7 @@
 package world
 
 import (
+	"github.com/chimera-rpg/go-server/data"
 	"github.com/cosmos72/gomacro/fast"
 )
 
@@ -13,6 +14,7 @@ func SetupInterpreterTypes(interp *fast.Interp) {
 	interp.DeclType(interp.TypeOf((*OwnerI)(nil)).Elem())
 	interp.DeclType(interp.TypeOf((*ObjectI)(nil)).Elem())
 	interp.DeclType(interp.TypeOf((*EventI)(nil)).Elem())
+	interp.DeclType(interp.TypeOf((*ActionI)(nil)).Elem())
 
 	// Concrete Types
 	interp.DeclType(interp.TypeOf(EventAdvance{}))
@@ -39,6 +41,12 @@ func SetupInterpreterTypes(interp *fast.Interp) {
 	interp.DeclType(interp.TypeOf(ObjectSkill{}))
 	interp.DeclType(interp.TypeOf(ObjectTile{}))
 	interp.DeclType(interp.TypeOf(ObjectWeapon{}))
+
+	interp.DeclType(interp.TypeOf(ActionMove{}))
+	interp.DeclType(interp.TypeOf(ActionSpawn{}))
+	interp.DeclType(interp.TypeOf(ActionStatus{}))
+
+	interp.DeclType(interp.TypeOf(data.Duration{}))
 
 	interp.DeclType(interp.TypeOf(Map{}))
 	interp.DeclType(interp.TypeOf(Tile{}))

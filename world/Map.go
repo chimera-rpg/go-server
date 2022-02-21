@@ -32,6 +32,7 @@ type Map struct {
 	tiles          [][][]Tile
 	activeTiles    []*Tile
 	activeObjects  map[ID]ObjectI
+	actions        []ActionI // Actions that are added and processed each update.
 	width          int
 	height         int
 	depth          int
@@ -135,6 +136,9 @@ func (gmap *Map) sizeMap(height int, width int, depth int) error {
 func (gmap *Map) Update(gm *World, delta time.Duration) error {
 	gmap.lifeTime += delta
 
+	// Refresh our actions.
+	gmap.actions = make([]ActionI, 0)
+
 	// Force owners to forget about objects in the refreshObjects list.
 	if len(gmap.refreshObjects) > 0 {
 		for _, oID := range gmap.refreshObjects {
@@ -161,6 +165,22 @@ func (gmap *Map) Update(gm *World, delta time.Duration) error {
 	// This might be a bit heavy...
 	if gmap.handlers.updateFunc != nil {
 		gmap.handlers.updateFunc(delta)
+	}
+
+	// Process our actions.
+	for _, action := range gmap.actions {
+		if action.Ready() {
+			switch a := action.(type) {
+			case *ActionMove:
+				if _, err := a.object.GetTile().GetMap().MoveObject(a.object, a.y, a.x, a.z, false); err != nil {
+					log.Warn(err)
+				}
+			case *ActionStatus:
+				a.object.SetStatus(a.status)
+			case *ActionSpawn:
+				HandleActionSpawn(gmap, a)
+			}
+		}
 	}
 
 	/*for y := range gmap.tiles {
@@ -588,6 +608,11 @@ func (gmap *Map) ActivateObject(oID ID) {
 	if o, ok := gmap.world.objects[oID]; ok {
 		gmap.activeObjects[oID] = o
 	}
+}
+
+// QueueAction queues up an action for processing at the end of the current map update.
+func (gmap *Map) QueueAction(action ActionI) {
+	gmap.actions = append(gmap.actions, action)
 }
 
 // Sounds

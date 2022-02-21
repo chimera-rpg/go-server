@@ -8,7 +8,6 @@ import (
 
 	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-server/data"
-	log "github.com/sirupsen/logrus"
 )
 
 // Object is the base type that should be used as an embeded struct in
@@ -250,110 +249,19 @@ func (o *Object) processEventResponses(r *data.EventResponses, e EventI) {
 			}
 		}
 
-		// We got an archetype! Let's try to spawn.
+		// We got an archetype! Let's queue up a spawn.
 		t := o.tile
 		if spawnItem != nil {
-			placedCoords := make(map[[3]int]struct{})
-			count := spawnItem.Count.Random()
-			for i := 0; i < count; i++ {
-				failed := false
-				for i := -1; i < spawnItem.Retry; i++ {
-					x := t.X + spawnItem.Placement.X.Random()
-					y := t.Y + spawnItem.Placement.Y.Random()
-					z := t.Z + spawnItem.Placement.Z.Random()
-
-					// Deny spawning at same coord
-					if y == t.Y && x == t.X && z == t.Z {
-						continue
-					}
-
-					// Bail if overlap is false and we've already spawned at this location.
-					if !spawnItem.Placement.Overlap {
-						exists := false
-						if _, ok := placedCoords[[3]int{y, x, z}]; ok {
-							exists = true
-						}
-						if exists {
-							continue
-						}
-					}
-
-					// Check if the surface is ideal for us.
-					h := int(spawnItem.Archetype.Height)
-					w := int(spawnItem.Archetype.Width)
-					d := int(spawnItem.Archetype.Depth)
-					if h == 0 {
-						h = 1
-					}
-					if w == 0 {
-						w = 1
-					}
-					if d == 0 {
-						d = 1
-					}
-					checkMatter := func(y, x, z int, matter *cdata.MatterType, checkMatter bool) bool {
-						for yi := y; yi < y+h; yi++ {
-							for xi := x; xi < x+w; xi++ {
-								for zi := z; zi < z+d; zi++ {
-									t2 := t.gameMap.GetTile(yi, xi, zi)
-									if t2 == nil {
-										return false
-									}
-									if checkMatter {
-										if t2.matter == *matter || t2.matter.Is(*matter) {
-											return true
-										}
-									} else {
-										if t2.blocking == *matter || t2.blocking.Is(*matter) {
-											return true
-										}
-									}
-								}
-							}
-						}
-						return false
-					}
-
-					if spawnItem.Placement.Air.Blocking != nil {
-						if !checkMatter(y, x, z, spawnItem.Placement.Air.Blocking, false) {
-							continue
-						}
-					}
-					if spawnItem.Placement.Air.Matter != nil {
-						if !checkMatter(y, x, z, spawnItem.Placement.Air.Matter, true) {
-							continue
-						}
-					}
-					if spawnItem.Placement.Surface.Blocking != nil {
-						if !checkMatter(y-1, x, z, spawnItem.Placement.Surface.Blocking, false) {
-							continue
-						}
-					}
-					if spawnItem.Placement.Surface.Matter != nil {
-						if !checkMatter(y-1, x, z, spawnItem.Placement.Surface.Matter, true) {
-							continue
-						}
-					}
-
-					// TODO: Move to a map.SpawnObject function or similar.
-					if object, err := t.gameMap.world.CreateObjectFromArch(spawnItem.Archetype); err != nil {
-						log.Warn("Spawn", err)
-						failed = true
-						break
-					} else {
-						if err := t.gameMap.PlaceObject(object, y, x, z); err != nil {
-							log.Warn("Spawn", err)
-						} else {
-							placedCoords[[3]int{y, x, z}] = struct{}{}
-							object.ResolveEvent(EventBirth{})
-							break
-						}
-					}
-				}
-				if failed {
-					break
-				}
+			action := &ActionSpawn{
+				Action: Action{
+					ready: true,
+				},
+				Y:     t.Y,
+				X:     t.X,
+				Z:     t.Z,
+				Spawn: spawnItem,
 			}
+			t.gameMap.QueueAction(action)
 		}
 	}
 	// Replace replaces the given object's underline archetype with a randomly weighted one. Note that replace removes other running timers!

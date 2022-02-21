@@ -7,7 +7,6 @@ import (
 
 	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-server/data"
-	log "github.com/sirupsen/logrus"
 )
 
 // ObjectCharacter represents player characters.
@@ -139,27 +138,22 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 		}
 	}
 
-	// Process as many commands as we can.
+	// Adust action duration cooldown
 	o.currentActionDuration += delta / time.Duration(o.speedPenaltyMultiplier)
-	for {
-		// Process our current action first.
-		if o.currentAction != nil {
-			if !o.currentAction.Channeled() && o.currentActionDuration >= o.currentAction.ChannelTime() {
-				switch a := o.currentAction.(type) {
-				case *ActionMove:
-					if _, err := o.GetTile().GetMap().MoveObject(o, a.y, a.x, a.z, false); err != nil {
-						log.Warn(err)
-					}
-				case *ActionStatus:
-					o.SetStatus(a.status)
-				}
-				o.currentAction.Channel(true)
-			}
-			if o.currentActionDuration < o.currentAction.ChannelTime()+o.currentAction.RecoveryTime() {
-				break
-			}
+	// Process our current action.
+	if o.currentAction != nil {
+		if !o.currentAction.Channeled() && o.currentActionDuration >= o.currentAction.ChannelTime() {
+			o.currentAction.SetObject(o)
+			o.currentAction.SetReady(true)
+			o.tile.gameMap.QueueAction(o.currentAction)
+			o.currentAction.Channel(true)
+		}
+		if o.currentActionDuration >= o.currentAction.ChannelTime()+o.currentAction.RecoveryTime() {
 			o.currentAction = nil
 		}
+	}
+	// Find a new action if we have any pending commands.
+	if o.currentAction == nil {
 		calcDuration := func(base time.Duration, min time.Duration, reduction time.Duration) time.Duration {
 			d := base - reduction
 			if d < min {
@@ -212,9 +206,6 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 				o.currentAction = NewActionStatus(c.Status, duration)
 				o.currentActionDuration = 0 // TODO: Add remainder from last operation if possible.
 			}
-		}
-		if o.currentAction == nil {
-			break
 		}
 	}
 	isRunning := false
