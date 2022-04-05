@@ -120,11 +120,14 @@ type EventType uint32
 
 // Events is a structure for our various potentially handled event responses.
 type Events struct {
-	Birth   *EventResponses `yaml:"Birth,omitempty"`
-	Death   *EventResponses `yaml:"Death,omitempty"`
-	Hit     *EventResponses `yaml:"Hit,omitempty"`
-	Advance *EventResponses `yaml:"Advance,omitempty"`
-	Exit    *EventResponses `yaml:"Exit,omitempty"`
+	Birth     *EventResponses `yaml:"Birth,omitempty"`
+	Death     *EventResponses `yaml:"Death,omitempty"`
+	Hit       *EventResponses `yaml:"Hit,omitempty"`
+	Attacking *EventResponses `yaml:"Attacking,omitempty"`
+	Attacked  *EventResponses `yaml:"Attacked,omitempty"`
+	Attack    *EventResponses `yaml:"Attack,omitempty"`
+	Advance   *EventResponses `yaml:"Advance,omitempty"`
+	Exit      *EventResponses `yaml:"Exit,omitempty"`
 }
 
 // EventResponses are the valid responses that can be given for an event.
