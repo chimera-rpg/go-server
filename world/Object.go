@@ -29,6 +29,8 @@ type Object struct {
 	actions    int // Actions are the amount of actions that a player can take within 1 second
 	maxActions int // Max actions are the amount of actions that a player can take within 1 second.
 	//
+	attackable bool
+	//
 	timers []Timer
 }
 
@@ -38,6 +40,7 @@ func NewObject(a *data.Archetype) Object {
 		blocking:  a.Blocking,
 		Archetype: a,
 	}
+	o.attackable = a.Attackable
 
 	o.addTimers(a.Timers)
 
@@ -198,6 +201,18 @@ func (o *Object) ResolveEvent(e EventI) bool {
 		case EventAdvance:
 			if events.Advance != nil {
 				o.processEventResponses(events.Advance, e)
+			}
+		case *EventAttacking:
+			if events.Attacking != nil {
+				o.processEventResponses(events.Attacking, e)
+			}
+		case *EventAttacked:
+			if events.Attacked != nil {
+				o.processEventResponses(events.Attacked, e)
+			}
+		case *EventAttack:
+			if events.Attack != nil {
+				o.processEventResponses(events.Attack, e)
 			}
 		}
 	}
@@ -394,6 +409,10 @@ func (o *Object) RestoreStamina() {}
 func (o *Object) GetDistance(y, x, z int) float64 {
 	t := o.GetTile()
 	return math.Sqrt(math.Pow(float64(y-t.Y), 2) + math.Pow(float64(x-t.X), 2) + math.Pow(float64(z-t.Z), 2))
+}
+
+func (o *Object) Attackable() bool {
+	return o.attackable
 }
 
 func (o *Object) Updates() bool {
