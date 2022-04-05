@@ -39,6 +39,8 @@ type ObjectI interface {
 	//
 	RestoreStamina()
 	//
+	Attackable() bool
+	//
 	Updates() bool
 	Timers() *[]Timer
 }
