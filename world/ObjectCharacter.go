@@ -157,6 +157,7 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 			o.currentAction = nil
 		}
 	}
+
 	// Find a new action if we have any pending commands.
 	if o.currentAction == nil {
 		calcDuration := func(base time.Duration, min time.Duration, reduction time.Duration) time.Duration {
@@ -166,6 +167,37 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 			}
 			return d
 		}
+		// FIXME: MOVE THIS
+		buildAttackAction := func(c OwnerAttackCommand) *ActionAttack {
+			base := 500 * time.Millisecond
+			duration := calcDuration(base, 20*time.Millisecond, time.Duration(o.speed)*time.Millisecond)
+			var y, x, z int
+			if c.Y != 0 || c.X != 0 || c.Z != 0 {
+				y = c.Y
+				x = c.X
+				z = c.Z
+			} else if c.Target == 0 {
+				h, w, d := o.GetDimensions()
+				if c.Direction == network.North {
+					z = -o.reach
+				} else if c.Direction == network.South {
+					z = o.reach + d
+				} else if c.Direction == network.East {
+					x = o.reach + w
+				} else if c.Direction == network.West {
+					x = -o.reach
+				} else if c.Direction == network.Up {
+					y = o.reach + h
+				} else if c.Direction == network.Down {
+					y = -o.reach
+				}
+				y = o.tile.Y + y
+				x = o.tile.X + x
+				z = o.tile.Z + z
+			}
+			return NewActionAttack(y, x, z, c.Target, duration)
+		}
+
 		// Always prioritize repeat commands.
 		if cmd := o.GetOwner().RepeatCommand(); cmd != nil {
 			cmd := cmd.(OwnerRepeatCommand)
@@ -187,10 +219,8 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 				o.currentAction = NewActionMove(c.Y, c.X, c.Z, duration, true)
 				o.currentActionDuration = 0 // TODO: Add remainder from last operation if possible.
 			case OwnerAttackCommand:
-				/*base := 500 * time.Millisecond
-				duration := calcDuration(base, 20*time.Millisecond, time.Duration(o.speed)*time.Millisecond)
-				o.currentAction = NewActionAttack(c, duration)
-				o.currentActionDuration = 0 // TODO: Add remainder from last operation if possible.*/
+				o.currentAction = buildAttackAction(c)
+				o.currentActionDuration = 0 // TODO: Add remainder from last operation if possible.
 			}
 		} else if o.GetOwner() != nil && o.GetOwner().HasCommands() {
 			cmd := o.GetOwner().ShiftCommand()
@@ -212,35 +242,7 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 				o.currentAction = NewActionMove(c.Y, c.X, c.Z, duration, false)
 				o.currentActionDuration = 0 // TODO: Add remainder from last operation if possible.
 			case OwnerAttackCommand:
-				base := 500 * time.Millisecond
-				duration := calcDuration(base, 20*time.Millisecond, time.Duration(o.speed)*time.Millisecond)
-				fmt.Println("Attacking with", c)
-				var y, x, z int
-				if c.Y != 0 || c.X != 0 || c.Z != 0 {
-					y = c.Y
-					x = c.X
-					z = c.Z
-				} else if c.Target == 0 {
-					h, w, d := o.GetDimensions()
-					if c.Direction == network.North {
-						z = -o.reach
-					} else if c.Direction == network.South {
-						z = o.reach + d
-					} else if c.Direction == network.East {
-						x = o.reach + w
-					} else if c.Direction == network.West {
-						x = -o.reach
-					} else if c.Direction == network.Up {
-						y = o.reach + h
-					} else if c.Direction == network.Down {
-						y = -o.reach
-					}
-					y = o.tile.Y + y
-					x = o.tile.X + x
-					z = o.tile.Z + z
-					fmt.Println("Our attack is", y, x, z)
-				}
-				o.currentAction = NewActionAttack(y, x, z, c.Target, duration)
+				o.currentAction = buildAttackAction(c)
 				o.currentActionDuration = 0 // TODO: Add remainder from last operation if possible.
 			case OwnerStatusCommand:
 				duration := calcDuration(200*time.Millisecond, 50*time.Millisecond, time.Duration(o.speed)*time.Millisecond)
