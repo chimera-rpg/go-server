@@ -3,6 +3,7 @@ package world
 import (
 	"errors"
 	"fmt"
+	"math"
 	"time"
 
 	cdata "github.com/chimera-rpg/go-common/data"
@@ -38,6 +39,7 @@ type ObjectCharacter struct {
 	shouldRecalculate bool
 	speed             int
 	health            int
+	reach             int
 }
 
 // NewObjectCharacter creates a new ObjectCharacter from the given archetype.
@@ -45,6 +47,7 @@ func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 	o = &ObjectCharacter{
 		Object:                 NewObject(a),
 		speedPenaltyMultiplier: 1,
+		reach:                  1,
 	}
 	*o.name = *a.Name
 	*o.level = a.Level
@@ -52,6 +55,7 @@ func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 	*o.attacktypes = a.AttackTypes
 	*o.attributes = a.Attributes
 	*o.competencies = a.Competencies
+	o.reach = int(a.Reach)
 	o.maxStamina = o.CalculateStamina()
 
 	// Create a new Owner AI if it is an NPC.
@@ -76,6 +80,7 @@ func NewObjectCharacterFromCharacter(c *data.Character, completeArchetype *data.
 		attacktypes:            &c.Archetype.AttackTypes,
 		attributes:             &c.Archetype.Attributes,
 		competencies:           &c.Archetype.Competencies,
+		reach:                  int(c.Archetype.Reach),
 		speedPenaltyMultiplier: 1,
 	}
 	o.AltArchetype = &c.Archetype
@@ -347,6 +352,45 @@ func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 	return false
 }
 
+func (o *ObjectCharacter) Attack(o2 ObjectI) {
+	t2 := o2.GetTile()
+	var ty, tx, tz int
+	ty = t2.Y
+	tx = t2.X
+	tz = t2.Z
+
+	distance := math.Sqrt(math.Pow(float64(ty-o.tile.Y), 2) + math.Pow(float64(tx-o.tile.X), 2) + math.Pow(float64(tz-o.tile.Z), 2))
+	if float64(o.reach) >= distance {
+		fmt.Println(o2, "is in reach")
+	} else {
+		fmt.Println(o2, "is not in reach")
+	}
+}
+
+func (o *ObjectCharacter) AttackTowards(y, x, z int) {
+	var ty, tx, tz int
+	if y < o.tile.Y {
+		ty = -o.reach
+	} else if y > o.tile.Y {
+		ty = o.reach
+	}
+	if x < o.tile.X {
+		tx = -o.reach
+	} else if x > o.tile.X {
+		tx = o.reach
+	}
+	if z < o.tile.Z {
+		tz = -o.reach
+	} else if z > o.tile.Z {
+		tz = o.reach
+	}
+
+	gmap := o.GetTile().GetMap()
+
+	tiles := gmap.ShootRay(o.tile.Y, o.tile.X, o.tile.Z, ty, tx, tz)
+	fmt.Println("TODO: Check results of ray", tiles)
+}
+
 // RollAttack rolls an attack with the given weapon.
 func (o *ObjectCharacter) RollAttack(w *ObjectWeapon) (a Attacks) {
 	//
@@ -434,6 +478,7 @@ func (o *ObjectCharacter) RestoreStamina() {
 func (o *ObjectCharacter) Recalculate() {
 	o.speed = o.CalculateSpeed()
 	o.health = o.CalculateHealth()
+	o.reach = o.CalculateReach()
 }
 
 // CalculateStamina calculates the maximum stamina based upon our attributes.
@@ -472,6 +517,19 @@ func (o *ObjectCharacter) CalculateHealth() int {
 	}
 	// Add from our own archetype.
 	result += int(o.AltArchetype.Attributes.Physical.GetHealthBonus())
+
+	return result
+}
+
+func (o *ObjectCharacter) CalculateReach() int {
+	result := 0
+
+	// Add any bonuses from our ancestry.
+	for _, a := range o.Archetype.ArchPointers {
+		result += int(a.Reach)
+	}
+	// Add from our own archetype.
+	result += int(o.AltArchetype.Reach)
 
 	return result
 }
