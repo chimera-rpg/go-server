@@ -97,6 +97,8 @@ type Archetype struct {
 	Resistances AttackTypes `yaml:"Resistances,omitempty"`
 	// AttackTypes represents the attack types of a weapon or a character.
 	AttackTypes AttackTypes `yaml:"AttackTypes,omitempty"`
+	// Reach represents how far this object can reach.
+	Reach uint8 `yaml:"Reach,omitempty"`
 	// Damage represents the damage of a weapon or otherwise.
 	Damage       *string `yaml:"Damage,omitempty"`
 	ChannelTime  uint16  `yaml:"ChannelTime,omitempty"`
