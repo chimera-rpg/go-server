@@ -500,6 +500,16 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 				c.Owner.GetCommandChannel() <- world.OwnerMoveCommand{Y: 1}
 			case network.Down:
 				c.Owner.GetCommandChannel() <- world.OwnerMoveCommand{Y: -1}
+			case network.Attack:
+				if v, ok := t.Data.(network.CommandAttack); ok {
+					c.Owner.GetCommandChannel() <- world.OwnerAttackCommand{
+						Y:         int(v.Y),
+						X:         int(v.X),
+						Z:         int(v.Z),
+						Direction: v.Direction,
+						Target:    v.Target,
+					}
+				}
 			case network.Wizard:
 				if c.user.Wizard {
 					c.Owner.GetCommandChannel() <- world.OwnerWizardCommand{}
@@ -533,6 +543,16 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 				c.Owner.GetCommandChannel() <- world.OwnerRepeatCommand{Command: world.OwnerMoveCommand{X: 1, Z: 1}, Cancel: t.Cancel}
 			case network.Southwest:
 				c.Owner.GetCommandChannel() <- world.OwnerRepeatCommand{Command: world.OwnerMoveCommand{X: -1, Z: 1}, Cancel: t.Cancel}
+			case network.Attack:
+				if v, ok := t.Data.(network.CommandAttack); ok {
+					c.Owner.GetCommandChannel() <- world.OwnerAttackCommand{
+						Y:         int(v.Y),
+						X:         int(v.X),
+						Z:         int(v.Z),
+						Direction: v.Direction,
+						Target:    v.Target,
+					}
+				}
 			}
 			c.log.WithFields(log.Fields{
 				"cmd": t,
