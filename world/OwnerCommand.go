@@ -22,6 +22,13 @@ type OwnerRepeatCommand struct {
 	Cancel  bool
 }
 
+// OwnerAttackCommand
+type OwnerAttackCommand struct {
+	Direction int
+	Y, X, Z   int
+	Target    ID
+}
+
 // OwnerClearCommand clears the owner's commands.
 type OwnerClearCommand struct{}
 
