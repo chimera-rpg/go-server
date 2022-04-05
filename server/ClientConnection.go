@@ -545,12 +545,15 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 				c.Owner.GetCommandChannel() <- world.OwnerRepeatCommand{Command: world.OwnerMoveCommand{X: -1, Z: 1}, Cancel: t.Cancel}
 			case network.Attack:
 				if v, ok := t.Data.(network.CommandAttack); ok {
-					c.Owner.GetCommandChannel() <- world.OwnerAttackCommand{
-						Y:         int(v.Y),
-						X:         int(v.X),
-						Z:         int(v.Z),
-						Direction: v.Direction,
-						Target:    v.Target,
+					c.Owner.GetCommandChannel() <- world.OwnerRepeatCommand{
+						Command: world.OwnerAttackCommand{
+							Y:         int(v.Y),
+							X:         int(v.X),
+							Z:         int(v.Z),
+							Direction: v.Direction,
+							Target:    v.Target,
+						},
+						Cancel: t.Cancel,
 					}
 				}
 			}
