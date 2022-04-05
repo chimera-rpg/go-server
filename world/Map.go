@@ -176,6 +176,46 @@ func (gmap *Map) Update(gm *World, delta time.Duration) error {
 				if _, err := a.object.GetTile().GetMap().MoveObject(a.object, a.y, a.x, a.z, false); err != nil {
 					log.Warn(err)
 				}
+			case *ActionAttack:
+				if a.Target != 0 {
+					o2 := gmap.world.GetObject(a.Target)
+					if o2 == nil {
+						log.Errorln("Attack request for missing object")
+						continue
+					}
+					if o2.GetTile().GetMap() != gmap {
+						log.Errorln("Attack request for object in different map")
+						continue
+					}
+					if o2.Attackable() {
+						switch attacker := a.object.(type) {
+						case *ObjectCharacter:
+							if attacker.Attack(o2) {
+								break
+							}
+						}
+					}
+				} else if a.Y != 0 || a.X != 0 || a.Z != 0 {
+					h, w, d := a.object.GetDimensions()
+					t := a.object.GetTile()
+					tiles := gmap.ShootRay(t.Y+h, t.X+w, t.Z+d, a.Y, a.X, a.Z)
+					objs := getUniqueObjectsInTiles(tiles)
+					// Ignore our own tile.
+					for _, o := range objs {
+						// Ignore ourself.
+						if o == a.object {
+							continue
+						}
+						if o.Attackable() {
+							switch attacker := a.object.(type) {
+							case *ObjectCharacter:
+								if attacker.Attack(o) {
+									break
+								}
+							}
+						}
+					}
+				}
 			case *ActionStatus:
 				a.object.SetStatus(a.status)
 			case *ActionSpawn:
@@ -760,9 +800,9 @@ func (gmap *Map) ShootRay(fromY, fromX, fromZ, toY, toX, toZ int) (tiles []*Tile
 		}
 		tile := gmap.GetTile(y, x, z)
 		tiles = append(tiles, tile)
-		if tile.opaque {
+		/*if tile.opaque {
 			break
-		}
+		}*/
 	}
 	return
 }
