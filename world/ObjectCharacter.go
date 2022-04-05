@@ -3,10 +3,10 @@ package world
 import (
 	"errors"
 	"fmt"
-	"math"
 	"time"
 
 	cdata "github.com/chimera-rpg/go-common/data"
+	"github.com/chimera-rpg/go-common/network"
 	"github.com/chimera-rpg/go-server/data"
 )
 
@@ -186,6 +186,11 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 				duration := calcDuration(base, 20*time.Millisecond, time.Duration(o.speed)*time.Millisecond)
 				o.currentAction = NewActionMove(c.Y, c.X, c.Z, duration, true)
 				o.currentActionDuration = 0 // TODO: Add remainder from last operation if possible.
+			case OwnerAttackCommand:
+				/*base := 500 * time.Millisecond
+				duration := calcDuration(base, 20*time.Millisecond, time.Duration(o.speed)*time.Millisecond)
+				o.currentAction = NewActionAttack(c, duration)
+				o.currentActionDuration = 0 // TODO: Add remainder from last operation if possible.*/
 			}
 		} else if o.GetOwner() != nil && o.GetOwner().HasCommands() {
 			cmd := o.GetOwner().ShiftCommand()
@@ -205,6 +210,37 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 				// Cap movement duration cost to a minimum of 20 millisecond
 				duration := calcDuration(base, 20*time.Millisecond, time.Duration(o.speed)*time.Millisecond)
 				o.currentAction = NewActionMove(c.Y, c.X, c.Z, duration, false)
+				o.currentActionDuration = 0 // TODO: Add remainder from last operation if possible.
+			case OwnerAttackCommand:
+				base := 500 * time.Millisecond
+				duration := calcDuration(base, 20*time.Millisecond, time.Duration(o.speed)*time.Millisecond)
+				fmt.Println("Attacking with", c)
+				var y, x, z int
+				if c.Y != 0 || c.X != 0 || c.Z != 0 {
+					y = c.Y
+					x = c.X
+					z = c.Z
+				} else if c.Target == 0 {
+					h, w, d := o.GetDimensions()
+					if c.Direction == network.North {
+						z = -o.reach
+					} else if c.Direction == network.South {
+						z = o.reach + d
+					} else if c.Direction == network.East {
+						x = o.reach + w
+					} else if c.Direction == network.West {
+						x = -o.reach
+					} else if c.Direction == network.Up {
+						y = o.reach + h
+					} else if c.Direction == network.Down {
+						y = -o.reach
+					}
+					y = o.tile.Y + y
+					x = o.tile.X + x
+					z = o.tile.Z + z
+					fmt.Println("Our attack is", y, x, z)
+				}
+				o.currentAction = NewActionAttack(y, x, z, c.Target, duration)
 				o.currentActionDuration = 0 // TODO: Add remainder from last operation if possible.
 			case OwnerStatusCommand:
 				duration := calcDuration(200*time.Millisecond, 50*time.Millisecond, time.Duration(o.speed)*time.Millisecond)
@@ -336,59 +372,58 @@ func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 		}
 		// TODO: If we're not invisible or very quiet, notify other creatures in a radius that we've cratered our legs.
 		return true
-		/*case EventSqueezing:
-			if o.GetOwner() != nil {
-				o.GetOwner().SendMessage("You are squeezing.")
-			}
-			return true
-		case EventUnsqueeze:
-			if o.GetOwner() != nil {
-				o.GetOwner().SendMessage("You are no longer squeezing.")
-			}
-			return true*/
+	/*case EventSqueezing:
+		if o.GetOwner() != nil {
+			o.GetOwner().SendMessage("You are squeezing.")
+		}
+		return true
+	case EventUnsqueeze:
+		if o.GetOwner() != nil {
+			o.GetOwner().SendMessage("You are no longer squeezing.")
+		}
+		return true*/
+	case *EventAttack:
+		fmt.Println("TODO: Send to owner, and maybe all nearby friendlies, the attack!")
 	}
 	// Resolve normal events.
 	o.Object.ResolveEvent(e)
 	return false
 }
 
-func (o *ObjectCharacter) Attack(o2 ObjectI) {
-	t2 := o2.GetTile()
-	var ty, tx, tz int
-	ty = t2.Y
-	tx = t2.X
-	tz = t2.Z
+func (o *ObjectCharacter) Attack(o2 ObjectI) bool {
+	//t2 := o2.GetTile()
 
-	distance := math.Sqrt(math.Pow(float64(ty-o.tile.Y), 2) + math.Pow(float64(tx-o.tile.X), 2) + math.Pow(float64(tz-o.tile.Z), 2))
-	if float64(o.reach) >= distance {
-		fmt.Println(o2, "is in reach")
-	} else {
-		fmt.Println(o2, "is not in reach")
-	}
-}
-
-func (o *ObjectCharacter) AttackTowards(y, x, z int) {
-	var ty, tx, tz int
-	if y < o.tile.Y {
-		ty = -o.reach
-	} else if y > o.tile.Y {
-		ty = o.reach
-	}
-	if x < o.tile.X {
-		tx = -o.reach
-	} else if x > o.tile.X {
-		tx = o.reach
-	}
-	if z < o.tile.Z {
-		tz = -o.reach
-	} else if z > o.tile.Z {
-		tz = o.reach
+	// FIXME: We should do a distance check, but it should be from the ideal facing edge.
+	//distance := o.GetDistance(t2.Y, t2.X, t2.Z)
+	//if float64(o.reach) >= distance {
+	// FIXME: o.Matter() should be the weapon instead, as well as any spells/abilities of the character!
+	if !o.Matter().Is(o2.Matter()) {
+		fmt.Println("Our matter does not effect their matter")
+		return false
 	}
 
-	gmap := o.GetTile().GetMap()
+	// TODO: Calculate base damage here!
+	e1 := &EventAttacking{
+		Target: o2,
+	}
+	o.ResolveEvent(e1)
 
-	tiles := gmap.ShootRay(o.tile.Y, o.tile.X, o.tile.Z, ty, tx, tz)
-	fmt.Println("TODO: Check results of ray", tiles)
+	// TODO: Reduce damage here!
+	e2 := &EventAttacked{
+		Attacker: o,
+	}
+	o2.ResolveEvent(e2)
+
+	// TODO: Actually apply damage here!
+	e3 := &EventAttack{
+		Target: o2,
+	}
+	o.ResolveEvent(e3)
+
+	//return true
+	//}
+
+	return false
 }
 
 // RollAttack rolls an attack with the given weapon.
@@ -522,7 +557,7 @@ func (o *ObjectCharacter) CalculateHealth() int {
 }
 
 func (o *ObjectCharacter) CalculateReach() int {
-	result := 0
+	result := 1
 
 	// Add any bonuses from our ancestry.
 	for _, a := range o.Archetype.ArchPointers {
@@ -602,4 +637,11 @@ func (o *ObjectCharacter) HandleObjectSound(audioID, soundID ID, o2 ObjectI, vol
 		o.GetOwner().SendSound(audioID, soundID, o2.GetID(), 0, 0, 0, volume)
 		// TODO: EventSound?
 	}
+}
+
+func (o *ObjectCharacter) Attackable() bool {
+	if o.health >= 0 {
+		return true
+	}
+	return false
 }
