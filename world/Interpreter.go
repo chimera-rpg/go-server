@@ -18,6 +18,9 @@ func SetupInterpreterTypes(interp *fast.Interp) {
 
 	// Concrete Types
 	interp.DeclType(interp.TypeOf(EventAdvance{}))
+	interp.DeclType(interp.TypeOf(EventAttacked{}))
+	interp.DeclType(interp.TypeOf(EventAttacking{}))
+	interp.DeclType(interp.TypeOf(EventAttack{}))
 	interp.DeclType(interp.TypeOf(EventBirth{}))
 	interp.DeclType(interp.TypeOf(EventDestroy{}))
 	interp.DeclType(interp.TypeOf(EventFall{}))
@@ -43,6 +46,7 @@ func SetupInterpreterTypes(interp *fast.Interp) {
 	interp.DeclType(interp.TypeOf(ObjectWeapon{}))
 
 	interp.DeclType(interp.TypeOf(ActionMove{}))
+	interp.DeclType(interp.TypeOf(ActionAttack{}))
 	interp.DeclType(interp.TypeOf(ActionSpawn{}))
 	interp.DeclType(interp.TypeOf(ActionStatus{}))
 
