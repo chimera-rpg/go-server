@@ -139,3 +139,21 @@ func (tile *Tile) updateBlocking() {
 		}
 	}
 }
+
+func getUniqueObjectsInTiles(tiles []*Tile) (objs []ObjectI) {
+	for _, t := range tiles {
+		for _, o := range t.objectParts {
+			exists := false
+			for _, o2 := range objs {
+				if o == o2 {
+					exists = true
+					break
+				}
+			}
+			if !exists {
+				objs = append(objs, o)
+			}
+		}
+	}
+	return
+}
