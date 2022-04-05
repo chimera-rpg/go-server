@@ -19,6 +19,7 @@ func (e EventAttacking) String() string {
 type EventAttacked struct {
 	Attacker ObjectI
 	// Damage
+	Prevented bool // Prevented flags the damage to not be applied, but still will notify the attacker of their damage.
 }
 
 // String returns a string representing the attack.

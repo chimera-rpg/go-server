@@ -413,8 +413,10 @@ func (o *ObjectCharacter) Attack(o2 ObjectI) bool {
 		Attacker: o,
 	}
 	o2.ResolveEvent(e2)
+	if !e2.Prevented {
+		// TODO: Apply e2.Damage to o2.
+	}
 
-	// TODO: Actually apply damage here!
 	e3 := &EventAttack{
 		Target: o2,
 	}
