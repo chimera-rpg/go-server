@@ -90,3 +90,22 @@ func (a *Attributes) GetSpeedBonus() AttributeValue {
 func (a *Attributes) GetHealthBonus() AttributeValue {
 	return a.Prowess*8 + a.Might*2
 }
+
+// GetAttributes gets the target attribute.
+func (a *Attributes) GetAttribute(w AttributeType) AttributeValue {
+	switch w {
+	case Might:
+		return a.Might
+	case Prowess:
+		return a.Prowess
+	case Focus:
+		return a.Focus
+	case Sense:
+		return a.Sense
+	case Haste:
+		return a.Haste
+	case Reaction:
+		return a.Reaction
+	}
+	return 0
+}
