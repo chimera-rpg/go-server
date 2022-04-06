@@ -16,6 +16,9 @@ import (
 	"github.com/jinzhu/copier"
 )
 
+// FIXME: This shouldn't be here. We want to have default melee fallback, though certain genera should have alternatives that use edged or similar.
+var HandToHandWeapon *ObjectWeapon
+
 // World contains and manages all map updating, loading, and otherwise.
 type World struct {
 	data              *data.Manager
@@ -39,6 +42,15 @@ func (w *World) Setup(manager *data.Manager) error {
 	w.LoadMap("Chamber of Origins")
 	// FIXME: Create a temporary dummy map
 	// Create a timer for doing cleanup.
+	if a, err := w.data.GetArchetypeByName("weapons/handtohand/striking"); err != nil {
+		log.Errorln("couldn't load striking archetype", err)
+	} else {
+		if o, err := w.CreateObjectFromArch(a); err != nil {
+			log.Errorln("couldn't load create striking object", err)
+		} else {
+			HandToHandWeapon = o.(*ObjectWeapon)
+		}
+	}
 
 	cleanupTicker := time.NewTicker(time.Second * 60)
 	go func() {
