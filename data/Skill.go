@@ -4,7 +4,7 @@ import "fmt"
 
 // Skill is a simple container for a skill's fields.
 type Skill struct {
-	Experience float64
+	Experience float64 `yaml:"Experience,omitempty"`
 }
 
 // SkillType is the type used to represent the skills used in Chimera.
