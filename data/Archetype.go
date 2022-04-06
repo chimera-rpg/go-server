@@ -93,6 +93,8 @@ type Archetype struct {
 	Resistances AttackTypes `yaml:"Resistances,omitempty"`
 	// AttackTypes represents the attack types of a weapon or a character.
 	AttackTypes AttackTypes `yaml:"AttackTypes,omitempty"`
+	//
+	DamageBonus AttributeSets `yaml:"DamageBonus,omitempty"`
 	// Reach represents how far this object can reach.
 	Reach      uint8 `yaml:"Reach,omitempty"`
 	Attackable bool  `yaml:"Attackable,omitempty"`
