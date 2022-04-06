@@ -150,13 +150,6 @@ func (m *Manager) ProcessArchetype(archetype *Archetype) error {
 		}
 	}
 
-	// Process Skills.
-	for i := range archetype.Skills {
-		if err := m.ProcessArchetype(&archetype.Skills[i]); err != nil {
-			return err
-		}
-	}
-
 	// Process Events' archetypes.
 	processEventResponses := func(e *EventResponses) error {
 		if e == nil {
@@ -233,13 +226,6 @@ func (m *Manager) CompileArchetype(archetype *Archetype) error {
 	// Ensure inventory is compiled.
 	for i := range archetype.Inventory {
 		if err := m.CompileArchetype(&archetype.Inventory[i]); err != nil {
-			return err
-		}
-	}
-
-	// Ensure skills are compiled.
-	for i := range archetype.Skills {
-		if err := m.CompileArchetype(&archetype.Skills[i]); err != nil {
 			return err
 		}
 	}

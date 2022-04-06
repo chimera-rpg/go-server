@@ -81,18 +81,14 @@ type Archetype struct {
 	Timers []ArchetypeTimer `yaml:"Timers,omitempty"`
 	//
 	Inventory []Archetype `yaml:"Inventory,omitempty"`
-	// Skill is the skill name that a skill archetype will target.
-	Skill SkillType `yaml:"Skill,omitempty"`
-	// Skills are the skills contained by a character.
-	Skills []Archetype `yaml:"Skills,omitempty"`
 	// SkillTypes correspond to the skills used by weapons and similar.
 	SkillTypes []SkillType `yaml:"SkillTypes,omitempty"`
 	// CompetencyTypes are the competency types of a weapon or armor.
 	CompetencyTypes []CompetencyType `yaml:"CompetencyTypes,omitempty"`
-	// Competencies are the associated competencies' values that a skill instance has.
+	// Skills are the skills levels contained by a character.
+	Skills map[SkillType]Skill `yaml:"Skills,omitempty"`
+	// Competencies are the associated competencies' values that a character has.
 	Competencies map[CompetencyType]Competency `yaml:"Competencies,omitempty"`
-	// TrainsCompetencyTypes are the competencies that a skill will train even if only one in a group is being trained.
-	TrainsCompetencyTypes map[CompetencyType][]CompetencyType `yaml:"TrainsCompetencyTypes,omitempty"`
 	// Resistances represents the attack type resistances of armor or a character.
 	Resistances AttackTypes `yaml:"Resistances,omitempty"`
 	// AttackTypes represents the attack types of a weapon or a character.
@@ -101,15 +97,15 @@ type Archetype struct {
 	Reach      uint8 `yaml:"Reach,omitempty"`
 	Attackable bool  `yaml:"Attackable,omitempty"`
 	// Damage represents the damage of a weapon or otherwise.
-	Damage       *string `yaml:"Damage,omitempty"`
+	Damage       float64 `yaml:"Damage,omitempty"`
 	ChannelTime  uint16  `yaml:"ChannelTime,omitempty"`
 	RecoveryTime uint16  `yaml:"RecoveryTime,omitempty"`
 	// Level represents the level of a skill or character.
 	Level int `yaml:"Level,omitempty"`
 	// Advancement represents the advancement of a skill or a character into the next level.
-	Advancement float32 `yaml:"Advancement,omitempty"`
+	Advancement float64 `yaml:"Advancement,omitempty"`
 	// Efficiency represents the current efficiency of a skill.
-	Efficiency float32 `yaml:"Efficiency,omitempty"`
+	Efficiency float64 `yaml:"Efficiency,omitempty"`
 	//
 	Attributes AttributeSets `yaml:"Attributes,omitempty"`
 	// Hmm
@@ -194,15 +190,13 @@ func (arch *Archetype) Add(other *Archetype) error {
 	for _, o := range other.Inventory {
 		arch.Inventory = append(arch.Inventory, o)
 	}
-	for _, o := range other.Skills {
-		exists := false
-		for _, s := range arch.Skills {
-			if o.Skill == s.Skill {
-				exists = true
-			}
-		}
-		if !exists {
-			arch.Skills = append(arch.Skills, o)
+	for k, v := range other.Skills {
+		v2, ok := arch.Skills[k]
+		if ok {
+			v2.Experience += v.Experience
+			arch.Skills[k] = v2
+		} else {
+			arch.Skills[k] = v
 		}
 	}
 	for _, o := range other.SkillTypes {
@@ -230,28 +224,11 @@ func (arch *Archetype) Add(other *Archetype) error {
 		}
 	}
 	for k, v := range other.Competencies {
-		if _, exists := arch.Competencies[k]; !exists {
+		if v2, exists := arch.Competencies[k]; !exists {
 			arch.Competencies[k] = v
 		} else {
-			arch.Competencies[k] += other.Competencies[k]
-		}
-	}
-	for k, v := range other.TrainsCompetencyTypes {
-		if types, exists := arch.TrainsCompetencyTypes[k]; !exists {
-			arch.TrainsCompetencyTypes[k] = append([]CompetencyType(nil), v...)
-		} else {
-			for _, o := range v {
-				exists = false
-				for _, tv := range types {
-					if o == tv {
-						exists = true
-						break
-					}
-				}
-				if !exists {
-					arch.TrainsCompetencyTypes[k] = append(arch.TrainsCompetencyTypes[k], o)
-				}
-			}
+			v2.Efficiency += v.Efficiency
+			arch.Competencies[k] = v2
 		}
 	}
 
@@ -260,6 +237,8 @@ func (arch *Archetype) Add(other *Archetype) error {
 	arch.Level += other.Level
 	arch.Advancement += other.Advancement
 	arch.Efficiency += other.Efficiency
+
+	arch.Damage += other.Damage
 
 	arch.Attributes.Physical.Add(other.Attributes.Physical)
 	arch.Attributes.Arcane.Add(other.Attributes.Arcane)

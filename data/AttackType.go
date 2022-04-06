@@ -75,18 +75,18 @@ var AttackTypeToStringMap = map[AttackType]string{
 }
 
 // AttackTypes is a map of AttackTypes to floats.
-type AttackTypes map[AttackType]float32
+type AttackTypes map[AttackType]float64
 
 // UnmarshalYAML unmarshals, converting attack type strings into AttackTypes.
 func (a *AttackTypes) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	*a = make(AttackTypes)
-	var value map[string]float32
+	var value map[string]float64
 	if err := unmarshal(&value); err != nil {
 		return err
 	}
 	for k, v := range value {
 		if ak, ok := StringToAttackTypeMap[k]; ok {
-			map[AttackType]float32(*a)[ak] = v / 100
+			map[AttackType]float64(*a)[ak] = v / 100
 		}
 	}
 	return nil
@@ -94,7 +94,7 @@ func (a *AttackTypes) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 // MarshalYAML marshals, converting AttackTypes into strings.
 func (a AttackTypes) MarshalYAML() (interface{}, error) {
-	r := make(map[string]float32)
+	r := make(map[string]float64)
 	for k, v := range a {
 		if sk, ok := AttackTypeToStringMap[k]; ok {
 			r[sk] = v * 100
