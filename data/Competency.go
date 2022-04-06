@@ -2,7 +2,7 @@ package data
 
 import "fmt"
 
-// Competency is the floating value of competency for a competency type.
+// Competency is the floating value of competency for a competency type. These range from 0 to 100.
 type Competency float32
 
 // CompetencyType is a type for a given competency.
@@ -10,9 +10,11 @@ type CompetencyType uint32
 
 // These are the various competency types within chimera.
 const (
-	Incompetency CompetencyType = 0
+	//Incompetency CompetencyType = 0
+	Incompetency CompetencyType = iota
 	// Weapon styles
-	AxesCompetency = 1 << iota
+	//AxesCompetency = 1 << iota
+	AxesCompetency
 	HammersCompetency
 	DaggersCompetency
 	SwordsCompetency
@@ -46,6 +48,11 @@ const (
 	CurseCompetency
 	ProtectCompetency
 	WeakenCompetency
+	// Other
+	DodgeCompetency
+	LightArmorCompetency
+	MediumArmorCompetency
+	HeavyArmorCompetency
 )
 
 // StringToCompetencyMap maps strings to their corresponding CompetencyTypes.
@@ -85,6 +92,11 @@ var StringToCompetencyMap = map[string]CompetencyType{
 	"Curse":   CurseCompetency,
 	"Protect": ProtectCompetency,
 	"Weaken":  WeakenCompetency,
+	//
+	"Dodge":        DodgeCompetency,
+	"Light Armor":  LightArmorCompetency,
+	"Medium Armor": MediumArmorCompetency,
+	"Heavy Armor":  HeavyArmorCompetency,
 }
 
 // CompetencyToStringMap maps CompetencyTypes to their corresponding string.
@@ -125,6 +137,11 @@ var CompetencyToStringMap = map[CompetencyType]string{
 	CurseCompetency:   "Curse",
 	ProtectCompetency: "Protect",
 	WeakenCompetency:  "Weaken",
+	//
+	DodgeCompetency:       "Dodge",
+	LightArmorCompetency:  "Light Armor",
+	MediumArmorCompetency: "Medium Armor",
+	HeavyArmorCompetency:  "Heavy Armor",
 }
 
 // UnmarshalYAML unmarshals an ArchetypeType from a string.

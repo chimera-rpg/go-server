@@ -87,7 +87,7 @@ type Archetype struct {
 	Skills []Archetype `yaml:"Skills,omitempty"`
 	// SkillTypes correspond to the skills used by weapons and similar.
 	SkillTypes []SkillType `yaml:"SkillTypes,omitempty"`
-	// CompetencyTypes are the competency types of a weapon.
+	// CompetencyTypes are the competency types of a weapon or armor.
 	CompetencyTypes []CompetencyType `yaml:"CompetencyTypes,omitempty"`
 	// Competencies are the associated competencies' values that a skill instance has.
 	Competencies map[CompetencyType]Competency `yaml:"Competencies,omitempty"`

@@ -13,6 +13,8 @@ const (
 	RangedCombat
 	SpiritSkill
 	ArcaneSkill
+	DodgeSkill
+	ArmorSkill
 )
 
 // StringToSkillTypeMap is a map of strings to their corresponding SkillTypes.
@@ -23,6 +25,8 @@ var StringToSkillTypeMap = map[string]SkillType{
 	"Ranged Combat": RangedCombat,
 	"Spirit":        SpiritSkill,
 	"Arcane":        ArcaneSkill,
+	"Dodge":         DodgeSkill,
+	"Armor":         ArmorSkill,
 }
 
 // SkillTypeToStringMap is a map of SkillTypes to their corresponding strings.
@@ -33,6 +37,8 @@ var SkillTypeToStringMap = map[SkillType]string{
 	RangedCombat: "Ranged Combat",
 	SpiritSkill:  "Spirit",
 	ArcaneSkill:  "Arcane",
+	DodgeSkill:   "Dodge",
+	ArmorSkill:   "Armor",
 }
 
 // UnmarshalYAML unmarshals an SkillType from a string.
