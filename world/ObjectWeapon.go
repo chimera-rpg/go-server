@@ -33,7 +33,7 @@ func (o *ObjectWeapon) getType() cdata.ArchetypeType {
 	return cdata.ArchetypeWeapon
 }
 
-func (o *ObjectWeapon) GetDamages(skills map[data.SkillType]data.Skill, competencies map[data.CompetencyType]data.Competency) (damages []Damage, err error) {
+func (o *ObjectWeapon) GetDamages(skills map[data.SkillType]data.Skill, competencies map[data.CompetencyType]data.Competency, attributes *data.AttributeSets) (damages []Damage, err error) {
 	base := o.Archetype.Damage
 	// Multiply by the weapon's skills
 	totalSkill := 0.0
@@ -65,20 +65,19 @@ func (o *ObjectWeapon) GetDamages(skills map[data.SkillType]data.Skill, competen
 	totalCompetency /= float64(totalCompetencyCount)
 	totalCompetency = 0.5 + totalCompetency/2
 
-	// FIXME: It seems a bit much to have so much bonus from skill... hmm.
-	for k, d := range o.Archetype.AttackTypes {
-		if k == data.Physical {
-			damages = append(damages, Damage{
-				AttackType: k,
-				Value:      base * (d / 100) * (totalSkill * totalCompetency),
-			})
-		} else {
-			damages = append(damages, Damage{
-				AttackType: k,
-				Value:      base * (d / 100),
-			})
+	for k, a := range o.Archetype.AttackTypes {
+		damage := Damage{
+			AttackType: k,
+			BaseDamage: base,
+			Competency: totalCompetency,
+			Skill:      totalSkill,
+			//Value:      base * (d / 100) * (totalSkill * totalCompetency),
 		}
+		for k2, d := range a {
+			damage.AttackStyles[k2] = d
+		}
+		damages = append(damages, damage)
 	}
 
-	return []Damage{}, nil
+	return damages, nil
 }
