@@ -93,15 +93,13 @@ type Archetype struct {
 	Resistances AttackTypes `yaml:"Resistances,omitempty"`
 	// AttackTypes represents the attack types of a weapon or a character.
 	AttackTypes AttackTypes `yaml:"AttackTypes,omitempty"`
-	//
-	DamageBonus AttributeSets `yaml:"DamageBonus,omitempty"`
 	// Reach represents how far this object can reach.
 	Reach      uint8 `yaml:"Reach,omitempty"`
 	Attackable bool  `yaml:"Attackable,omitempty"`
 	// Damage represents the damage of a weapon or otherwise.
-	Damage       float64 `yaml:"Damage,omitempty"`
-	ChannelTime  uint16  `yaml:"ChannelTime,omitempty"`
-	RecoveryTime uint16  `yaml:"RecoveryTime,omitempty"`
+	Damage       Damage `yaml:"Damage,omitempty"`
+	ChannelTime  uint16 `yaml:"ChannelTime,omitempty"`
+	RecoveryTime uint16 `yaml:"RecoveryTime,omitempty"`
 	// Level represents the level of a skill or character.
 	Level int `yaml:"Level,omitempty"`
 	// Advancement represents the advancement of a skill or a character into the next level.
@@ -240,7 +238,7 @@ func (arch *Archetype) Add(other *Archetype) error {
 	arch.Advancement += other.Advancement
 	arch.Efficiency += other.Efficiency
 
-	arch.Damage += other.Damage
+	arch.Damage.Add(other.Damage)
 
 	arch.Attributes.Physical.Add(other.Attributes.Physical)
 	arch.Attributes.Arcane.Add(other.Attributes.Arcane)
