@@ -3,6 +3,7 @@ package world
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	cdata "github.com/chimera-rpg/go-common/data"
@@ -35,6 +36,8 @@ type ObjectCharacter struct {
 	maxStamina             int
 	currentAction          ActionI
 	speedPenaltyMultiplier int // The speed penalty multiplier, for status penalties to action duration costs.
+	//
+	damages []Damages
 	//
 	shouldRecalculate bool
 	speed             int
@@ -385,7 +388,12 @@ func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 		}
 		return true*/
 	case *EventAttack:
-		fmt.Println("TODO: Send to owner, and maybe all nearby friendlies, the attack!")
+		var damageStrings []string
+		for _, d := range e.Damages {
+			damageStrings = append(damageStrings, d.String())
+		}
+		o.GetOwner().SendMessage(fmt.Sprintf("You attack for %s", strings.Join(damageStrings, ", ")))
+		// TODO: Send the calculated damage values (total, styles, attributes) to the client! Also send to nearby owners(?)
 	}
 	// Resolve normal events.
 	o.Object.ResolveEvent(e)
@@ -404,15 +412,23 @@ func (o *ObjectCharacter) Attack(o2 ObjectI) bool {
 		return false
 	}
 
+	// Clone our precalculated normal damages so they can be modified.
+	var damages []Damages
+	for _, d := range o.damages {
+		damages = append(damages, d.Clone())
+	}
+
 	// TODO: Calculate base damage here!
 	e1 := &EventAttacking{
-		Target: o2,
+		Target:  o2,
+		Damages: damages,
 	}
 	o.ResolveEvent(e1)
 
 	// TODO: Reduce damage here!
 	e2 := &EventAttacked{
 		Attacker: o,
+		Damages:  damages,
 	}
 	o2.ResolveEvent(e2)
 	if !e2.Prevented {
@@ -420,7 +436,8 @@ func (o *ObjectCharacter) Attack(o2 ObjectI) bool {
 	}
 
 	e3 := &EventAttack{
-		Target: o2,
+		Target:  o2,
+		Damages: damages,
 	}
 	o.ResolveEvent(e3)
 
@@ -470,6 +487,8 @@ func (o *ObjectCharacter) EquipObject(ob ObjectI) error {
 		o.equipment = append(o.equipment, o.inventory[index])
 		o.inventory = append(o.inventory[:index], o.inventory[index+1:]...)
 	}
+
+	o.shouldRecalculate = true
 	return err
 }
 
@@ -518,6 +537,7 @@ func (o *ObjectCharacter) Recalculate() {
 	o.speed = o.CalculateSpeed()
 	o.health = o.CalculateHealth()
 	o.reach = o.CalculateReach()
+	o.damages = o.CalculateDamages()
 }
 
 // CalculateStamina calculates the maximum stamina based upon our attributes.
@@ -571,6 +591,33 @@ func (o *ObjectCharacter) CalculateReach() int {
 	result += int(o.AltArchetype.Reach)
 
 	return result
+}
+
+func (o *ObjectCharacter) CalculateDamages() []Damages {
+	// Get our current weapon(s).
+	var weapons []*ObjectWeapon
+	for _, e := range o.equipment {
+		switch e := e.(type) {
+		case *ObjectWeapon:
+			weapons = append(weapons, e)
+		}
+	}
+	// If we have no weapons, default to PUNCH.
+	if len(weapons) == 0 {
+		weapons = append(weapons, HandToHandWeapon)
+	}
+
+	var damages []Damages
+	for _, w := range weapons {
+		dmg, err := GetDamages(w, o)
+		if err != nil {
+			o.GetOwner().SendMessage(err.Error())
+			continue
+		}
+		damages = append(damages, dmg)
+	}
+
+	return damages
 }
 
 // GetAttributeValue gets the calculated value for a given attribute.

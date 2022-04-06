@@ -97,9 +97,9 @@ type Archetype struct {
 	Reach      uint8 `yaml:"Reach,omitempty"`
 	Attackable bool  `yaml:"Attackable,omitempty"`
 	// Damage represents the damage of a weapon or otherwise.
-	Damage       Damage `yaml:"Damage,omitempty"`
-	ChannelTime  uint16 `yaml:"ChannelTime,omitempty"`
-	RecoveryTime uint16 `yaml:"RecoveryTime,omitempty"`
+	Damage       *Damage `yaml:"Damage,omitempty"`
+	ChannelTime  uint16  `yaml:"ChannelTime,omitempty"`
+	RecoveryTime uint16  `yaml:"RecoveryTime,omitempty"`
 	// Level represents the level of a skill or character.
 	Level int `yaml:"Level,omitempty"`
 	// Advancement represents the advancement of a skill or a character into the next level.
@@ -238,6 +238,9 @@ func (arch *Archetype) Add(other *Archetype) error {
 	arch.Advancement += other.Advancement
 	arch.Efficiency += other.Efficiency
 
+	if arch.Damage == nil {
+		arch.Damage = &Damage{}
+	}
 	arch.Damage.Add(other.Damage)
 
 	arch.Attributes.Physical.Add(other.Attributes.Physical)

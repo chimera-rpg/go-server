@@ -1,7 +1,8 @@
 package world
 
 import (
-	"errors"
+	"fmt"
+	"math"
 
 	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-server/data"
@@ -33,6 +34,22 @@ func (o *ObjectWeapon) getType() cdata.ArchetypeType {
 	return cdata.ArchetypeWeapon
 }
 
+type MissingSkillError struct {
+	skillType data.SkillType
+}
+
+func (e *MissingSkillError) Error() string {
+	return fmt.Sprintf("missing skill \"%s\"", data.SkillTypeToStringMap[e.skillType])
+}
+
+type MissingCompetencyError struct {
+	competencyType data.CompetencyType
+}
+
+func (e *MissingCompetencyError) Error() string {
+	return fmt.Sprintf("missing competency \"%s\"", data.CompetencyToStringMap[e.competencyType])
+}
+
 func GetDamages(w *ObjectWeapon, c *ObjectCharacter) (damages []Damage, err error) {
 	base := w.Archetype.Damage
 	// Multiply by the weapon's skills
@@ -42,10 +59,9 @@ func GetDamages(w *ObjectWeapon, c *ObjectCharacter) (damages []Damage, err erro
 		v, ok := c.Archetype.Skills[s]
 		if !ok {
 			// No skill, we cannot process!
-			return nil, errors.New("missing skill " + data.SkillTypeToStringMap[s])
+			return nil, &MissingSkillError{s}
 		}
-		// FIXME: This should according to leveling table, not "experience".
-		totalSkill += v.Experience
+		totalSkill += math.Floor(v.Experience)
 		totalSkillCount++
 	}
 	totalSkill /= float64(totalSkillCount)
@@ -57,7 +73,7 @@ func GetDamages(w *ObjectWeapon, c *ObjectCharacter) (damages []Damage, err erro
 		v, ok := c.Archetype.Competencies[ct]
 		if !ok {
 			// No competency, we cannot process!
-			return nil, errors.New("missing competency " + data.CompetencyToStringMap[ct])
+			return nil, &MissingCompetencyError{ct}
 		}
 		totalCompetency += v.Efficiency
 		totalCompetencyCount++
@@ -68,10 +84,8 @@ func GetDamages(w *ObjectWeapon, c *ObjectCharacter) (damages []Damage, err erro
 	for k, a := range w.Archetype.AttackTypes {
 		damage := Damage{
 			AttackType: k,
-			//BaseDamage: float64(base.Value),
-			//Competency: totalCompetency,
-			//Skill:      totalSkill,
-			//Value:      base * (d / 100) * (totalSkill * totalCompetency),
+			Styles:     make(map[data.AttackStyle]float64),
+			BaseDamage: float64(base.Value),
 		}
 
 		// Calculate bonus damage.
@@ -92,7 +106,7 @@ func GetDamages(w *ObjectWeapon, c *ObjectCharacter) (damages []Damage, err erro
 
 		// Calculate attack style damage.
 		for k2, d := range a {
-			damage.StyleDamages[k2] = float64(base.Value) * d * (totalSkill * totalCompetency)
+			damage.Styles[k2] = d * (totalSkill * totalCompetency)
 		}
 
 		damages = append(damages, damage)

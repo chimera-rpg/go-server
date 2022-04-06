@@ -6,8 +6,8 @@ import (
 
 // EventAttack is emitted when an object is attacking another.
 type EventAttacking struct {
-	Target ObjectI
-	// Damage
+	Target  ObjectI
+	Damages []Damages
 }
 
 // String returns a string representing the attack.
@@ -17,9 +17,9 @@ func (e EventAttacking) String() string {
 
 // EventAttacked is emitted when an object is attacked.
 type EventAttacked struct {
-	Attacker ObjectI
-	// Damage
+	Attacker  ObjectI
 	Prevented bool // Prevented flags the damage to not be applied, but still will notify the attacker of their damage.
+	Damages   []Damages
 }
 
 // String returns a string representing the attack.
@@ -29,8 +29,8 @@ func (e EventAttacked) String() string {
 
 // EventAttack is emitted when an object attacks another.
 type EventAttack struct {
-	Target ObjectI
-	// Damage
+	Target  ObjectI
+	Damages []Damages
 }
 
 // String returns a string representing the attack.
