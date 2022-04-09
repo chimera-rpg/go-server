@@ -419,22 +419,26 @@ func (o *ObjectCharacter) Attack(o2 ObjectI) bool {
 		damages = append(damages, d.Clone())
 	}
 
+	// Send the attacking event to the attacker.
 	e1 := &EventAttacking{
 		Target:  o2,
 		Damages: damages,
 	}
 	o.ResolveEvent(e1)
 
-	// Reduce damage by the target's armor.
-	var armor Armors
+	// Get our object's base resistances, then merge with any object-specific armors.
+	armor := (o2.Resistances()).Clone()
 	switch o2 := o2.(type) {
 	case *ObjectCharacter:
-		armor = o2.armor
+		armor.Merge(o2.armor)
 	}
+
+	// Reduce the damages.
 	for _, d := range damages {
 		armor.Reduce(&d)
 	}
 
+	// Send the attacked event to the defender.
 	e2 := &EventAttacked{
 		Attacker: o,
 		Armor:    armor,
@@ -442,17 +446,15 @@ func (o *ObjectCharacter) Attack(o2 ObjectI) bool {
 	}
 	o2.ResolveEvent(e2)
 	if !e2.Prevented {
-		// TODO: Apply e2.Damage to o2.
+		fmt.Println("TODO: Apply damages: ", e2.Damages)
 	}
 
+	// Send the attack event to the attacker.
 	e3 := &EventAttack{
 		Target:  o2,
 		Damages: damages,
 	}
 	o.ResolveEvent(e3)
-
-	//return true
-	//}
 
 	return false
 }
