@@ -394,6 +394,17 @@ func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 			damageStrings = append(damageStrings, d.String())
 		}
 		o.GetOwner().SendMessage(fmt.Sprintf("You attack for %s", strings.Join(damageStrings, ", ")))
+		for _, ds := range e.Damages {
+			dr := ds.Result()
+			for _, d := range dr {
+				o.GetOwner().SendCommand(network.CommandDamage{
+					Target:          e.Target.GetID(),
+					Type:            d.AttackType,
+					AttributeDamage: d.AttributeDamage,
+					StyleDamage:     d.Styles,
+				})
+			}
+		}
 		// TODO: Send the calculated damage values (total, styles, attributes) to the client! Also send to nearby owners(?)
 	}
 	// Resolve normal events.
