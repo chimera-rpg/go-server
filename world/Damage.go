@@ -12,6 +12,7 @@ type Damage struct {
 	BaseDamage      float64
 	AttributeDamage float64
 	Styles          map[data.AttackStyle]float64
+	StyleTotal      float64
 }
 
 type Damages []Damage
@@ -19,10 +20,13 @@ type Damages []Damage
 func (ds *Damages) Total() (total float64) {
 	for _, d := range *ds {
 		styleDamages := 0.0
+		attributeDamages := 0.0
 		for _, s := range d.Styles {
 			styleDamages += d.BaseDamage * s
+			attributeDamages += d.AttributeDamage * s / d.StyleTotal
 		}
 		total += styleDamages
+		total += attributeDamages
 	}
 	return total
 }
@@ -32,11 +36,14 @@ func (ds *Damages) String() string {
 	var total float64
 	for _, d := range *ds {
 		styleDamages := 0.0
+		attributeDamages := 0.0
 		for k, s := range d.Styles {
 			styleStrings = append(styleStrings, fmt.Sprintf("%.1f %s", d.BaseDamage*s, data.AttackStyleToStringMap[k]))
 			styleDamages += d.BaseDamage * s
+			attributeDamages += d.AttributeDamage * s / d.StyleTotal
 		}
 		total += styleDamages
+		total += attributeDamages
 	}
 	return fmt.Sprintf("%.1f (%s)", total, strings.Join(styleStrings, ", "))
 }
@@ -48,6 +55,7 @@ func (ds *Damages) Clone() (ds2 Damages) {
 			BaseDamage:      d.BaseDamage,
 			AttributeDamage: d.AttributeDamage,
 			Styles:          make(map[data.AttackStyle]float64),
+			StyleTotal:      d.StyleTotal,
 		}
 		for k, v := range d.Styles {
 			d2.Styles[k] = v

@@ -50,7 +50,7 @@ func (e *MissingCompetencyError) Error() string {
 	return fmt.Sprintf("missing competency \"%s\"", data.CompetencyToStringMap[e.competencyType])
 }
 
-func GetDamages(w *ObjectWeapon, c *ObjectCharacter) (damages []Damage, err error) {
+func GetDamages(w *ObjectWeapon, c *ObjectCharacter) (damages Damages, err error) {
 	base := w.Archetype.Damage
 	// Multiply by the weapon's skills
 	totalSkill := 0.0
@@ -107,6 +107,7 @@ func GetDamages(w *ObjectWeapon, c *ObjectCharacter) (damages []Damage, err erro
 		// Calculate attack style damage.
 		for k2, d := range a {
 			damage.Styles[k2] = d * (totalSkill * totalCompetency)
+			damage.StyleTotal += damage.Styles[k2]
 		}
 
 		damages = append(damages, damage)
