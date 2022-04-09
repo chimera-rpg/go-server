@@ -391,6 +391,16 @@ func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 			o.GetOwner().SendMessage("You are no longer squeezing.")
 		}
 		return true*/
+	case *EventAttacked:
+		if e.Dodged {
+			o.GetOwner().SendMessage(fmt.Sprintf("You dodge %s's attack", e.Attacker.Name()))
+		} else {
+			var damageStrings []string
+			for _, d := range e.Damages {
+				damageStrings = append(damageStrings, d.String())
+			}
+			o.GetOwner().SendMessage(fmt.Sprintf("%s attacks you for %s", e.Attacker.Name(), strings.Join(damageStrings, ", ")))
+		}
 	case *EventAttack:
 		if e.Dodged {
 			o.GetOwner().SendMessage(fmt.Sprintf("%s dodges", e.Target.Name()))
