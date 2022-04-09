@@ -392,20 +392,24 @@ func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 		}
 		return true*/
 	case *EventAttack:
-		var damageStrings []string
-		for _, d := range e.Damages {
-			damageStrings = append(damageStrings, d.String())
-		}
-		o.GetOwner().SendMessage(fmt.Sprintf("You attack for %s", strings.Join(damageStrings, ", ")))
-		for _, ds := range e.Damages {
-			dr := ds.Result()
-			for _, d := range dr {
-				o.GetOwner().SendCommand(network.CommandDamage{
-					Target:          e.Target.GetID(),
-					Type:            d.AttackType,
-					AttributeDamage: d.AttributeDamage,
-					StyleDamage:     d.Styles,
-				})
+		if e.Dodged {
+			o.GetOwner().SendMessage(fmt.Sprintf("%s dodges", e.Target.Name()))
+		} else {
+			var damageStrings []string
+			for _, d := range e.Damages {
+				damageStrings = append(damageStrings, d.String())
+			}
+			o.GetOwner().SendMessage(fmt.Sprintf("You attack for %s", strings.Join(damageStrings, ", ")))
+			for _, ds := range e.Damages {
+				dr := ds.Result()
+				for _, d := range dr {
+					o.GetOwner().SendCommand(network.CommandDamage{
+						Target:          e.Target.GetID(),
+						Type:            d.AttackType,
+						AttributeDamage: d.AttributeDamage,
+						StyleDamage:     d.Styles,
+					})
+				}
 			}
 		}
 	}
@@ -650,7 +654,9 @@ func (o *ObjectCharacter) CalculateDamages() []Damages {
 	for _, w := range weapons {
 		dmg, err := GetDamages(w, o)
 		if err != nil {
-			o.GetOwner().SendMessage(err.Error())
+			if o.GetOwner() != nil {
+				o.GetOwner().SendMessage(err.Error())
+			}
 			continue
 		}
 		damages = append(damages, dmg)
