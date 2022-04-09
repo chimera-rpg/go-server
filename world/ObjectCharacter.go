@@ -3,6 +3,7 @@ package world
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -39,6 +40,7 @@ type ObjectCharacter struct {
 	//
 	damages []Damages
 	armor   Armors
+	dodge   float64
 	//
 	shouldRecalculate bool
 	speed             int
@@ -561,6 +563,7 @@ func (o *ObjectCharacter) Recalculate() {
 	o.reach = o.CalculateReach()
 	o.damages = o.CalculateDamages()
 	o.armor = o.CalculateArmor()
+	o.dodge = o.CalculateDodge()
 }
 
 // CalculateStamina calculates the maximum stamina based upon our attributes.
@@ -661,6 +664,38 @@ func (o *ObjectCharacter) CalculateArmor() (armors Armors) {
 		}
 		armors = armor
 	}
+	return
+}
+
+func (o *ObjectCharacter) CalculateDodge() (dodge float64) {
+	// Get our base dodge skill
+	if d, ok := o.Archetype.Skills[data.DodgeSkill]; ok {
+		if c, ok := o.Archetype.Competencies[data.DodgeCompetency]; ok {
+			dodge = math.Floor(d.Experience) * c.Efficiency
+		}
+	}
+	// FIXME: Dodge should be acquired for physical, arcane, and spirit!
+	// Add flat Reaction value.
+	dodge += float64(o.Archetype.Attributes.Physical.GetAttribute(data.Reaction))
+	dodge *= 0.0075 // Scale to 0.75% per unit.
+
+	// Get our current worn armor value.
+	var armor *ObjectArmor
+	for _, e := range o.equipment {
+		switch e := e.(type) {
+		case *ObjectArmor:
+			armor = e
+			break
+		}
+	}
+
+	// Reduce dodge based upon our armor if worn, or gain a 20% dodge bonus if the character is not wearing armor.
+	if armor != nil && armor.Archetype.Armor > 0 {
+		dodge *= 1 - armor.Archetype.Armor
+	} else {
+		dodge += 0.2
+	}
+
 	return
 }
 
