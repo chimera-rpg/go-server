@@ -405,7 +405,6 @@ func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 				})
 			}
 		}
-		// TODO: Send the calculated damage values (total, styles, attributes) to the client! Also send to nearby owners(?)
 	}
 	// Resolve normal events.
 	o.Object.ResolveEvent(e)
