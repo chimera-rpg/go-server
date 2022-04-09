@@ -31,11 +31,11 @@ func (ds *Damages) Total() (total float64) {
 	return total
 }
 
-func (ds *Damages) String() string {
+func (ds Damages) String() string {
 	var styleStrings []string
 	var total float64
 	var totalAttributes float64
-	for _, d := range *ds {
+	for _, d := range ds {
 		styleDamages := 0.0
 		attributeDamages := 0.0
 		for k, s := range d.Styles {
