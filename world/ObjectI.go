@@ -43,4 +43,6 @@ type ObjectI interface {
 	//
 	Updates() bool
 	Timers() *[]Timer
+	//
+	Resistances() Armors
 }

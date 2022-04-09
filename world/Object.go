@@ -29,7 +29,8 @@ type Object struct {
 	actions    int // Actions are the amount of actions that a player can take within 1 second
 	maxActions int // Max actions are the amount of actions that a player can take within 1 second.
 	//
-	attackable bool
+	attackable  bool
+	resistances Armors // resistances are inherit resistances that the object has.
 	//
 	timers []Timer
 }
@@ -41,6 +42,7 @@ func NewObject(a *data.Archetype) Object {
 		Archetype: a,
 	}
 	o.attackable = a.Attackable
+	o.CalculateResistances()
 
 	o.addTimers(a.Timers)
 
@@ -417,4 +419,23 @@ func (o *Object) Attackable() bool {
 
 func (o *Object) Updates() bool {
 	return o.updates
+}
+
+func (o *Object) CalculateResistances() {
+	o.resistances = make(Armors, 0)
+	for k, a := range o.Archetype.Resistances {
+		armor := Armor{
+			ArmorType: k,
+			Styles:    make(map[data.AttackStyle]float64),
+		}
+
+		for k2, s := range a {
+			armor.Styles[k2] = o.Archetype.Armor * s
+		}
+		o.resistances = append(o.resistances, armor)
+	}
+}
+
+func (o *Object) Resistances() Armors {
+	return o.resistances
 }
