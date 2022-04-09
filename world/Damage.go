@@ -15,7 +15,28 @@ type Damage struct {
 	StyleTotal      float64
 }
 
+type DamageResult struct {
+	AttackType      cdata.AttackType
+	AttributeDamage float64
+	Styles          map[cdata.AttackStyle]float64
+}
+
 type Damages []Damage
+
+func (ds *Damages) Result() (dr []DamageResult) {
+	for _, d := range *ds {
+		r := DamageResult{
+			AttackType: d.AttackType,
+			Styles:     make(map[cdata.AttackStyle]float64),
+		}
+		for k, s := range d.Styles {
+			r.Styles[k] = d.BaseDamage * s
+			r.AttributeDamage += d.AttributeDamage * s / d.StyleTotal
+		}
+		dr = append(dr, r)
+	}
+	return
+}
 
 func (ds *Damages) Total() (total float64) {
 	for _, d := range *ds {
