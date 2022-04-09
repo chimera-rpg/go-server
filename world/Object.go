@@ -426,7 +426,7 @@ func (o *Object) CalculateResistances() {
 	for k, a := range o.Archetype.Resistances {
 		armor := Armor{
 			ArmorType: k,
-			Styles:    make(map[data.AttackStyle]float64),
+			Styles:    make(map[cdata.AttackStyle]float64),
 		}
 
 		for k2, s := range a {

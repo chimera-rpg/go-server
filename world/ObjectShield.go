@@ -10,7 +10,7 @@ type ObjectShield struct {
 	Object
 	name        string
 	damaged     float32 // How damaged the shield is.
-	resistances data.AttackTypes
+	resistances cdata.AttackTypes
 }
 
 // NewObjectShield creates a skill object from the given archetype.

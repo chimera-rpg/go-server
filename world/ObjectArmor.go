@@ -12,7 +12,7 @@ type ObjectArmor struct {
 	Object
 	name        string
 	damaged     float32 // How damaged the armor is.
-	resistances data.AttackTypes
+	resistances cdata.AttackTypes
 }
 
 // NewObjectArmor creates a skill object from the given archetype.
@@ -65,7 +65,7 @@ func GetArmors(a *ObjectArmor, c *ObjectCharacter) (armors Armors, err error) {
 	for k, a := range a.Archetype.Resistances {
 		armor := Armor{
 			ArmorType: k,
-			Styles:    make(map[data.AttackStyle]float64),
+			Styles:    make(map[cdata.AttackStyle]float64),
 		}
 
 		for k2, s := range a {

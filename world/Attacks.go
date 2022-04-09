@@ -1,8 +1,8 @@
 package world
 
 import (
-	"github.com/chimera-rpg/go-server/data"
+	cdata "github.com/chimera-rpg/go-common/data"
 )
 
-// Attacks provides a mapping of data.AttackTypes to integer values. This is used for damage reduction and similar after damage rolls are made.
-type Attacks map[data.AttackType]int
+// Attacks provides a mapping of AttackTypes to integer values. This is used for damage reduction and similar after damage rolls are made.
+type Attacks map[cdata.AttackType]int

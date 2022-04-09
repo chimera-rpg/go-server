@@ -90,9 +90,9 @@ type Archetype struct {
 	// Competencies are the associated competencies' values that a character has.
 	Competencies map[CompetencyType]Competency `yaml:"Competencies,omitempty"`
 	// Resistances represents the attack type resistances of armor or a character.
-	Resistances AttackTypes `yaml:"Resistances,omitempty"`
+	Resistances cdata.AttackTypes `yaml:"Resistances,omitempty"`
 	// AttackTypes represents the attack types of a weapon or a character.
-	AttackTypes AttackTypes `yaml:"AttackTypes,omitempty"`
+	AttackTypes cdata.AttackTypes `yaml:"AttackTypes,omitempty"`
 	// Reach represents how far this object can reach.
 	Reach      uint8 `yaml:"Reach,omitempty"`
 	Attackable bool  `yaml:"Attackable,omitempty"`

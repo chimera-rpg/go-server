@@ -13,7 +13,7 @@ type ObjectWeapon struct {
 	Object
 	name        string
 	damaged     float32 // How damaged the weapon is.
-	attackTypes data.AttackTypes
+	attackTypes cdata.AttackTypes
 	// TODO: attack types
 }
 
@@ -84,20 +84,20 @@ func GetDamages(w *ObjectWeapon, c *ObjectCharacter) (damages Damages, err error
 	for k, a := range w.Archetype.AttackTypes {
 		damage := Damage{
 			AttackType: k,
-			Styles:     make(map[data.AttackStyle]float64),
+			Styles:     make(map[cdata.AttackStyle]float64),
 			BaseDamage: float64(base.Value),
 		}
 
 		// Calculate bonus damage.
 		if bonus, ok := w.Archetype.Damage.AttributeBonus[k]; ok {
 			for attrK, attrV := range bonus {
-				if k == data.Physical {
+				if k == cdata.Physical {
 					charAttr := c.Archetype.Attributes.Physical.GetAttribute(attrK)
 					damage.AttributeDamage += float64(charAttr) * attrV
-				} else if k == data.Arcane {
+				} else if k == cdata.Arcane {
 					charAttr := c.Archetype.Attributes.Arcane.GetAttribute(attrK)
 					damage.AttributeDamage += float64(charAttr) * attrV
-				} else if k == data.Spirit {
+				} else if k == cdata.Spirit {
 					charAttr := c.Archetype.Attributes.Spirit.GetAttribute(attrK)
 					damage.AttributeDamage += float64(charAttr) * attrV
 				}

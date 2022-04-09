@@ -1,5 +1,9 @@
 package data
 
+import (
+	cdata "github.com/chimera-rpg/go-common/data"
+)
+
 type Damage struct {
 	Value          int                    `yaml:"Value,omitempty"`
 	AttributeBonus DamageAttributeBonuses `yaml:"AttributeBonus,omitempty"`
@@ -22,7 +26,7 @@ func (d *Damage) Add(other *Damage) {
 	}
 }
 
-type DamageAttributeBonuses map[AttackType]map[AttributeType]float64
+type DamageAttributeBonuses map[cdata.AttackType]map[AttributeType]float64
 
 // UnmarshalYAML unmarshals, converting attack type strings into AttackTypes.
 func (d *DamageAttributeBonuses) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -32,7 +36,7 @@ func (d *DamageAttributeBonuses) UnmarshalYAML(unmarshal func(interface{}) error
 		return err
 	}
 	for k, v := range value {
-		if ak, ok := StringToAttackTypeMap[k]; ok {
+		if ak, ok := cdata.StringToAttackTypeMap[k]; ok {
 			(*d)[ak] = make(map[AttributeType]float64)
 			for k2, v2 := range v {
 				if sk, ok := StringToAttributeTypeMap[k2]; ok {
@@ -48,7 +52,7 @@ func (d *DamageAttributeBonuses) UnmarshalYAML(unmarshal func(interface{}) error
 func (d DamageAttributeBonuses) MarshalYAML() (interface{}, error) {
 	r := make(map[string]map[string]float64)
 	for k, v := range d {
-		if sk, ok := AttackTypeToStringMap[k]; ok {
+		if sk, ok := cdata.AttackTypeToStringMap[k]; ok {
 			r[sk] = make(map[string]float64)
 			for k2, v2 := range v {
 				if sk2, ok := AttributeTypeToStringMap[k2]; ok {

@@ -23,8 +23,8 @@ type ObjectCharacter struct {
 	// Fields that are pointers to the underlying archetype. In the case of NPCs, the archetypes should correspond to the instance of their on-map Archetype or the result of an archetype spawn. In the case of PCs, the archetype corresponds to the one embedded in their player data file.
 	name         *string
 	level        *int
-	resistances  *data.AttackTypes
-	attacktypes  *data.AttackTypes
+	resistances  *cdata.AttackTypes
+	attacktypes  *cdata.AttackTypes
 	attributes   *data.AttributeSets
 	competencies *map[data.CompetencyType]data.Competency
 	skills       []ObjectSkill
