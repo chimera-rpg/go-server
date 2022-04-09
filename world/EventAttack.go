@@ -21,6 +21,7 @@ type EventAttacked struct {
 	Prevented bool // Prevented flags the damage to not be applied, but still will notify the attacker of their damage.
 	Damages   []Damages
 	Armor     Armors
+	Dodged    bool
 }
 
 // String returns a string representing the attack.
@@ -32,9 +33,13 @@ func (e EventAttacked) String() string {
 type EventAttack struct {
 	Target  ObjectI
 	Damages []Damages
+	Dodged  bool
 }
 
 // String returns a string representing the attack.
 func (e EventAttack) String() string {
+	if e.Dodged {
+		return fmt.Sprintf("You missed %s", e.Target.Name())
+	}
 	return fmt.Sprintf("You attacked %s", e.Target.Name())
 }

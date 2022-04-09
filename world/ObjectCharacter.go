@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -449,15 +450,22 @@ func (o *ObjectCharacter) Attack(o2 ObjectI) bool {
 	for _, d := range damages {
 		armor.Reduce(&d)
 	}
-
 	// Send the attacked event to the defender.
 	e2 := &EventAttacked{
 		Attacker: o,
 		Armor:    armor,
 		Damages:  damages,
 	}
+	// But first do dodging.
+	switch o2 := o2.(type) {
+	case *ObjectCharacter:
+		if rand.Float64() <= o2.dodge {
+			e2.Dodged = true
+		}
+	}
+
 	o2.ResolveEvent(e2)
-	if !e2.Prevented {
+	if !e2.Prevented && !e2.Dodged {
 		fmt.Println("TODO: Apply damages: ", e2.Damages)
 	}
 
@@ -465,6 +473,7 @@ func (o *ObjectCharacter) Attack(o2 ObjectI) bool {
 	e3 := &EventAttack{
 		Target:  o2,
 		Damages: damages,
+		Dodged:  e2.Dodged,
 	}
 	o.ResolveEvent(e3)
 
