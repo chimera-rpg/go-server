@@ -34,6 +34,7 @@ func (ds *Damages) Total() (total float64) {
 func (ds *Damages) String() string {
 	var styleStrings []string
 	var total float64
+	var totalAttributes float64
 	for _, d := range *ds {
 		styleDamages := 0.0
 		attributeDamages := 0.0
@@ -44,8 +45,9 @@ func (ds *Damages) String() string {
 		}
 		total += styleDamages
 		total += attributeDamages
+		totalAttributes += attributeDamages
 	}
-	return fmt.Sprintf("%.1f (%s)", total, strings.Join(styleStrings, ", "))
+	return fmt.Sprintf("%.1f (%s) [%.1f Attr]", total, strings.Join(styleStrings, ", "), totalAttributes)
 }
 
 func (ds *Damages) Clone() (ds2 Damages) {
