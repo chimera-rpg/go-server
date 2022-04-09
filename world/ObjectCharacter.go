@@ -38,6 +38,7 @@ type ObjectCharacter struct {
 	speedPenaltyMultiplier int // The speed penalty multiplier, for status penalties to action duration costs.
 	//
 	damages []Damages
+	armor   Armors
 	//
 	shouldRecalculate bool
 	speed             int
@@ -418,16 +419,25 @@ func (o *ObjectCharacter) Attack(o2 ObjectI) bool {
 		damages = append(damages, d.Clone())
 	}
 
-	// TODO: Calculate base damage here!
 	e1 := &EventAttacking{
 		Target:  o2,
 		Damages: damages,
 	}
 	o.ResolveEvent(e1)
 
-	// TODO: Reduce damage here!
+	// Reduce damage by the target's armor.
+	var armor Armors
+	switch o2 := o2.(type) {
+	case *ObjectCharacter:
+		armor = o2.armor
+	}
+	for _, d := range damages {
+		armor.Reduce(&d)
+	}
+
 	e2 := &EventAttacked{
 		Attacker: o,
+		Armor:    armor,
 		Damages:  damages,
 	}
 	o2.ResolveEvent(e2)
@@ -538,6 +548,7 @@ func (o *ObjectCharacter) Recalculate() {
 	o.health = o.CalculateHealth()
 	o.reach = o.CalculateReach()
 	o.damages = o.CalculateDamages()
+	o.armor = o.CalculateArmor()
 }
 
 // CalculateStamina calculates the maximum stamina based upon our attributes.
@@ -618,6 +629,27 @@ func (o *ObjectCharacter) CalculateDamages() []Damages {
 	}
 
 	return damages
+}
+
+func (o *ObjectCharacter) CalculateArmor() (armors Armors) {
+	var armor *ObjectArmor
+	for _, e := range o.equipment {
+		switch e := e.(type) {
+		case *ObjectArmor:
+			armor = e
+			break
+		}
+	}
+
+	if armor != nil {
+		armor, err := GetArmors(armor, o)
+		if err != nil {
+			o.GetOwner().SendMessage(err.Error())
+			return
+		}
+		armors = armor
+	}
+	return
 }
 
 // GetAttributeValue gets the calculated value for a given attribute.

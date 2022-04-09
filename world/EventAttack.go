@@ -20,6 +20,7 @@ type EventAttacked struct {
 	Attacker  ObjectI
 	Prevented bool // Prevented flags the damage to not be applied, but still will notify the attacker of their damage.
 	Damages   []Damages
+	Armor     Armors
 }
 
 // String returns a string representing the attack.
