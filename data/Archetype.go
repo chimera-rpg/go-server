@@ -97,8 +97,10 @@ type Archetype struct {
 	Reach      uint8 `yaml:"Reach,omitempty"`
 	Attackable bool  `yaml:"Attackable,omitempty"`
 	// Damage represents the damage of a weapon or otherwise.
-	Damage       *Damage `yaml:"Damage,omitempty"`
-	Armor        float64 `yaml:"Armor,omitempty"`
+	Damage *Damage `yaml:"Damage,omitempty"`
+	Armor  float64 `yaml:"Armor,omitempty"`
+	// Dodge represents an intrinsic dodge %. Only applicable to characters.
+	Dodge        float64 `yaml:"Dodge,omitempty"`
 	ChannelTime  uint16  `yaml:"ChannelTime,omitempty"`
 	RecoveryTime uint16  `yaml:"RecoveryTime,omitempty"`
 	// Level represents the level of a skill or character.

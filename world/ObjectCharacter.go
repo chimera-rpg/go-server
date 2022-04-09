@@ -457,9 +457,13 @@ func (o *ObjectCharacter) Attack(o2 ObjectI) bool {
 		Damages:  damages,
 	}
 	// But first do dodging.
+	dodge := o.Archetype.Dodge
 	switch o2 := o2.(type) {
 	case *ObjectCharacter:
-		if rand.Float64() <= o2.dodge {
+		dodge += o2.dodge
+	}
+	if dodge > 0 {
+		if rand.Float64() <= dodge {
 			e2.Dodged = true
 		}
 	}
