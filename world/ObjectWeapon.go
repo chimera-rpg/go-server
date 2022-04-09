@@ -51,7 +51,10 @@ func (e *MissingCompetencyError) Error() string {
 }
 
 func GetDamages(w *ObjectWeapon, c *ObjectCharacter) (damages Damages, err error) {
-	base := w.Archetype.Damage
+	base := 0
+	if w.Archetype.Damage != nil {
+		base = w.Archetype.Damage.Value
+	}
 	// Multiply by the weapon's skills
 	totalSkill := 0.0
 	totalSkillCount := 0
@@ -85,7 +88,7 @@ func GetDamages(w *ObjectWeapon, c *ObjectCharacter) (damages Damages, err error
 		damage := Damage{
 			AttackType: k,
 			Styles:     make(map[cdata.AttackStyle]float64),
-			BaseDamage: float64(base.Value),
+			BaseDamage: float64(base),
 		}
 
 		// Calculate bonus damage.
