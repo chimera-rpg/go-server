@@ -98,6 +98,7 @@ type Archetype struct {
 	Attackable bool  `yaml:"Attackable,omitempty"`
 	// Damage represents the damage of a weapon or otherwise.
 	Damage       *Damage `yaml:"Damage,omitempty"`
+	Armor        float64 `yaml:"Armor,omitempty"`
 	ChannelTime  uint16  `yaml:"ChannelTime,omitempty"`
 	RecoveryTime uint16  `yaml:"RecoveryTime,omitempty"`
 	// Level represents the level of a skill or character.
