@@ -3,6 +3,7 @@ package world
 import (
 	"time"
 
+	"github.com/chimera-rpg/go-common/network"
 	"github.com/chimera-rpg/go-server/data"
 )
 
@@ -22,6 +23,7 @@ type OwnerI interface {
 	//
 	GetAttitude(ID) data.Attitude
 	//
+	SendCommand(network.Command) error
 	SendMessage(string)
 	SendStatus(StatusI, bool)
 	SendSound(audioID ID, soundID ID, objectID ID, y, x, z int, volume float32)

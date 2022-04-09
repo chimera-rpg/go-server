@@ -525,6 +525,11 @@ func (player *OwnerPlayer) GetAttitude(oID ID) data.Attitude {
 	return data.NoAttitude
 }
 
+// SendCommand sends the given command to the owner.
+func (player *OwnerPlayer) SendCommand(command network.Command) error {
+	return player.ClientConnection.Send(command)
+}
+
 // SendMessage sends a message to the character.
 func (player *OwnerPlayer) SendMessage(s string) {
 	player.ClientConnection.Send(network.CommandMessage{

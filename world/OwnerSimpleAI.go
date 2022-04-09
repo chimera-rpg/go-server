@@ -1,6 +1,7 @@
 package world
 
 import (
+	"github.com/chimera-rpg/go-common/network"
 	"github.com/chimera-rpg/go-server/data"
 
 	"time"
@@ -111,6 +112,11 @@ func (owner *OwnerSimpleAI) GetAttitude(oID ID) data.Attitude {
 		}
 	}
 	return data.NoAttitude
+}
+
+// SendCommand sends the given command to the owner.
+func (owner *OwnerSimpleAI) SendCommand(command network.Command) error {
+	return nil
 }
 
 // SendMessage sends a message to the character.
