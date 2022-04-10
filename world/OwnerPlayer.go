@@ -215,9 +215,9 @@ func (player *OwnerPlayer) getVisionCube() (c [][3]int) {
 }
 
 // ShootRay shoots out a ray and returns all tiles between the starting position and the target coordinate. If blockedByOpaque is true, the ray stops when it hits an opaque tile.
-func (player *OwnerPlayer) ShootRay(y1, x1, z1 float64, c [3]int, blockedByOpaque bool) (tiles []*Tile) {
+func (player *OwnerPlayer) ShootRay(y1, x1, z1 float64, c [3]int, f func(tile *Tile) bool) (tiles []*Tile) {
 	gmap := player.GetMap()
-	return gmap.ShootRay(int(y1), int(x1), int(z1), c[0], c[1], c[2], blockedByOpaque)
+	return gmap.ShootRay(int(y1), int(x1), int(z1), c[0], c[1], c[2], f)
 }
 
 func (player *OwnerPlayer) checkVisionRing() error {
@@ -240,7 +240,9 @@ func (player *OwnerPlayer) checkVisionRing() error {
 	x1 := float64(tile.X) + float64(a.Width)/2
 	z1 := float64(tile.Z) + float64(a.Depth)/2
 	for _, c := range coords {
-		for _, tile := range player.ShootRay(y1, x1, z1, c, true) {
+		for _, tile := range player.ShootRay(y1, x1, z1, c, func(t *Tile) bool {
+			return !t.opaque
+		}) {
 			player.sendTile(tile)
 		}
 	}

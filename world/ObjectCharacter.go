@@ -442,7 +442,9 @@ func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 						// FIXME: Use target's attributes...!
 						if d < 40 {
 							// FIXME: This sort of filter if hit logic should be handled by ShootRay itself, perhaps via a passed check func.
-							tiles := o.tile.gameMap.ShootRay(t.GetTile().Y, t.GetTile().X, t.GetTile().Z, tile.Y, tile.X, tile.Z, true)
+							tiles := o.tile.gameMap.ShootRay(t.GetTile().Y, t.GetTile().X, t.GetTile().Z, tile.Y, tile.X, tile.Z, func(t *Tile) bool {
+								return !t.opaque
+							})
 							sees := false
 							for _, t := range tiles {
 								for _, p := range t.objectParts {
