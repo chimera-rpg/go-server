@@ -198,7 +198,7 @@ func (gmap *Map) Update(gm *World, delta time.Duration) error {
 				} else if a.Y != 0 || a.X != 0 || a.Z != 0 {
 					h, w, d := a.object.GetDimensions()
 					t := a.object.GetTile()
-					tiles := gmap.ShootRay(t.Y+h, t.X+w, t.Z+d, a.Y, a.X, a.Z, func(t *Tile) bool {
+					tiles := gmap.ShootRay(float64(t.Y)+float64(h)/2, float64(t.X)+float64(w)/2, float64(t.Z)+float64(d)/2, float64(a.Y), float64(a.X), float64(a.Z), func(t *Tile) bool {
 						return true
 					})
 					objs := getUniqueObjectsInTiles(tiles)
@@ -712,14 +712,14 @@ func IsInLiquid(targetTiles []*Tile) bool {
 }
 
 // ShootRay shoots a ray from a position to another, calling f for each tile traversed. If f returns false, then the ray is stopped.
-func (gmap *Map) ShootRay(fromY, fromX, fromZ, toY, toX, toZ int, f func(tile *Tile) bool) (tiles []*Tile) {
-	y1 := float64(fromY)
-	x1 := float64(fromX)
-	z1 := float64(fromZ)
+func (gmap *Map) ShootRay(fromY, fromX, fromZ, toY, toX, toZ float64, f func(tile *Tile) bool) (tiles []*Tile) {
+	y1 := fromY
+	x1 := fromX
+	z1 := fromZ
 	var tMaxX, tMaxY, tMaxZ, tDeltaX, tDeltaY, tDeltaZ float64
-	y2 := float64(toY)
-	x2 := float64(toX)
-	z2 := float64(toZ)
+	y2 := toY
+	x2 := toX
+	z2 := toZ
 	var dy, dx, dz int
 	var y, x, z int
 
