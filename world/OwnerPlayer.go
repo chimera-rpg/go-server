@@ -215,6 +215,105 @@ func (player *OwnerPlayer) getVisionCube() (c [][3]int) {
 	return
 }
 
+// ShootRay shoots out a ray and returns all tiles between the starting position and the target coordinate. If blockedByOpaque is true, the ray stops when it hits an opaque tile.
+func (player *OwnerPlayer) ShootRay(y1, x1, z1 float64, c [3]int, blockedByOpaque bool) (tiles []*Tile) {
+	gmap := player.GetMap()
+
+	var tMaxX, tMaxY, tMaxZ, tDeltaX, tDeltaY, tDeltaZ float64
+	y2 := float64(c[0])
+	x2 := float64(c[1])
+	z2 := float64(c[2])
+	var dy, dx, dz int
+	var y, x, z int
+
+	sign := func(x float64) int {
+		if x > 0 {
+			return 1
+		} else if x < 0 {
+			return -1
+		}
+		return 0
+	}
+	frac0 := func(x float64) float64 {
+		return x - math.Floor(x)
+	}
+	frac1 := func(x float64) float64 {
+		return 1 - x + math.Floor(x)
+	}
+
+	dy = sign(y2 - y1)
+	if dy != 0 {
+		tDeltaY = math.Min(float64(dy)/(y2-y1), 10000)
+	} else {
+		tDeltaY = 10000
+	}
+	if dy > 0 {
+		tMaxY = tDeltaY * frac1(y1)
+	} else {
+		tMaxY = tDeltaY * frac0(y1)
+	}
+	y = int(y1)
+
+	dx = sign(x2 - x1)
+	if dx != 0 {
+		tDeltaX = math.Min(float64(dx)/(x2-x1), 10000)
+	} else {
+		tDeltaX = 10000
+	}
+	if dx > 0 {
+		tMaxX = tDeltaX * frac1(x1)
+	} else {
+		tMaxX = tDeltaX * frac0(x1)
+	}
+	x = int(x1)
+
+	dz = sign(z2 - z1)
+	if dz != 0 {
+		tDeltaZ = math.Min(float64(dz)/(z2-z1), 10000)
+	} else {
+		tDeltaZ = 10000
+	}
+	if dz > 0 {
+		tMaxZ = tDeltaZ * frac1(z1)
+	} else {
+		tMaxZ = tDeltaZ * frac0(z1)
+	}
+	z = int(z1)
+
+	for {
+		if tMaxX < tMaxY {
+			if tMaxX < tMaxZ {
+				x += dx
+				tMaxX += tDeltaX
+			} else {
+				z += dz
+				tMaxZ += tDeltaZ
+			}
+		} else {
+			if tMaxY < tMaxZ {
+				y += dy
+				tMaxY += tDeltaY
+			} else {
+				z += dz
+				tMaxZ += tDeltaZ
+			}
+		}
+		if tMaxY > 1 && tMaxX > 1 && tMaxZ > 1 {
+			break
+		}
+		if y < 0 || x < 0 || z < 0 || y >= gmap.height || x >= gmap.width || z >= gmap.depth {
+			continue
+			//break
+		}
+		tile := gmap.GetTile(y, x, z)
+		tiles = append(tiles, tile)
+		if blockedByOpaque && tile.opaque {
+			break
+		}
+	}
+	return
+}
+
 func (player *OwnerPlayer) checkVisionRing() error {
 	gmap := player.GetMap()
 	tile := player.GetTarget().GetTile()
@@ -235,97 +334,8 @@ func (player *OwnerPlayer) checkVisionRing() error {
 	x1 := float64(tile.X) + float64(a.Width)/2
 	z1 := float64(tile.Z) + float64(a.Depth)/2
 	for _, c := range coords {
-		var tMaxX, tMaxY, tMaxZ, tDeltaX, tDeltaY, tDeltaZ float64
-		y2 := float64(c[0])
-		x2 := float64(c[1])
-		z2 := float64(c[2])
-		var dy, dx, dz int
-		var y, x, z int
-
-		sign := func(x float64) int {
-			if x > 0 {
-				return 1
-			} else if x < 0 {
-				return -1
-			}
-			return 0
-		}
-		frac0 := func(x float64) float64 {
-			return x - math.Floor(x)
-		}
-		frac1 := func(x float64) float64 {
-			return 1 - x + math.Floor(x)
-		}
-
-		dy = sign(y2 - y1)
-		if dy != 0 {
-			tDeltaY = math.Min(float64(dy)/(y2-y1), 10000)
-		} else {
-			tDeltaY = 10000
-		}
-		if dy > 0 {
-			tMaxY = tDeltaY * frac1(y1)
-		} else {
-			tMaxY = tDeltaY * frac0(y1)
-		}
-		y = int(y1)
-
-		dx = sign(x2 - x1)
-		if dx != 0 {
-			tDeltaX = math.Min(float64(dx)/(x2-x1), 10000)
-		} else {
-			tDeltaX = 10000
-		}
-		if dx > 0 {
-			tMaxX = tDeltaX * frac1(x1)
-		} else {
-			tMaxX = tDeltaX * frac0(x1)
-		}
-		x = int(x1)
-
-		dz = sign(z2 - z1)
-		if dz != 0 {
-			tDeltaZ = math.Min(float64(dz)/(z2-z1), 10000)
-		} else {
-			tDeltaZ = 10000
-		}
-		if dz > 0 {
-			tMaxZ = tDeltaZ * frac1(z1)
-		} else {
-			tMaxZ = tDeltaZ * frac0(z1)
-		}
-		z = int(z1)
-
-		for {
-			if tMaxX < tMaxY {
-				if tMaxX < tMaxZ {
-					x += dx
-					tMaxX += tDeltaX
-				} else {
-					z += dz
-					tMaxZ += tDeltaZ
-				}
-			} else {
-				if tMaxY < tMaxZ {
-					y += dy
-					tMaxY += tDeltaY
-				} else {
-					z += dz
-					tMaxZ += tDeltaZ
-				}
-			}
-			if tMaxY > 1 && tMaxX > 1 && tMaxZ > 1 {
-				break
-			}
-			if y < 0 || x < 0 || z < 0 || y >= gmap.height || x >= gmap.width || z >= gmap.depth {
-				continue
-				//break
-			}
-			tile := gmap.GetTile(y, x, z)
+		for _, tile := range player.ShootRay(y1, x1, z1, c, true) {
 			player.sendTile(tile)
-			if tile.opaque {
-				break
-			}
 		}
 	}
 	return nil
