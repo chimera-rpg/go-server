@@ -392,6 +392,9 @@ func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 		}
 		return true*/
 	case *EventAttacked:
+		if !e.Prevented && !e.Dodged {
+			// TODO: Apply damage!
+		}
 		if e.Dodged {
 			o.GetOwner().SendMessage(fmt.Sprintf("You dodge %s's attack", e.Attacker.Name()))
 		} else {
@@ -405,6 +408,7 @@ func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 		if e.Dodged {
 			o.GetOwner().SendMessage(fmt.Sprintf("%s dodges", e.Target.Name()))
 		} else {
+			// TODO: Immediately add exp...?
 			var damageStrings []string
 			for _, d := range e.Damages {
 				damageStrings = append(damageStrings, d.String())
@@ -471,6 +475,7 @@ func (o *ObjectCharacter) Attack(o2 ObjectI) bool {
 	for _, d := range damages {
 		armor.Reduce(&d)
 	}
+
 	// Send the attacked event to the defender.
 	e2 := &EventAttacked{
 		Attacker: o,
@@ -490,9 +495,6 @@ func (o *ObjectCharacter) Attack(o2 ObjectI) bool {
 	}
 
 	o2.ResolveEvent(e2)
-	if !e2.Prevented && !e2.Dodged {
-		fmt.Println("TODO: Apply damages: ", e2.Damages)
-	}
 
 	// Send the attack event to the attacker.
 	e3 := &EventAttack{
