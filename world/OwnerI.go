@@ -38,4 +38,5 @@ type OwnerI interface {
 	Wizard() bool
 	//
 	ForgetObject(ID)
+	ShootRay(y1, x1, z1 float64, c [3]int, blockedByOpaque bool) (tiles []*Tile)
 }

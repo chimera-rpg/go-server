@@ -198,7 +198,7 @@ func (gmap *Map) Update(gm *World, delta time.Duration) error {
 				} else if a.Y != 0 || a.X != 0 || a.Z != 0 {
 					h, w, d := a.object.GetDimensions()
 					t := a.object.GetTile()
-					tiles := gmap.ShootRay(t.Y+h, t.X+w, t.Z+d, a.Y, a.X, a.Z)
+					tiles := gmap.ShootRay(t.Y+h, t.X+w, t.Z+d, a.Y, a.X, a.Z, false)
 					objs := getUniqueObjectsInTiles(tiles)
 					// Ignore our own tile.
 					for _, o := range objs {
@@ -709,7 +709,7 @@ func IsInLiquid(targetTiles []*Tile) bool {
 	return false
 }
 
-func (gmap *Map) ShootRay(fromY, fromX, fromZ, toY, toX, toZ int) (tiles []*Tile) {
+func (gmap *Map) ShootRay(fromY, fromX, fromZ, toY, toX, toZ int, blockedByOpaque bool) (tiles []*Tile) {
 	y1 := float64(fromY)
 	x1 := float64(fromX)
 	z1 := float64(fromZ)
@@ -800,9 +800,9 @@ func (gmap *Map) ShootRay(fromY, fromX, fromZ, toY, toX, toZ int) (tiles []*Tile
 		}
 		tile := gmap.GetTile(y, x, z)
 		tiles = append(tiles, tile)
-		/*if tile.opaque {
+		if blockedByOpaque && tile.opaque {
 			break
-		}*/
+		}
 	}
 	return
 }

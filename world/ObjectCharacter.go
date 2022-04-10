@@ -430,6 +430,38 @@ func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 					if e.Target.GetOwner() != nil {
 						e.Target.GetOwner().SendCommand(cmd)
 					}
+					// Send to others.
+					tile := e.Target.GetTile()
+					for _, owner := range tile.gameMap.owners {
+						t := owner.GetTarget()
+						// Skip attacker and defender.
+						if t == e.Target || t == o {
+							continue
+						}
+						d := t.GetDistance(tile.Y, tile.X, tile.Z)
+						// FIXME: Use target's attributes...!
+						if d < 40 {
+							// FIXME: This sort of filter if hit logic should be handled by ShootRay itself, perhaps via a passed check func.
+							tiles := o.tile.gameMap.ShootRay(t.GetTile().Y, t.GetTile().X, t.GetTile().Z, tile.Y, tile.X, tile.Z, true)
+							sees := false
+							for _, t := range tiles {
+								for _, p := range t.objectParts {
+									if p == e.Target {
+										sees = true
+										break
+									}
+								}
+								if sees {
+									break
+								}
+							}
+							// Owner's object can see it, so let's also send the damage info to them.
+							if sees {
+								owner.SendCommand(cmd)
+							}
+						}
+					}
+					// FIXME: Base this upon senses!
 				}
 			}
 		}

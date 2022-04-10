@@ -138,3 +138,9 @@ func (owner *OwnerSimpleAI) SendMusic(audioID, soundID ID, soundIndex int8, obje
 // StopMusic does nothing.
 func (owner *OwnerSimpleAI) StopMusic(objectID ID) {
 }
+
+// ShootRay shoots out a ray and returns all tiles between the starting position and the target coordinate. If blockedByOpaque is true, the ray stops when it hits an opaque tile.
+func (owner *OwnerSimpleAI) ShootRay(y1, x1, z1 float64, c [3]int, blockedByOpaque bool) (tiles []*Tile) {
+	gmap := owner.GetMap()
+	return gmap.ShootRay(int(y1), int(x1), int(z1), c[0], c[1], c[2], blockedByOpaque)
+}
