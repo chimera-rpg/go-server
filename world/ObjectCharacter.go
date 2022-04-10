@@ -413,12 +413,19 @@ func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 			for _, ds := range e.Damages {
 				dr := ds.Result()
 				for _, d := range dr {
-					o.GetOwner().SendCommand(network.CommandDamage{
+					cmd := network.CommandDamage{
 						Target:          e.Target.GetID(),
 						Type:            d.AttackType,
 						AttributeDamage: d.AttributeDamage,
 						StyleDamage:     d.Styles,
-					})
+					}
+					// TODO: Send this cmd to all owners within either a radius or in visual range.
+					if o.GetOwner() != nil {
+						o.GetOwner().SendCommand(cmd)
+					}
+					if e.Target.GetOwner() != nil {
+						e.Target.GetOwner().SendCommand(cmd)
+					}
 				}
 			}
 		}
