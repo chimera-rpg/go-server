@@ -138,11 +138,3 @@ func (owner *OwnerSimpleAI) SendMusic(audioID, soundID ID, soundIndex int8, obje
 // StopMusic does nothing.
 func (owner *OwnerSimpleAI) StopMusic(objectID ID) {
 }
-
-// ShootRay shoots out a ray and returns all tiles between the starting position and the target coordinate.
-func (owner *OwnerSimpleAI) ShootRay(y, x, z float64, f func(tile *Tile) bool) (tiles []*Tile) {
-	gmap := owner.GetMap()
-	t := owner.target.tile
-	h, w, d := owner.target.GetDimensions()
-	return gmap.ShootRay(float64(t.Y)+float64(h)/2, float64(t.X)+float64(w)/2, float64(t.Z)+float64(d/2), y, x, z, f)
-}

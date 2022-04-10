@@ -33,6 +33,7 @@ type ObjectI interface {
 	Name() string
 	GetDimensions() (h, w, d int)
 	GetDistance(y, x, z int) float64
+	ShootRay(y, x, z float64, f func(tile *Tile) bool) (tiles []*Tile)
 	//
 	Stamina() int
 	MaxStamina() int

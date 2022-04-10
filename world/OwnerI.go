@@ -38,5 +38,4 @@ type OwnerI interface {
 	Wizard() bool
 	//
 	ForgetObject(ID)
-	ShootRay(y, x, z float64, f func(t *Tile) bool) (tiles []*Tile)
 }

@@ -439,3 +439,10 @@ func (o *Object) CalculateResistances() {
 func (o *Object) Resistances() Armors {
 	return o.resistances
 }
+
+// ShootRay shoots out a ray and returns all tiles from the center of the object to the ending coordinate.
+func (o *Object) ShootRay(y, x, z float64, f func(tile *Tile) bool) (tiles []*Tile) {
+	t := o.tile
+	h, w, d := o.GetDimensions()
+	return t.gameMap.ShootRay(float64(t.Y)+float64(h)/2, float64(t.X)+float64(w)/2, float64(t.Z)+float64(d/2), y, x, z, f)
+}
