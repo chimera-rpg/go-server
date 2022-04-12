@@ -26,13 +26,10 @@ type OwnerPlayer struct {
 	Owner
 	commandChannel                   chan OwnerCommand
 	ClientConnection                 clientConnectionI
-	target                           *ObjectCharacter
-	currentMap                       *Map
 	mapUpdateTime                    uint8
 	viewWidth, viewHeight, viewDepth int
 	view                             [][][]TileView
 	knownIDs                         map[ID]struct{}
-	attitudes                        map[ID]data.Attitude
 	lastKnownStamina                 time.Duration
 }
 
@@ -54,11 +51,6 @@ func (player *OwnerPlayer) SetTarget(object ObjectI) {
 // GetCommandChannel gets the command channel for the player.
 func (player *OwnerPlayer) GetCommandChannel() chan OwnerCommand {
 	return player.commandChannel
-}
-
-// GetMap gets the currentMap of the owner.
-func (player *OwnerPlayer) GetMap() *Map {
-	return player.currentMap
 }
 
 // SetMap sets the currentMap of the owner.
@@ -417,24 +409,6 @@ func (player *OwnerPlayer) OnObjectDelete(oID ID) error {
 	}
 
 	return nil
-}
-
-// GetAttitude returns the attitude the owner has the a given object. If no attitude exists, one is calculated based upon the target's attitude (if it has one).
-func (player *OwnerPlayer) GetAttitude(oID ID) data.Attitude {
-	if attitude, ok := player.attitudes[oID]; ok {
-		return attitude
-	}
-	target := player.GetMap().world.GetObject(oID)
-	if target == nil {
-		delete(player.attitudes, oID)
-	} else {
-		// TODO: We should probably check if the target knows us and use their attitude. If not, we should calculate from our target object archetype's default attitude towards: Genera, Species, Legacy, and Faction.
-		if otherOwner := target.GetOwner(); otherOwner != nil {
-			return otherOwner.GetAttitude(player.target.id)
-		}
-	}
-
-	return data.NoAttitude
 }
 
 // SendCommand sends the given command to the owner.

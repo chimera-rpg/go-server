@@ -97,23 +97,6 @@ func (owner *OwnerSimpleAI) OnObjectDelete(oID ID) error {
 	return nil
 }
 
-// GetAttitude returns the attitude the owner has the a given object. If no attitude exists, one is calculated based upon the target's attitude (if it has one).
-func (owner *OwnerSimpleAI) GetAttitude(oID ID) data.Attitude {
-	if attitude, ok := owner.attitudes[oID]; ok {
-		return attitude
-	}
-	target := owner.GetMap().world.GetObject(oID)
-	if target == nil {
-		delete(owner.attitudes, oID)
-	} else {
-		// TODO: We should probably check if the target knows us and use their attitude. If not, we should calculate from our target object archetype's default attitude towards: Genera, Species, Legacy, and Faction.
-		if otherOwner := target.GetOwner(); otherOwner != nil {
-			return otherOwner.GetAttitude(owner.target.id)
-		}
-	}
-	return data.NoAttitude
-}
-
 // SendCommand sends the given command to the owner.
 func (owner *OwnerSimpleAI) SendCommand(command network.Command) error {
 	return nil

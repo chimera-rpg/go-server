@@ -1,9 +1,14 @@
 package world
 
+import "github.com/chimera-rpg/go-server/data"
+
 type Owner struct {
 	commandQueue  []OwnerCommand
 	repeatCommand OwnerCommand
 	wizard        bool
+	attitudes     map[ID]data.Attitude
+	currentMap    *Map
+	target        *ObjectCharacter
 }
 
 func (owner *Owner) HasCommands() bool {
@@ -34,4 +39,27 @@ func (owner *Owner) Wizard() bool {
 }
 
 func (owner *Owner) ForgetObject(oID ID) {
+}
+
+// GetAttitude returns the attitude the owner has the a given object. If no attitude exists, one is calculated based upon the target's attitude (if it has one).
+func (owner *Owner) GetAttitude(oID ID) data.Attitude {
+	if attitude, ok := owner.attitudes[oID]; ok {
+		return attitude
+	}
+	target := owner.GetMap().world.GetObject(oID)
+	if target == nil {
+		delete(owner.attitudes, oID)
+	} else {
+		// TODO: We should probably check if the target knows us and use their attitude. If not, we should calculate from our target object archetype's default attitude towards: Genera, Species, Legacy, and Faction.
+		if otherOwner := target.GetOwner(); otherOwner != nil {
+			return otherOwner.GetAttitude(owner.target.id)
+		}
+	}
+
+	return data.NoAttitude
+}
+
+// GetMap gets the currentMap of the owner.
+func (owner *Owner) GetMap() *Map {
+	return owner.currentMap
 }
