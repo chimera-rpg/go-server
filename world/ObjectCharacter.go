@@ -476,6 +476,14 @@ func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 func (o *ObjectCharacter) Attack(o2 ObjectI) bool {
 	//t2 := o2.GetTile()
 
+	// TODO: During the AttackAction, we should also filter the list of tile targets to _only_ be those with attitudes matching the owner's desired attitude-based attacks.
+	if o.GetOwner() != nil {
+		attitude := o.GetOwner().GetAttitude(o2.GetID())
+		if attitude >= data.SlavishAttitude && attitude <= data.UnfriendlyAttitude {
+			fmt.Println("Not hostile towards target")
+			return false
+		}
+	}
 	// FIXME: We should do a distance check, but it should be from the ideal facing edge.
 	//distance := o.GetDistance(t2.Y, t2.X, t2.Z)
 	//if float64(o.reach) >= distance {
