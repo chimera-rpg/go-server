@@ -49,6 +49,9 @@ func (owner *OwnerSimpleAI) SetMap(m *Map) {
 // NewOwnerSimpleAI creates a new OwnerSimpleAI.
 func NewOwnerSimpleAI() *OwnerSimpleAI {
 	return &OwnerSimpleAI{
+		Owner: Owner{
+			attitudes: make(map[uint32]data.Attitude),
+		},
 		knownIDs:   make(map[ID]struct{}),
 		viewHeight: 8,
 		viewWidth:  16,

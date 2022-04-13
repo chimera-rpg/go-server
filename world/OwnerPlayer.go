@@ -75,6 +75,9 @@ func (player *OwnerPlayer) SetMap(m *Map) {
 // NewOwnerPlayer creates a Player from a given client connection.
 func NewOwnerPlayer(cc clientConnectionI) *OwnerPlayer {
 	return &OwnerPlayer{
+		Owner: Owner{
+			attitudes: make(map[uint32]data.Attitude),
+		},
 		commandChannel:   make(chan OwnerCommand),
 		ClientConnection: cc,
 		knownIDs:         make(map[ID]struct{}),
