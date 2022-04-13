@@ -56,12 +56,42 @@ func (owner *Owner) GetAttitude(oID ID) data.Attitude {
 	if target == nil {
 		delete(owner.attitudes, oID)
 	} else {
-		// TODO: We should probably check if the target knows us and use their attitude. If not, we should calculate from our target object archetype's default attitude towards: Genera, Species, Legacy, and Faction.
-		if otherOwner := target.GetOwner(); otherOwner != nil {
-			if otherOwner.HasAttitude(owner.target.id) {
-				return otherOwner.GetAttitude(owner.target.id)
+		attitude := data.NoAttitude
+		if ownerArchetype := target.GetArchetype(); ownerArchetype != nil {
+			if targetArchetype := target.GetArchetype(); targetArchetype != nil {
+				// First check against default faction attitudes.
+				for _, faction := range targetArchetype.Factions {
+					if f, ok := ownerArchetype.Attitudes.Factions[faction]; ok {
+						attitude = f
+					}
+				}
+				// Second check against species -> genera.
+				if attitude == data.NoAttitude {
+					if g, ok := ownerArchetype.Attitudes.Genera[targetArchetype.Genera]; ok {
+						attitude = g.Attitude
+						if s := g.Species[targetArchetype.Species]; ok {
+							attitude = s
+						}
+					}
+				}
+				// Third check against legacy.
+				if attitude == data.NoAttitude {
+					if l, ok := ownerArchetype.Attitudes.Legacies[targetArchetype.Legacy]; ok {
+						attitude = l
+					}
+				}
 			}
 		}
+		// If we have no attitude at this point, try to default from the other owner's attitudes.
+		if attitude == data.NoAttitude {
+			if otherOwner := target.GetOwner(); otherOwner != nil {
+				if otherOwner.HasAttitude(owner.target.id) {
+					attitude = otherOwner.GetAttitude(owner.target.id)
+				}
+			}
+		}
+		owner.attitudes[oID] = attitude
+		return attitude
 	}
 
 	return data.NoAttitude

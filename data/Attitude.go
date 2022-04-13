@@ -69,16 +69,13 @@ func (a Attitude) MarshalYAML() (interface{}, error) {
 
 // Attitudes contain families and factions that are considered for attitude relation.
 type Attitudes struct {
-	Families map[string]FamilyAttitudes `yaml:"Families,omitempty"`
-	Factions map[string]Attitudes       `yaml:"Factions,omitempty"`
-}
-
-// FamilyAttitudes contain genera that are considered for attitude relation.
-type FamilyAttitudes struct {
-	Genera map[string]GeneraAttitudes `yaml:"Genera,omitempty"`
+	Genera   map[string]GeneraAttitudes `yaml:"Genera,omitempty"`
+	Factions map[string]Attitude        `yaml:"Factions,omitempty"`
+	Legacies map[string]Attitude        `yaml:"Legacies,omitempty"`
 }
 
 // GeneraAttitudes contain species that are considered for attitude relation.
 type GeneraAttitudes struct {
-	Species map[string]Attitude `yaml:"Species,omitempty"`
+	Attitude Attitude            `yaml:"Attitude,omitempty"`
+	Species  map[string]Attitude `yaml:"Species,omitempty"`
 }

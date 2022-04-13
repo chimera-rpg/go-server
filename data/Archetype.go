@@ -118,6 +118,8 @@ type Archetype struct {
 	Genera    string    `yaml:"Genera,omitempty"`
 	Family    string    `yaml:"Family,omitempty"`
 	Species   string    `yaml:"Species,omitempty"`
+	Factions  []string  `yaml:"Factions,omitemity"`
+	Legacy    string    `yaml:"Legacy,omitempty"`
 	// Events are maps of EventIDs to EventResponses.
 	Events *Events `yaml:"Events,omitempty"`
 	//
