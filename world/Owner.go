@@ -1,8 +1,6 @@
 package world
 
 import (
-	"strings"
-
 	"github.com/chimera-rpg/go-server/data"
 )
 
@@ -53,6 +51,7 @@ func (owner *Owner) HasAttitude(oID ID) bool {
 
 // GetAttitude returns the attitude the owner has the a given object. If no attitude exists, one is calculated based upon the target's attitude (if it has one).
 func (owner *Owner) GetAttitude(oID ID, recurse bool) data.Attitude {
+	attitude := data.NoAttitude
 	if attitude, ok := owner.attitudes[oID]; ok {
 		return attitude
 	}
@@ -60,54 +59,8 @@ func (owner *Owner) GetAttitude(oID ID, recurse bool) data.Attitude {
 	if target == nil {
 		delete(owner.attitudes, oID)
 	} else {
-		attitude := data.NoAttitude
-		if ownerArchetype := owner.target.GetArchetype(); ownerArchetype != nil {
-			if targetArchetype := target.GetArchetype(); targetArchetype != nil {
-				// First check against our own faction attitudes
-				// TODO: These faction comparisons should have more detail in terms of combinatory operations, such as allowing FactionA, !FactionB, etc. -- it should compare all faction relations, then determine the final attitude from that.
-				for faction, value := range ownerArchetype.Attitudes.Factions {
-					if faction[0] == '!' {
-						s := strings.TrimPrefix(faction, "!")
-						has := false
-						for _, otherFaction := range targetArchetype.Factions {
-							if otherFaction == s {
-								has = true
-								break
-							}
-						}
-						if !has {
-							attitude = value
-						}
-					} else {
-						for _, otherFaction := range targetArchetype.Factions {
-							if faction == otherFaction {
-								attitude = value
-								break
-							}
-						}
-					}
-					if attitude != data.NoAttitude {
-						break
-					}
-				}
-				// Second check against species -> genera.
-				if attitude == data.NoAttitude {
-					if g, ok := ownerArchetype.Attitudes.Genera[targetArchetype.Genera]; ok {
-						attitude = g.Attitude
-						if s := g.Species[targetArchetype.Species]; ok {
-							attitude = s
-						}
-					}
-				}
-				// Third check against legacy.
-				if attitude == data.NoAttitude {
-					if l, ok := ownerArchetype.Attitudes.Legacies[targetArchetype.Legacy]; ok {
-						attitude = l
-					}
-				}
-			}
-		}
-		// If we have no attitude at this point, try to default from the other owner's attitudes.
+		attitude = owner.target.GetAttitude(target)
+		// If we have no attitude at this point, try to default from the other owner object's attitudes.
 		if attitude == data.NoAttitude && recurse {
 			if otherOwner := target.GetOwner(); otherOwner != nil {
 				if otherOwner.HasAttitude(owner.target.id) {
@@ -116,10 +69,8 @@ func (owner *Owner) GetAttitude(oID ID, recurse bool) data.Attitude {
 			}
 		}
 		owner.attitudes[oID] = attitude
-		return attitude
 	}
-
-	return data.NoAttitude
+	return attitude
 }
 
 // GetMap gets the currentMap of the owner.

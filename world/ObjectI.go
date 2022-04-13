@@ -46,4 +46,6 @@ type ObjectI interface {
 	Timers() *[]Timer
 	//
 	Resistances() Armors
+	//
+	GetAttitude(ObjectI) data.Attitude
 }

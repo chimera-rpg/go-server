@@ -4,6 +4,7 @@ import (
 	"math"
 	"math/rand"
 	"reflect"
+	"strings"
 	"time"
 
 	cdata "github.com/chimera-rpg/go-common/data"
@@ -445,4 +446,56 @@ func (o *Object) ShootRay(y, x, z float64, f func(tile *Tile) bool) (tiles []*Ti
 	t := o.tile
 	h, w, d := o.GetDimensions()
 	return t.gameMap.ShootRay(float64(t.Y)+float64(h)/2, float64(t.X)+float64(w)/2, float64(t.Z)+float64(d/2), y, x, z, f)
+}
+
+// GetAttitude returns the object's archetype's default attitudes from one to another.
+func (o *Object) GetAttitude(o2 ObjectI) data.Attitude {
+	attitude := data.NoAttitude
+
+	if objectArchetype := o.GetArchetype(); objectArchetype != nil {
+		if targetArchetype := o2.GetArchetype(); targetArchetype != nil {
+			for faction, value := range objectArchetype.Attitudes.Factions {
+				if faction[0] == '!' {
+					s := strings.TrimPrefix(faction, "!")
+					has := false
+					for _, otherFaction := range targetArchetype.Factions {
+						if otherFaction == s {
+							has = true
+							break
+						}
+					}
+					if !has {
+						attitude = value
+					}
+				} else {
+					for _, otherFaction := range targetArchetype.Factions {
+						if faction == otherFaction {
+							attitude = value
+							break
+						}
+					}
+				}
+				if attitude != data.NoAttitude {
+					break
+				}
+			}
+			// Second check against species -> genera.
+			if attitude == data.NoAttitude {
+				if g, ok := objectArchetype.Attitudes.Genera[targetArchetype.Genera]; ok {
+					attitude = g.Attitude
+					if s := g.Species[targetArchetype.Species]; ok {
+						attitude = s
+					}
+				}
+			}
+			// Third check against legacy.
+			if attitude == data.NoAttitude {
+				if l, ok := objectArchetype.Attitudes.Legacies[targetArchetype.Legacy]; ok {
+					attitude = l
+				}
+			}
+		}
+	}
+
+	return attitude
 }
