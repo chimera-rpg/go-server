@@ -41,6 +41,12 @@ func (owner *Owner) Wizard() bool {
 func (owner *Owner) ForgetObject(oID ID) {
 }
 
+// HasAttitude returns if the owner has an attitude towards the given object.
+func (owner *Owner) HasAttitude(oID ID) bool {
+	_, ok := owner.attitudes[oID]
+	return ok
+}
+
 // GetAttitude returns the attitude the owner has the a given object. If no attitude exists, one is calculated based upon the target's attitude (if it has one).
 func (owner *Owner) GetAttitude(oID ID) data.Attitude {
 	if attitude, ok := owner.attitudes[oID]; ok {
@@ -52,7 +58,9 @@ func (owner *Owner) GetAttitude(oID ID) data.Attitude {
 	} else {
 		// TODO: We should probably check if the target knows us and use their attitude. If not, we should calculate from our target object archetype's default attitude towards: Genera, Species, Legacy, and Faction.
 		if otherOwner := target.GetOwner(); otherOwner != nil {
-			return otherOwner.GetAttitude(owner.target.id)
+			if otherOwner.HasAttitude(owner.target.id) {
+				return otherOwner.GetAttitude(owner.target.id)
+			}
 		}
 	}
 
