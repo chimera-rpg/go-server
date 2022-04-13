@@ -454,44 +454,45 @@ func (o *Object) GetAttitude(o2 ObjectI) data.Attitude {
 
 	if objectArchetype := o.GetArchetype(); objectArchetype != nil {
 		if targetArchetype := o2.GetArchetype(); targetArchetype != nil {
-			for faction, value := range objectArchetype.Attitudes.Factions {
-				if faction[0] == '!' {
-					s := strings.TrimPrefix(faction, "!")
-					has := false
-					for _, otherFaction := range targetArchetype.Factions {
-						if otherFaction == s {
-							has = true
-							break
+			// First check against legacy.
+			if l, ok := objectArchetype.Attitudes.Legacies[targetArchetype.Legacy]; ok {
+				attitude = l
+			}
+			// Second check against factions.
+			if attitude == data.NoAttitude {
+				for faction, value := range objectArchetype.Attitudes.Factions {
+					if faction[0] == '!' {
+						s := strings.TrimPrefix(faction, "!")
+						has := false
+						for _, otherFaction := range targetArchetype.Factions {
+							if otherFaction == s {
+								has = true
+								break
+							}
 						}
-					}
-					if !has {
-						attitude = value
-					}
-				} else {
-					for _, otherFaction := range targetArchetype.Factions {
-						if faction == otherFaction {
+						if !has {
 							attitude = value
-							break
+						}
+					} else {
+						for _, otherFaction := range targetArchetype.Factions {
+							if faction == otherFaction {
+								attitude = value
+								break
+							}
 						}
 					}
-				}
-				if attitude != data.NoAttitude {
-					break
+					if attitude != data.NoAttitude {
+						break
+					}
 				}
 			}
-			// Second check against species -> genera.
+			// Third check against genera -> species.
 			if attitude == data.NoAttitude {
 				if g, ok := objectArchetype.Attitudes.Genera[targetArchetype.Genera]; ok {
 					attitude = g.Attitude
 					if s := g.Species[targetArchetype.Species]; ok {
 						attitude = s
 					}
-				}
-			}
-			// Third check against legacy.
-			if attitude == data.NoAttitude {
-				if l, ok := objectArchetype.Attitudes.Legacies[targetArchetype.Legacy]; ok {
-					attitude = l
 				}
 			}
 		}
