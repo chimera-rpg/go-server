@@ -116,7 +116,6 @@ type Archetype struct {
 	// Attitudes represent attitudes towards factions and similar.
 	Attitudes Attitudes `yaml:"Attitudes,omitempty"`
 	Genera    string    `yaml:"Genera,omitempty"`
-	Family    string    `yaml:"Family,omitempty"`
 	Species   string    `yaml:"Species,omitempty"`
 	Factions  []string  `yaml:"Factions,omitempty"`
 	Legacy    string    `yaml:"Legacy,omitempty"`
