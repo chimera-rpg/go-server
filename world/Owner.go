@@ -1,6 +1,10 @@
 package world
 
-import "github.com/chimera-rpg/go-server/data"
+import (
+	"strings"
+
+	"github.com/chimera-rpg/go-server/data"
+)
 
 type Owner struct {
 	commandQueue  []OwnerCommand
@@ -57,12 +61,33 @@ func (owner *Owner) GetAttitude(oID ID) data.Attitude {
 		delete(owner.attitudes, oID)
 	} else {
 		attitude := data.NoAttitude
-		if ownerArchetype := target.GetArchetype(); ownerArchetype != nil {
+		if ownerArchetype := owner.target.GetArchetype(); ownerArchetype != nil {
 			if targetArchetype := target.GetArchetype(); targetArchetype != nil {
-				// First check against default faction attitudes.
-				for _, faction := range targetArchetype.Factions {
-					if f, ok := ownerArchetype.Attitudes.Factions[faction]; ok {
-						attitude = f
+				// First check against our own faction attitudes
+				// TODO: These faction comparisons should have more detail in terms of combinatory operations, such as allowing FactionA, !FactionB, etc. -- it should compare all faction relations, then determine the final attitude from that.
+				for faction, value := range ownerArchetype.Attitudes.Factions {
+					if faction[0] == '!' {
+						s := strings.TrimPrefix(faction, "!")
+						has := false
+						for _, otherFaction := range targetArchetype.Factions {
+							if otherFaction == s {
+								has = true
+								break
+							}
+						}
+						if !has {
+							attitude = value
+						}
+					} else {
+						for _, otherFaction := range targetArchetype.Factions {
+							if faction == otherFaction {
+								attitude = value
+								break
+							}
+						}
+					}
+					if attitude != data.NoAttitude {
+						break
 					}
 				}
 				// Second check against species -> genera.
@@ -79,14 +104,6 @@ func (owner *Owner) GetAttitude(oID ID) data.Attitude {
 					if l, ok := ownerArchetype.Attitudes.Legacies[targetArchetype.Legacy]; ok {
 						attitude = l
 					}
-				}
-			}
-		}
-		// If we have no attitude at this point, try to default from the other owner's attitudes.
-		if attitude == data.NoAttitude {
-			if otherOwner := target.GetOwner(); otherOwner != nil {
-				if otherOwner.HasAttitude(owner.target.id) {
-					attitude = otherOwner.GetAttitude(owner.target.id)
 				}
 			}
 		}
