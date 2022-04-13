@@ -476,11 +476,11 @@ func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 func (o *ObjectCharacter) Attack(o2 ObjectI) bool {
 	//t2 := o2.GetTile()
 
-	// TODO: During the AttackAction, we should also filter the list of tile targets to _only_ be those with attitudes matching the owner's desired attitude-based attacks.
+	// TODO: During the AttackAction (what eventually leads to this call), we should first filter the list of tile targets to _only_ be those with attitudes matching the owner's desired attitude-based attacks.
 	if o.GetOwner() != nil {
-		attitude := o.GetOwner().GetAttitude(o2.GetID())
-		if attitude >= data.SlavishAttitude && attitude <= data.UnfriendlyAttitude {
-			fmt.Println("Not hostile towards target")
+		attitude := o.GetOwner().GetAttitude(o2.GetID(), true)
+		if attitude <= data.UnfriendlyAttitude {
+			o.GetOwner().SendMessage("You are not hostile towards " + o2.Name())
 			return false
 		}
 	}
@@ -489,7 +489,7 @@ func (o *ObjectCharacter) Attack(o2 ObjectI) bool {
 	//if float64(o.reach) >= distance {
 	// FIXME: o.Matter() should be the weapon instead, as well as any spells/abilities of the character!
 	if !o.Matter().Is(o2.Matter()) {
-		fmt.Println("Our matter does not effect their matter")
+		o.GetOwner().SendMessage("You cannot touch " + o2.Name())
 		return false
 	}
 

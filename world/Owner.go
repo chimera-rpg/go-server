@@ -52,7 +52,7 @@ func (owner *Owner) HasAttitude(oID ID) bool {
 }
 
 // GetAttitude returns the attitude the owner has the a given object. If no attitude exists, one is calculated based upon the target's attitude (if it has one).
-func (owner *Owner) GetAttitude(oID ID) data.Attitude {
+func (owner *Owner) GetAttitude(oID ID, recurse bool) data.Attitude {
 	if attitude, ok := owner.attitudes[oID]; ok {
 		return attitude
 	}
@@ -104,6 +104,14 @@ func (owner *Owner) GetAttitude(oID ID) data.Attitude {
 					if l, ok := ownerArchetype.Attitudes.Legacies[targetArchetype.Legacy]; ok {
 						attitude = l
 					}
+				}
+			}
+		}
+		// If we have no attitude at this point, try to default from the other owner's attitudes.
+		if attitude == data.NoAttitude && recurse {
+			if otherOwner := target.GetOwner(); otherOwner != nil {
+				if otherOwner.HasAttitude(owner.target.id) {
+					attitude = otherOwner.GetAttitude(owner.target.id, false)
 				}
 			}
 		}

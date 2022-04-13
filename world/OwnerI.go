@@ -22,7 +22,7 @@ type OwnerI interface {
 	GetViewSize() (h, w, d int)
 	//
 	HasAttitude(ID) bool
-	GetAttitude(ID) data.Attitude
+	GetAttitude(ID, bool) data.Attitude
 	//
 	SendCommand(network.Command) error
 	SendMessage(string)
