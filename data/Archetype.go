@@ -113,6 +113,11 @@ type Archetype struct {
 	Attributes AttributeSets `yaml:"Attributes,omitempty"`
 	// Hmm
 	Statuses map[string]map[string]interface{} `yaml:"Statuses,omitempty"`
+	// Attitudes represent attitudes towards factions and similar.
+	Attitudes Attitudes `yaml:"Attitudes,omitempty"`
+	Genera    string    `yaml:"Genera,omitempty"`
+	Family    string    `yaml:"Family,omitempty"`
+	Species   string    `yaml:"Species,omitempty"`
 	// Events are maps of EventIDs to EventResponses.
 	Events *Events `yaml:"Events,omitempty"`
 	//
