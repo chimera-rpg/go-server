@@ -11,8 +11,8 @@ type Attitude uint8
 
 // These attitudes correspond to the given levels of hostility or friendliness of a character.
 const (
-	NoAttitude      Attitude = 0
-	SlavishAttitude          = 1 << iota
+	NoAttitude Attitude = iota
+	SlavishAttitude
 	AlliedAttitude
 	FriendlyAttitude
 	NeutralAttitude
