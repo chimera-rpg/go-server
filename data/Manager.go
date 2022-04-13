@@ -44,6 +44,7 @@ type Manager struct {
 	generaArchetypes  []*Archetype     // Slice of genera archetypes.
 	speciesArchetypes []*Archetype     // Slice of species archetypes.
 	pcArchetypes      []*Archetype     // Player Character archetypes, used for creating new characters.
+	factionArchetypes []*Archetype     // Faction archetypes, used for looking up default attitudes.
 	maps              map[string]*Map  // Full map of Maps.
 	loadedUsers       map[string]*User // Map of loaded Players
 	cryptParams       cryptParams      // Cryptography parameters
@@ -331,12 +332,14 @@ func (m *Manager) parseArchetypeFiles() error {
 
 	m.buildGeneraArchetypes()
 	m.buildSpeciesArchetypes()
+	m.buildFactionArchetypes()
 	m.buildPCArchetypes()
 
 	l.WithFields(log.Fields{
 		"Total":      len(m.archetypes),
 		"Genera":     len(m.generaArchetypes),
 		"Species":    len(m.speciesArchetypes),
+		"Factions":   len(m.factionArchetypes),
 		"Characters": len(m.pcArchetypes),
 	}).Println("Archetypes: Done!")
 
@@ -371,6 +374,16 @@ func (m *Manager) buildSpeciesArchetypes() int {
 		}
 	}
 	return len(m.speciesArchetypes) - oldCount
+}
+
+func (m *Manager) buildFactionArchetypes() int {
+	oldCount := len(m.factionArchetypes)
+	for _, v := range m.archetypes {
+		if v.Type == cdata.ArchetypeFaction {
+			m.factionArchetypes = append(m.factionArchetypes, v)
+		}
+	}
+	return len(m.factionArchetypes) - oldCount
 }
 
 // GetArchetype gets the given archetype by id if it exists.
@@ -828,6 +841,11 @@ func (m *Manager) GetGeneraArchetypes() []*Archetype {
 // GetSpeciesArchetypes returns the underlying *Archetype slice for species archetypes.
 func (m *Manager) GetSpeciesArchetypes() []*Archetype {
 	return m.speciesArchetypes
+}
+
+// GetFactionArchetypes returns the underlying *Archetype slice for faction archetypes.
+func (m *Manager) GetFactionArchetypes() []*Archetype {
+	return m.factionArchetypes
 }
 
 // GetString returns the StringId associated with the passed name.
