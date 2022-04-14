@@ -14,6 +14,8 @@ github.com/chimera-rpg/go-common v0.0.0-20220409172830-ba3619d3b5e7 h1:0yvEUIRUK
 github.com/chimera-rpg/go-common v0.0.0-20220409172830-ba3619d3b5e7/go.mod h1:/FwRKhQznOZpTqwkeKsxXiRD2BJVU5hU5B932mDTQnY=
 github.com/chimera-rpg/go-common v0.0.0-20220413014628-717c82077432 h1:1Di2U4JlDw7RoCPoX6cjs313EmsTB0Z9+TNvPkzP6mg=
 github.com/chimera-rpg/go-common v0.0.0-20220413014628-717c82077432/go.mod h1:/FwRKhQznOZpTqwkeKsxXiRD2BJVU5hU5B932mDTQnY=
+github.com/chimera-rpg/go-common v0.0.0-20220414013310-9c9ec0473074 h1:1eAl+tHF/UH28c7Ddx+lyTcUqq3h6P5ojtY5AShOi1U=
+github.com/chimera-rpg/go-common v0.0.0-20220414013310-9c9ec0473074/go.mod h1:/FwRKhQznOZpTqwkeKsxXiRD2BJVU5hU5B932mDTQnY=
 github.com/cosmos72/gomacro v0.0.0-20220110200413-b2701849f898 h1:wJEWj0f2mjjweXAOsqw0YxEnfTwzWNpxDRGkN+SaIV0=
 github.com/cosmos72/gomacro v0.0.0-20220110200413-b2701849f898/go.mod h1:60O8/t169OwS8bX0BeWSjxlGGb/I5cGYc6Brt5rWDL0=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
