@@ -743,6 +743,63 @@ func IsInLiquid(targetTiles []*Tile) bool {
 	return false
 }
 
+// ShootCube shoots rays out in a cube centered on a location. onTileTouch is used to cancel the ray if it returns false. onRayEnd is called when a ray ceases.
+func (gmap *Map) ShootCube(y1, x1, z1 float64, h, w, d float64, onTileTouch func(tile *Tile) bool, onRayEnd func()) {
+	var c [][3]float64
+	hh := h / 2
+	wh := w / 2
+	dh := d / 2
+	ymin := y1 - hh
+	if ymin < 0 {
+		ymin = 0
+	}
+	ymax := y1 + hh
+	if ymax > float64(gmap.height) {
+		ymax = float64(gmap.height) - 1
+	}
+
+	xmin := x1 - wh
+	if xmin < 0 {
+		xmin = 0
+	}
+	xmax := x1 + wh
+	if xmax > float64(gmap.width) {
+		xmax = float64(gmap.width) - 1
+	}
+
+	zmin := z1 - dh
+	if zmin < 0 {
+		zmin = 0
+	}
+	zmax := z1 + dh
+	if zmax > float64(gmap.depth) {
+		zmax = float64(gmap.depth) - 1
+	}
+
+	for y := ymin; y < ymax; y += 2 {
+		for x := xmin; x < xmax; x++ {
+			for z := zmin; z < zmax; z++ {
+				c = append(c, [3]float64{y, x, z})
+			}
+		}
+	}
+
+	for _, c := range c {
+		end := false
+		gmap.ShootRay(y1, x1, z1, c[0], c[1], c[2], func(tile *Tile) bool {
+			r := onTileTouch(tile)
+			if !r {
+				onRayEnd()
+				end = true
+			}
+			return r
+		})
+		if !end {
+			onRayEnd()
+		}
+	}
+}
+
 // ShootRay shoots a ray from a position to another, calling f for each tile traversed. If f returns false, then the ray is stopped.
 func (gmap *Map) ShootRay(fromY, fromX, fromZ, toY, toX, toZ float64, f func(tile *Tile) bool) (tiles []*Tile) {
 	y1 := fromY
@@ -843,22 +900,44 @@ func (gmap *Map) ShootRay(fromY, fromX, fromZ, toY, toX, toZ float64, f func(til
 }
 
 func (gmap *Map) RemoveObjectLighting(object ObjectI, y, x, z int) {
-	fmt.Println("RemoveObjectLighting")
 	if _, ok := gmap.lightObjects[object.GetID()]; ok {
-		fmt.Println("TODO: Remove lighting for object", y, x, z, object.GetArchetype().Light)
+		a := object.GetArchetype()
+		h, w, d := object.GetDimensions()
+		r := a.Light.Brightness / a.Light.Intensity
+		v := a.Light.Brightness
+		gmap.ShootCube(float64(y+h/2), float64(x+w/2), float64(z+d/2), float64(a.Light.Intensity), float64(a.Light.Intensity), float64(a.Light.Intensity), func(t *Tile) bool {
+			t.removeObjectLight(object, v)
+			v -= r
+			if t.opaque || v == 0 {
+				return false
+			}
+			return true
+		}, func() {
+			v = a.Light.Brightness
+		})
 		delete(gmap.lightObjects, object.GetID())
-		// TODO: shoot light rays!
 	} else {
 		fmt.Println("FIXME: Removed lighting more than once")
 	}
 }
 
 func (gmap *Map) AddObjectLighting(object ObjectI, y, x, z int) {
-	fmt.Println("AddObjectLighting")
 	if _, ok := gmap.lightObjects[object.GetID()]; !ok {
-		fmt.Println("TODO: Add lighting for object", y, x, z, object.GetArchetype().Light)
+		a := object.GetArchetype()
+		h, w, d := object.GetDimensions()
+		r := a.Light.Brightness / a.Light.Intensity
+		v := a.Light.Brightness
+		gmap.ShootCube(float64(y+h/2), float64(x+w/2), float64(z+d/2), float64(a.Light.Intensity), float64(a.Light.Intensity), float64(a.Light.Intensity), func(t *Tile) bool {
+			t.addObjectLight(object, v)
+			v -= r
+			if t.opaque || v == 0 {
+				return false
+			}
+			return true
+		}, func() {
+			v = a.Light.Brightness
+		})
 		gmap.lightObjects[object.GetID()] = object
-		// TODO: shoot light rays!
 	} else {
 		fmt.Println("FIXME: Added lighting more than once")
 	}

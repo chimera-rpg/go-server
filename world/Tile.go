@@ -8,16 +8,18 @@ import (
 
 // Tile represents a location on the ground.
 type Tile struct {
-	gameMap     *Map      // I guess this okay.
-	Y, X, Z     int       // Location of the tile.
-	objects     []ObjectI // objects contains Objects that origin from this tile. This data is used in network transmission.
-	objectParts []ObjectI // objectParts contains Object pointers that are used for collisions, pathing, and otherwise. This data is never sent over the network.
-	brightness  float32
-	r, g, b     uint8
-	blocking    cdata.MatterType
-	matter      cdata.MatterType
-	opaque      bool
-	modTime     uint16 // Last time this tile was updated.
+	gameMap      *Map      // I guess this okay.
+	Y, X, Z      int       // Location of the tile.
+	objects      []ObjectI // objects contains Objects that origin from this tile. This data is used in network transmission.
+	objectParts  []ObjectI // objectParts contains Object pointers that are used for collisions, pathing, and otherwise. This data is never sent over the network.
+	objectLights []ObjectI // objectLights contains Objects that give light to this tile.
+	brightness   float32
+	r, g, b      uint8
+	blocking     cdata.MatterType
+	matter       cdata.MatterType
+	opaque       bool
+	modTime      uint16 // Last time this tile was updated.
+	lightModTime uint16 // Last time this tile's light was updated.
 }
 
 // insertObject inserts the provided Object at the given index.
@@ -107,6 +109,15 @@ func (tile *Tile) getObjectIndex(object ObjectI) int {
 	return -1
 }
 
+func (tile *Tile) getObjectLightIndex(object ObjectI) int {
+	for i, o := range tile.objectLights {
+		if o.GetID() == object.GetID() {
+			return i
+		}
+	}
+	return -1
+}
+
 // GetObjects returns a slice of the tile's Object interfaces.
 func (tile *Tile) GetObjects() []ObjectI {
 	return tile.objects
@@ -157,4 +168,22 @@ func getUniqueObjectsInTiles(tiles []*Tile) (objs []ObjectI) {
 		}
 	}
 	return
+}
+
+func (tile *Tile) addObjectLight(object ObjectI, brightness float32) {
+	i := tile.getObjectLightIndex(object)
+	if i == -1 {
+		tile.objectLights = append(tile.objectLights, object)
+		tile.brightness += brightness
+		tile.lightModTime++
+	}
+}
+
+func (tile *Tile) removeObjectLight(object ObjectI, brightness float32) {
+	i := tile.getObjectLightIndex(object)
+	if i >= 0 {
+		tile.objectLights = append(tile.objectLights[:i], tile.objectLights[i+1:]...)
+		tile.brightness -= brightness
+		tile.lightModTime++
+	}
 }

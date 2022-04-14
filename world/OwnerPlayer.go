@@ -239,67 +239,76 @@ func (player *OwnerPlayer) checkVisionRing() error {
 }
 
 func (player *OwnerPlayer) sendTile(tile *Tile) {
-	// TODO: Actually calculate which tiles are visible for the owner.
-	if tile.modTime == player.view[tile.Y][tile.X][tile.Z].modTime {
-		return
-	}
-	player.view[tile.Y][tile.X][tile.Z].modTime = tile.modTime
-	// NOTE: We could maintain a list of known objects on a tile in the player's tile view and send the difference instead. For large stacks of infrequently changing tiles, this would be more bandwidth efficient, though at the expense of server-side RAM and CPU time.
-	// Filter out things we don't want to send to the client.
-	filteredMapObjects := make([]ObjectI, 0)
-	for _, o := range tile.GetObjects() {
-		if o.getType() != cdata.ArchetypeAudio {
-			filteredMapObjects = append(filteredMapObjects, o)
+	if tile.modTime != player.view[tile.Y][tile.X][tile.Z].modTime {
+		player.view[tile.Y][tile.X][tile.Z].modTime = tile.modTime
+		// NOTE: We could maintain a list of known objects on a tile in the player's tile view and send the difference instead. For large stacks of infrequently changing tiles, this would be more bandwidth efficient, though at the expense of server-side RAM and CPU time.
+		// Filter out things we don't want to send to the client.
+		filteredMapObjects := make([]ObjectI, 0)
+		for _, o := range tile.GetObjects() {
+			if o.getType() != cdata.ArchetypeAudio {
+				filteredMapObjects = append(filteredMapObjects, o)
+			}
 		}
-	}
-	tileObjectIDs := make([]ID, len(filteredMapObjects))
-	// Send any objects unknown to the client (and collect their IDs).
-	for i, o := range filteredMapObjects {
-		oID := o.GetID()
-		if _, isObjectKnown := player.knownIDs[oID]; !isObjectKnown {
-			// Let the client know of the object(s). NOTE: We could send a collection of object creation commands so as to reduce TCP overhead for bulk updates.
-			oArch := o.GetArchetype()
-			if oArch != nil {
+		tileObjectIDs := make([]ID, len(filteredMapObjects))
+		// Send any objects unknown to the client (and collect their IDs).
+		for i, o := range filteredMapObjects {
+			oID := o.GetID()
+			if _, isObjectKnown := player.knownIDs[oID]; !isObjectKnown {
+				// Let the client know of the object(s). NOTE: We could send a collection of object creation commands so as to reduce TCP overhead for bulk updates.
+				oArch := o.GetArchetype()
+				if oArch != nil {
+					player.ClientConnection.Send(network.CommandObject{
+						ObjectID: o.GetID(),
+						Payload: network.CommandObjectPayloadCreate{
+							TypeID:      o.getType().AsUint8(),
+							AnimationID: oArch.AnimID,
+							FaceID:      oArch.FaceID,
+							Height:      oArch.Height,
+							Width:       oArch.Width,
+							Depth:       oArch.Depth,
+							Opaque:      oArch.Matter.Is(cdata.OpaqueMatter),
+						},
+					})
+				} else {
+					player.ClientConnection.Send(network.CommandObject{
+						ObjectID: o.GetID(),
+						Payload:  network.CommandObjectPayloadCreate{},
+					})
+				}
+				player.knownIDs[oID] = struct{}{}
+			}
+			tileObjectIDs[i] = oID
+		}
+
+		// Check the given previous knownIDs and see if any were deleted. FIXME: This is kind of inefficient and should probably be handled by the Map.
+		for _, oID := range player.view[tile.Y][tile.X][tile.Z].knownIDs {
+			if o := tile.gameMap.world.GetObject(oID); o == nil {
 				player.ClientConnection.Send(network.CommandObject{
-					ObjectID: o.GetID(),
-					Payload: network.CommandObjectPayloadCreate{
-						TypeID:      o.getType().AsUint8(),
-						AnimationID: oArch.AnimID,
-						FaceID:      oArch.FaceID,
-						Height:      oArch.Height,
-						Width:       oArch.Width,
-						Depth:       oArch.Depth,
-						Opaque:      oArch.Matter.Is(cdata.OpaqueMatter),
-					},
-				})
-			} else {
-				player.ClientConnection.Send(network.CommandObject{
-					ObjectID: o.GetID(),
-					Payload:  network.CommandObjectPayloadCreate{},
+					ObjectID: oID,
+					Payload:  network.CommandObjectPayloadDelete{},
 				})
 			}
-			player.knownIDs[oID] = struct{}{}
 		}
-		tileObjectIDs[i] = oID
+		player.view[tile.Y][tile.X][tile.Z].knownIDs = tileObjectIDs
+		// Update the client's perception of the given tile.
+		player.ClientConnection.Send(network.CommandTile{
+			Y:         uint32(tile.Y),
+			X:         uint32(tile.X),
+			Z:         uint32(tile.Z),
+			ObjectIDs: tileObjectIDs,
+		})
 	}
-
-	// Check the given previous knownIDs and see if any were deleted. FIXME: This is kind of inefficient and should probably be handled by the Map.
-	for _, oID := range player.view[tile.Y][tile.X][tile.Z].knownIDs {
-		if o := tile.gameMap.world.GetObject(oID); o == nil {
-			player.ClientConnection.Send(network.CommandObject{
-				ObjectID: oID,
-				Payload:  network.CommandObjectPayloadDelete{},
-			})
-		}
+	if tile.lightModTime != player.view[tile.Y][tile.X][tile.Z].lightModTime {
+		player.view[tile.Y][tile.X][tile.Z].lightModTime = tile.lightModTime
+		// FIXME: This is a _lot_ of network updates to cause just to update lights... Maybe we should just send the light values of any objects with Light and allow the client to also calculate the brightness and/or r/g/b modulation. This _would_ work fine, however it does mean that clients could just show brightness for a given object if they have seen it once. It won't follow the object, so it might be okay...? It would also give visual bugs if the light object moved out of vision, at least until the source object is found again.
+		player.ClientConnection.Send(network.CommandTileLight{
+			Y:          uint32(tile.Y),
+			X:          uint32(tile.X),
+			Z:          uint32(tile.Z),
+			Brightness: tile.brightness,
+			// TODO: send R, G, B modulation.
+		})
 	}
-	player.view[tile.Y][tile.X][tile.Z].knownIDs = tileObjectIDs
-	// Update the client's perception of the given tile.
-	player.ClientConnection.Send(network.CommandTile{
-		Y:         uint32(tile.Y),
-		X:         uint32(tile.X),
-		Z:         uint32(tile.Z),
-		ObjectIDs: tileObjectIDs,
-	})
 }
 
 // checkVisibleTiles gets the initial view of the player. This sends tile information equal to how far the owner's PC can see.
