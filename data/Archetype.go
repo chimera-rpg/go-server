@@ -259,6 +259,13 @@ func (arch *Archetype) Add(other *Archetype) error {
 	arch.Attributes.Arcane.Add(other.Attributes.Arcane)
 	arch.Attributes.Spirit.Add(other.Attributes.Spirit)
 
+	// Brightness
+	if arch.Brightness == nil && other.Brightness != nil {
+		arch.Brightness = &*other.Brightness
+	} else if other.Brightness != nil {
+		*arch.Brightness += *other.Brightness
+	}
+
 	if arch.Exit == nil && other.Exit != nil {
 		y := *other.Exit.Y
 		x := *other.Exit.X
