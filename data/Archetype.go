@@ -70,8 +70,7 @@ type Archetype struct {
 	SoundSetID StringID `yaml:"-"`
 	SoundIndex int8     `yaml:"SoundIndex,omitempty"`
 	// Lighting
-	Brightness *float32  `yaml:"Brightness,omitempty"`
-	Color      *[3]uint8 `yaml:"Color,omitempty"`
+	Light *Light `yaml:"Light,omitempty"`
 	//
 	Worth      *string             `yaml:"Worth,omitempty"`
 	Value      *string             `yaml:"Value,omitempty"`
@@ -260,10 +259,11 @@ func (arch *Archetype) Add(other *Archetype) error {
 	arch.Attributes.Spirit.Add(other.Attributes.Spirit)
 
 	// Brightness
-	if arch.Brightness == nil && other.Brightness != nil {
-		arch.Brightness = &*other.Brightness
-	} else if other.Brightness != nil {
-		*arch.Brightness += *other.Brightness
+	if arch.Light != nil {
+		arch.Light.Add(other.Light)
+	} else if other.Light != nil {
+		arch.Light = &Light{}
+		arch.Light.Add(other.Light)
 	}
 
 	if arch.Exit == nil && other.Exit != nil {
