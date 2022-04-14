@@ -361,8 +361,7 @@ func (gmap *Map) PlaceObject(o ObjectI, y int, x int, z int) (err error) {
 
 	// Add object to lighting if it has brightness defined.
 	if o.GetArchetype().Brightness != nil {
-		gmap.lightObjects[o.GetID()] = o
-		// TODO: Mark map to regen light(?)
+		gmap.AddObjectLighting(o, y, x, z)
 	}
 
 	gmap.updateTime++
@@ -382,6 +381,11 @@ func (gmap *Map) RemoveObject(o ObjectI) (err error) {
 
 	tile := o.GetTile()
 	if tile != nil {
+		// Remove from lighting.
+		if o.GetArchetype().Brightness != nil {
+			gmap.RemoveObjectLighting(o, tile.Y, tile.X, tile.Z)
+		}
+		// Remove object.
 		tile.removeObject(o)
 	}
 
@@ -391,18 +395,16 @@ func (gmap *Map) RemoveObject(o ObjectI) (err error) {
 
 	delete(gmap.activeObjects, o.GetID())
 
-	// Remove from lighting.
-	if o.GetArchetype().Brightness != nil {
-		delete(gmap.lightObjects, o.GetID())
-		// TODO: Mark map to regen light(?)
-	}
-
 	//gmap.updateTime++
 	return
 }
 
 // TeleportObject teleports the given object from its current position to an absolute position.
 func (gmap *Map) TeleportObject(o ObjectI, y, x, z int, force bool) error {
+	if o.GetArchetype().Brightness != nil {
+		gmap.RemoveObjectLighting(o, o.GetTile().Y, o.GetTile().X, o.GetTile().Z)
+	}
+
 	yDir := y - o.GetTile().Y
 	xDir := x - o.GetTile().X
 	zDir := z - o.GetTile().Z
@@ -423,6 +425,11 @@ func (gmap *Map) TeleportObject(o ObjectI, y, x, z int, force bool) error {
 	targetTiles[0].insertObject(o, -1)
 	gmap.updateTime++
 	o.SetMoved(true)
+
+	// Update lighting.
+	if o.GetArchetype().Brightness != nil {
+		gmap.AddObjectLighting(o, o.GetTile().Y, o.GetTile().X, o.GetTile().Z)
+	}
 
 	return nil
 }
@@ -581,6 +588,11 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 		}
 	}
 
+	// Remove old lighting.
+	if o.GetArchetype().Brightness != nil {
+		gmap.RemoveObjectLighting(o, o.GetTile().Y, o.GetTile().X, o.GetTile().Z)
+	}
+
 	// If we got here then the move ended up being valid, so let's update our tiles.
 	// First we clear collisions from old intersection tiles.
 	for _, t := range oldTiles {
@@ -594,6 +606,12 @@ func (gmap *Map) MoveObject(o ObjectI, yDir, xDir, zDir int, force bool) (bool, 
 	targetTiles[0].insertObject(o, -1)
 	gmap.updateTime++
 	o.SetMoved(true)
+
+	// Add new lighting.
+	if o.GetArchetype().Brightness != nil {
+		gmap.AddObjectLighting(o, o.GetTile().Y, o.GetTile().X, o.GetTile().Z)
+	}
+
 	return true, nil
 }
 
@@ -822,4 +840,24 @@ func (gmap *Map) ShootRay(fromY, fromX, fromZ, toY, toX, toZ float64, f func(til
 		}
 	}
 	return
+}
+
+func (gmap *Map) RemoveObjectLighting(object ObjectI, y, x, z int) {
+	fmt.Println("RemoveObjectLighting")
+	if _, ok := gmap.lightObjects[object.GetID()]; ok {
+		fmt.Println("TODO: Remove lighting for object", y, x, z, object)
+		delete(gmap.lightObjects, object.GetID())
+	} else {
+		fmt.Println("FIXME: Removed lighting more than once")
+	}
+}
+
+func (gmap *Map) AddObjectLighting(object ObjectI, y, x, z int) {
+	fmt.Println("AddObjectLighting")
+	if _, ok := gmap.lightObjects[object.GetID()]; !ok {
+		fmt.Println("TODO: Add lighting for object", y, x, z, object)
+		gmap.lightObjects[object.GetID()] = object
+	} else {
+		fmt.Println("FIXME: Added lighting more than once")
+	}
 }
