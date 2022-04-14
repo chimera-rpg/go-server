@@ -93,6 +93,9 @@ func NewMap(world *World, name string) (*Map, error) {
 		gmap.addInterpreter(gd.Script)
 	}
 
+	// Generate map tile's sky lighting logic.
+	gmap.RefreshSky()
+
 	return gmap, nil
 }
 
@@ -941,4 +944,125 @@ func (gmap *Map) AddObjectLighting(object ObjectI, y, x, z int) {
 	} else {
 		fmt.Println("FIXME: Added lighting more than once")
 	}
+}
+
+// RefreshSky refreshes all tiles' exposure to the open sky.
+func (gmap *Map) RefreshSky() {
+	traversedCoords := make([][3]int, 0)
+	fullSkyCoords := make([][3]int, 0)
+	// Check every tile to see if it can see the sky.
+	// FIXME: Just check from the top of the map downwards, dingus.
+	for y := range gmap.tiles {
+		for x := range gmap.tiles[y] {
+			for z := range gmap.tiles[y][x] {
+				seesSky := true
+				for y2 := y + 1; y2 < gmap.height; y2++ {
+					t2 := gmap.tiles[y2][x][z]
+					if t2.opaque {
+						seesSky = false
+						break
+					}
+				}
+				if seesSky {
+					gmap.tiles[y][x][z].sky = 1.0
+					fullSkyCoords = append(fullSkyCoords, [3]int{y, x, z})
+					traversedCoords = append(traversedCoords, [3]int{y, x, z})
+				}
+			}
+		}
+	}
+	// Now iterate over each tile and cause light bleed-thru if it has no sky itself.
+	/*for _, c := range fullSkyCoords {
+		t := gmap.GetTile(c[0], c[1], c[2])
+		traversedCoords = append(traversedCoords, c)
+		for y2 := -1; y2 < 2; y2 += 2 {
+			for x2 := -1; x2 < 2; x2 += 2 {
+				for z2 := -1; z2 < 2; z2 += 2 {
+					if t2 := gmap.GetTile(c[0]+y2, c[1]+x2, c[2]+z2); t2 != nil {
+						t2.sky += t.sky / 4
+						if t2.sky > 1 {
+							t2.sky = 1.0
+						}
+						traversedCoords = append(traversedCoords, [3]int{c[0] + y2, c[1] + x2, c[2] + z2})
+					}
+				}
+			}
+		}
+	}*/
+
+	/*processNextCoords := func(current [][3]int) [][3]int {
+		nextCoords := make([][3]int, 0)
+		for _, c := range current {
+			fmt.Println("traversing", c)
+			t := gmap.GetTile(c[0], c[1], c[2])
+			for y2 := -1; y2 < 2; y2 += 2 {
+				for x2 := -1; x2 < 2; x2 += 2 {
+					for z2 := -1; z2 < 2; z2 += 2 {
+						has := false
+						for _, c2 := range traversedCoords {
+							if c2[0] == c[0]+y2 && c2[1] == c[1]+x2 && c2[2] == c[2]+z2 {
+								has = true
+							}
+						}
+						if !has {
+							// Adjust its thingies.
+							if t2 := gmap.GetTile(c[0]+y2, c[1]+x2, c[2]+z2); t2 != nil {
+								t2.sky += t.sky / 8
+								if t2.sky > 1 {
+									t2.sky = 1.0
+								}
+								nextCoords = append(nextCoords, [3]int{c[0] + y2, c[1] + x2, c[2] + z2})
+							}
+						}
+					}
+				}
+			}
+		}
+		return nextCoords
+	}
+
+	for c := processNextCoords(fullSkyCoords); len(c) > 0; c = processNextCoords(c) {
+	}*/
+	// FIXME: We should actually just iterate over all full-sky lights, then apply those to nearby tiles, then continue applying to each undiscovered tile until we have covered all tiles.
+	for y := range gmap.tiles {
+		for x := range gmap.tiles[y] {
+			for z := range gmap.tiles[y][x] {
+				if gmap.tiles[y][x][z].sky < 1.0 {
+					total := gmap.tiles[y][x][z].sky
+					checked := float32(1)
+					// Check neighbors up to 2x away in a cube to see if they have any light.
+					for y2 := -2; y2 <= 2; y2++ {
+						for x2 := -2; x2 <= 2; x2++ {
+							for z2 := -2; z2 <= 2; z2++ {
+								if y2 == 0 && x2 == 0 && z2 == 0 {
+									continue
+								}
+								if t := gmap.GetTile(y+y2, x+x2, z+z2); t != nil {
+									if t.sky >= gmap.tiles[y][x][z].sky {
+										checked++
+										total += t.sky
+									}
+								}
+							}
+						}
+					}
+					total /= checked
+					if total > 1 {
+						total = 1
+					}
+					gmap.tiles[y][x][z].sky = total
+				}
+			}
+		}
+	}
+	// Dump the sky.
+	/*for y := range gmap.tiles {
+		for x := range gmap.tiles[y] {
+			for z := range gmap.tiles[y][x] {
+				if gmap.tiles[y][x][z].sky < 1.0 {
+					fmt.Printf("Sky %dx%dx%d: %f\n", y, x, z, gmap.tiles[y][x][z].sky)
+				}
+			}
+		}
+	}*/
 }

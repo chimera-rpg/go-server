@@ -18,8 +18,9 @@ type Tile struct {
 	blocking     cdata.MatterType
 	matter       cdata.MatterType
 	opaque       bool
-	modTime      uint16 // Last time this tile was updated.
-	lightModTime uint16 // Last time this tile's light was updated.
+	modTime      uint16  // Last time this tile was updated.
+	lightModTime uint16  // Last time this tile's light was updated.
+	sky          float32 // How much this time is considered to be exposed to the open sky. Only calculated on map creation (for now).
 }
 
 // insertObject inserts the provided Object at the given index.
