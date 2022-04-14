@@ -69,6 +69,9 @@ type Archetype struct {
 	SoundSet   string   `yaml:"SoundSet,omitempty"`
 	SoundSetID StringID `yaml:"-"`
 	SoundIndex int8     `yaml:"SoundIndex,omitempty"`
+	// Lighting
+	Brightness *float32  `yaml:"Brightness,omitempty"`
+	Color      *[3]uint8 `yaml:"Color,omitempty"`
 	//
 	Worth      *string             `yaml:"Worth,omitempty"`
 	Value      *string             `yaml:"Value,omitempty"`

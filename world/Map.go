@@ -33,6 +33,7 @@ type Map struct {
 	tiles          [][][]Tile
 	activeTiles    []*Tile
 	activeObjects  map[ID]ObjectI
+	lightObjects   map[ID]ObjectI
 	actions        []ActionI // Actions that are added and processed each update.
 	width          int
 	height         int
@@ -60,6 +61,7 @@ func NewMap(world *World, name string) (*Map, error) {
 		name:          gd.Name,
 		dataName:      gd.DataName,
 		activeObjects: make(map[ID]ObjectI),
+		lightObjects:  make(map[ID]ObjectI),
 		y:             gd.Y,
 		x:             gd.X,
 		z:             gd.Z,
@@ -357,6 +359,12 @@ func (gmap *Map) PlaceObject(o ObjectI, y int, x int, z int) (err error) {
 		}
 	}
 
+	// Add object to lighting if it has brightness defined.
+	if o.GetArchetype().Brightness != nil {
+		gmap.lightObjects[o.GetID()] = o
+		// TODO: Mark map to regen light(?)
+	}
+
 	gmap.updateTime++
 	return
 }
@@ -382,6 +390,12 @@ func (gmap *Map) RemoveObject(o ObjectI) (err error) {
 	}
 
 	delete(gmap.activeObjects, o.GetID())
+
+	// Remove from lighting.
+	if o.GetArchetype().Brightness != nil {
+		delete(gmap.lightObjects, o.GetID())
+		// TODO: Mark map to regen light(?)
+	}
 
 	//gmap.updateTime++
 	return
