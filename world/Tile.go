@@ -12,7 +12,8 @@ type Tile struct {
 	Y, X, Z     int       // Location of the tile.
 	objects     []ObjectI // objects contains Objects that origin from this tile. This data is used in network transmission.
 	objectParts []ObjectI // objectParts contains Object pointers that are used for collisions, pathing, and otherwise. This data is never sent over the network.
-	brightness  int
+	brightness  float32
+	r, g, b     uint8
 	blocking    cdata.MatterType
 	matter      cdata.MatterType
 	opaque      bool
