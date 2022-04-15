@@ -123,10 +123,11 @@ func (gmap *Map) sizeMap(height int, width int, depth int) error {
 			gmap.tiles[y][x] = make([]Tile, depth)
 			for z := range gmap.tiles[y][x] {
 				gmap.tiles[y][x][z] = Tile{
-					gameMap: gmap,
-					Y:       y,
-					X:       x,
-					Z:       z,
+					gameMap:      gmap,
+					Y:            y,
+					X:            x,
+					Z:            z,
+					lightModTime: 1, // Set to 1 to ensure difference from player view's default light mod time.
 				}
 			}
 		}
@@ -946,114 +947,78 @@ func (gmap *Map) AddObjectLighting(object ObjectI, y, x, z int) {
 	}
 }
 
-// RefreshSky refreshes all tiles' exposure to the open sky.
+// RefreshSky refreshes all tiles' sky field to match their exposure to the open sky.
 func (gmap *Map) RefreshSky() {
-	traversedCoords := make([][3]int, 0)
-	fullSkyCoords := make([][3]int, 0)
-	// Check every tile to see if it can see the sky.
-	// FIXME: Just check from the top of the map downwards, dingus.
-	for y := range gmap.tiles {
-		for x := range gmap.tiles[y] {
-			for z := range gmap.tiles[y][x] {
-				seesSky := true
-				for y2 := y + 1; y2 < gmap.height; y2++ {
-					t2 := gmap.tiles[y2][x][z]
-					if t2.opaque {
-						seesSky = false
-						break
+	traversedCoords := make(map[[3]int]struct{}, 0)
+	nextCoords := make([][3]int, 0)
+
+	// First analyze/set all tiles that are guaranteed to be exposed to the sky.
+	for x := 0; x < gmap.width; x++ {
+		for z := 0; z < gmap.depth; z++ {
+			for y := gmap.height - 1; y >= 0; y-- {
+				gmap.tiles[y][x][z].sky = 1.0
+				traversedCoords[[3]int{y, x, z}] = struct{}{}
+
+				// Also add all adjacent tiles to our nextCoords slice that we will use to calculate their sky value.
+				for y2 := -1; y2 < 2; y2 += 2 {
+					for x2 := -1; x2 < 2; x2 += 2 {
+						for z2 := -1; z2 < 2; z2 += 2 {
+							if t := gmap.GetTile(y+y2, x+x2, z+z2); t != nil {
+								// Don't re-analyze full-sky styles.
+								if _, ok := traversedCoords[[3]int{y + y2, x + x2, z + z2}]; !ok {
+									nextCoords = append(nextCoords, [3]int{y + y2, x + x2, z + z2})
+								}
+							}
+						}
 					}
 				}
-				if seesSky {
-					gmap.tiles[y][x][z].sky = 1.0
-					fullSkyCoords = append(fullSkyCoords, [3]int{y, x, z})
-					traversedCoords = append(traversedCoords, [3]int{y, x, z})
+
+				// Bail if the tile is opaque, but still count it as being exposed to the sky.
+				if gmap.tiles[y][x][z].opaque {
+					break
 				}
 			}
 		}
 	}
-	// Now iterate over each tile and cause light bleed-thru if it has no sky itself.
-	/*for _, c := range fullSkyCoords {
-		t := gmap.GetTile(c[0], c[1], c[2])
-		traversedCoords = append(traversedCoords, c)
-		for y2 := -1; y2 < 2; y2 += 2 {
-			for x2 := -1; x2 < 2; x2 += 2 {
-				for z2 := -1; z2 < 2; z2 += 2 {
-					if t2 := gmap.GetTile(c[0]+y2, c[1]+x2, c[2]+z2); t2 != nil {
-						t2.sky += t.sky / 4
-						if t2.sky > 1 {
-							t2.sky = 1.0
-						}
-						traversedCoords = append(traversedCoords, [3]int{c[0] + y2, c[1] + x2, c[2] + z2})
-					}
-				}
-			}
-		}
-	}*/
 
-	/*processNextCoords := func(current [][3]int) [][3]int {
+	// This function iterates through each passed coordinate and makes it an aggregate of all adjacent tiles that have already been processed.
+	processNextCoords := func(current [][3]int) [][3]int {
 		nextCoords := make([][3]int, 0)
 		for _, c := range current {
-			fmt.Println("traversing", c)
 			t := gmap.GetTile(c[0], c[1], c[2])
+			traversedCoords[c] = struct{}{}
+			total := t.sky
+			count := float32(1)
 			for y2 := -1; y2 < 2; y2 += 2 {
 				for x2 := -1; x2 < 2; x2 += 2 {
 					for z2 := -1; z2 < 2; z2 += 2 {
-						has := false
-						for _, c2 := range traversedCoords {
-							if c2[0] == c[0]+y2 && c2[1] == c[1]+x2 && c2[2] == c[2]+z2 {
-								has = true
-							}
-						}
-						if !has {
-							// Adjust its thingies.
-							if t2 := gmap.GetTile(c[0]+y2, c[1]+x2, c[2]+z2); t2 != nil {
-								t2.sky += t.sky / 8
-								if t2.sky > 1 {
-									t2.sky = 1.0
-								}
+						if t2 := gmap.GetTile(c[0]+y2, c[1]+x2, c[2]+z2); t2 != nil {
+							// Only pull from already traversed coordinates.
+							if _, ok := traversedCoords[[3]int{c[0] + y2, c[1] + x2, c[2] + z2}]; ok {
+								total += t2.sky
+								count++
+							} else {
+								// Add non-traversed coordinates to our next coordinates slice.
 								nextCoords = append(nextCoords, [3]int{c[0] + y2, c[1] + x2, c[2] + z2})
 							}
 						}
 					}
 				}
 			}
+			// Only adjust the sky value if it is less than 1.
+			if t.sky < 1 {
+				t.sky = total / count
+				// Might as well round up numbers close enough to 1.
+				if t.sky >= 0.99 {
+					t.sky = 1
+				}
+			}
 		}
 		return nextCoords
 	}
 
-	for c := processNextCoords(fullSkyCoords); len(c) > 0; c = processNextCoords(c) {
-	}*/
-	// FIXME: We should actually just iterate over all full-sky lights, then apply those to nearby tiles, then continue applying to each undiscovered tile until we have covered all tiles.
-	for y := range gmap.tiles {
-		for x := range gmap.tiles[y] {
-			for z := range gmap.tiles[y][x] {
-				if gmap.tiles[y][x][z].sky < 1.0 {
-					total := gmap.tiles[y][x][z].sky
-					checked := float32(1)
-					// Check neighbors up to 2x away in a cube to see if they have any light.
-					for y2 := -2; y2 <= 2; y2++ {
-						for x2 := -2; x2 <= 2; x2++ {
-							for z2 := -2; z2 <= 2; z2++ {
-								if y2 == 0 && x2 == 0 && z2 == 0 {
-									continue
-								}
-								if t := gmap.GetTile(y+y2, x+x2, z+z2); t != nil {
-									if t.sky >= gmap.tiles[y][x][z].sky {
-										checked++
-										total += t.sky
-									}
-								}
-							}
-						}
-					}
-					total /= checked
-					if total > 1 {
-						total = 1
-					}
-					gmap.tiles[y][x][z].sky = total
-				}
-			}
-		}
+	// Step through all tile coordinates starting from full sky tiles.
+	for c := processNextCoords(nextCoords); len(c) > 0; c = processNextCoords(c) {
 	}
 	// Dump the sky.
 	/*for y := range gmap.tiles {
