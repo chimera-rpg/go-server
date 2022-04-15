@@ -302,9 +302,12 @@ func (player *OwnerPlayer) sendTile(tile *Tile) {
 		player.view[tile.Y][tile.X][tile.Z].lightModTime = tile.lightModTime
 		// FIXME: This is a _lot_ of network updates to cause just to update lights... Maybe we should just send the light values of any objects with Light and allow the client to also calculate the brightness and/or r/g/b modulation. This _would_ work fine, however it does mean that clients could just show brightness for a given object if they have seen it once. It won't follow the object, so it might be okay...? It would also give visual bugs if the light object moved out of vision, at least until the source object is found again.
 		// Modify by how sky-visibile it is... maybe this should be send to the client directly.
-		brightness := tile.brightness + tile.sky // * map.brightness..?
-		if brightness > 1.0 {
-			brightness = 1.0
+		brightness := tile.sky // * map.brightness..?
+		if brightness < 1.0 {
+			brightness += tile.brightness
+			if brightness > 1 {
+				brightness = 1.0
+			}
 		}
 		player.ClientConnection.Send(network.CommandTileLight{
 			Y:          uint32(tile.Y),
