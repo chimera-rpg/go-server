@@ -58,6 +58,8 @@ func (s *ScriptEventResponse) UnmarshalYAML(unmarshal func(interface{}) error) e
 	if err := unmarshal(&code); err != nil {
 		return nil
 	}
-	s.Expr = Interpreter.Compile(code)
+	if Interpreter != nil {
+		s.Expr = Interpreter.Compile(code)
+	}
 	return nil
 }

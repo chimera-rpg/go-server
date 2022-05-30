@@ -5,4 +5,4 @@ import (
 )
 
 // Interpreter is the interpreter instance used by all archetype scripts. This is more fully defined in world.
-var Interpreter *fast.Interp = fast.New()
+var Interpreter *fast.Interp
