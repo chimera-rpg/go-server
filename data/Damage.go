@@ -5,8 +5,8 @@ import (
 )
 
 type Damage struct {
-	Value          int                    `yaml:"Value,omitempty"`
-	AttributeBonus DamageAttributeBonuses `yaml:"AttributeBonus,omitempty"`
+	Value          int                    `json:"Value" yaml:"Value,omitempty"`
+	AttributeBonus DamageAttributeBonuses `json:"AttributeBonus" yaml:"AttributeBonus,omitempty"`
 }
 
 func (d *Damage) Add(other *Damage) {

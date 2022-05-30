@@ -76,43 +76,43 @@ func (t IntRange) Random() int {
 }
 
 type SpawnConditions struct {
-	Matter   *cdata.MatterType `yaml:"Matter,omitempty"`
-	Blocking *cdata.MatterType `yaml:"Blocking,omitempty"`
+	Matter   *cdata.MatterType `json:"Matter" yaml:"Matter,omitempty"`
+	Blocking *cdata.MatterType `json:"Blocking" yaml:"Blocking,omitempty"`
 }
 
 type SpawnPlacement struct {
-	Overlap bool            `yaml:"Overlap,omitempty"`
-	Surface SpawnConditions `yaml:"Surface,omitempty"`
-	Air     SpawnConditions `yaml:"Air,omitempty"`
-	X       IntRange        `yaml:"X,omitempty"`
-	Y       IntRange        `yaml:"Y,omitempty"`
-	Z       IntRange        `yaml:"Z,omitempty"`
+	Overlap bool            `json:"Overlap" yaml:"Overlap,omitempty"`
+	Surface SpawnConditions `json:"Surface" yaml:"Surface,omitempty"`
+	Air     SpawnConditions `json:"Air" yaml:"Air,omitempty"`
+	X       IntRange        `json:"X" yaml:"X,omitempty"`
+	Y       IntRange        `json:"Y" yaml:"Y,omitempty"`
+	Z       IntRange        `json:"Z" yaml:"Z,omitempty"`
 }
 
 // SpawnArchetype is a container for pairing an Archetype with a Chance value.
 type SpawnArchetype struct {
-	Chance    float32        `yaml:"Chance,omitempty"`
-	Archetype *Archetype     `yaml:"Archetype,omitempty"`
-	Count     IntRange       `yaml:"Count,omitempty"`
-	Retry     int            `yaml:"Retry,omitempty"` // Retry count if spawning fails.
-	Placement SpawnPlacement `yaml:"Placement,omitempty"`
+	Chance    float32        `json:"Chance" yaml:"Chance,omitempty"`
+	Archetype *Archetype     `json:"Archetype" yaml:"Archetype,omitempty"`
+	Count     IntRange       `json:"Count" yaml:"Count,omitempty"`
+	Retry     int            `json:"Retry" yaml:"Retry,omitempty"` // Retry count if spawning fails.
+	Placement SpawnPlacement `json:"Placement" yaml:"Placement,omitempty"`
 }
 
 type XYZOffset struct {
-	X IntRange `yaml:"X,omitempty"`
-	Y IntRange `yaml:"Y,omitempty"`
-	Z IntRange `yaml:"Z,omitempty"`
+	X IntRange `json:"X" yaml:"X,omitempty"`
+	Y IntRange `json:"Y" yaml:"Y,omitempty"`
+	Z IntRange `json:"Z" yaml:"Z,omitempty"`
 }
 
 // SpawnEventResponse is an event response that causes zero or more items to spawn.
 type SpawnEventResponse struct {
-	Type  SpawnEventType   `yaml:"Type,omitempty"`
-	Items []SpawnArchetype `yaml:"Items,omitempty"`
+	Type  SpawnEventType   `json:"Type" yaml:"Type,omitempty"`
+	Items []SpawnArchetype `json:"Items" yaml:"Items,omitempty"`
 }
 
 // TriggerEventResponse causes another event to be triggered.
 type TriggerEventResponse struct {
-	Event string `yaml:"Event,omitempty"`
+	Event string `json:"Event" yaml:"Event,omitempty"`
 }
 
 // EventType is a type representing our events.
@@ -120,20 +120,20 @@ type EventType uint32
 
 // Events is a structure for our various potentially handled event responses.
 type Events struct {
-	Birth     *EventResponses `yaml:"Birth,omitempty"`
-	Death     *EventResponses `yaml:"Death,omitempty"`
-	Hit       *EventResponses `yaml:"Hit,omitempty"`
-	Attacking *EventResponses `yaml:"Attacking,omitempty"`
-	Attacked  *EventResponses `yaml:"Attacked,omitempty"`
-	Attack    *EventResponses `yaml:"Attack,omitempty"`
-	Advance   *EventResponses `yaml:"Advance,omitempty"`
-	Exit      *EventResponses `yaml:"Exit,omitempty"`
+	Birth     *EventResponses `json:"Birth" yaml:"Birth,omitempty"`
+	Death     *EventResponses `json:"Death" yaml:"Death,omitempty"`
+	Hit       *EventResponses `json:"Hit" yaml:"Hit,omitempty"`
+	Attacking *EventResponses `json:"Attacking" yaml:"Attacking,omitempty"`
+	Attacked  *EventResponses `json:"Attacked" yaml:"Attacked,omitempty"`
+	Attack    *EventResponses `json:"Attack" yaml:"Attack,omitempty"`
+	Advance   *EventResponses `json:"Advance" yaml:"Advance,omitempty"`
+	Exit      *EventResponses `json:"Exit" yaml:"Exit,omitempty"`
 }
 
 // EventResponses are the valid responses that can be given for an event.
 type EventResponses struct {
-	Spawn   *SpawnEventResponse   `yaml:"Spawn,omitempty"`
-	Replace *[]SpawnArchetype     `yaml:"Replace,omitempty"`
-	Trigger *TriggerEventResponse `yaml:"Trigger,omitempty"`
-	Script  *ScriptEventResponse  `yaml:"Script,omitempty"`
+	Spawn   *SpawnEventResponse   `json:"Spawn" yaml:"Spawn,omitempty"`
+	Replace *[]SpawnArchetype     `json:"Replace" yaml:"Replace,omitempty"`
+	Trigger *TriggerEventResponse `json:"Trigger" yaml:"Trigger,omitempty"`
+	Script  *ScriptEventResponse  `json:"Script" yaml:"Script,omitempty"`
 }

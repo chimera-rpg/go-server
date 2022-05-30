@@ -13,9 +13,9 @@ const (
 
 // AttributeSets is our set of a Attributes.
 type AttributeSets struct {
-	Physical Attributes `yaml:"Physical,omitempty"`
-	Arcane   Attributes `yaml:"Arcane,omitempty"`
-	Spirit   Attributes `yaml:"Spirit,omitempty"`
+	Physical Attributes `json:"Physical" yaml:"Physical,omitempty"`
+	Arcane   Attributes `json:"Arcane" yaml:"Arcane,omitempty"`
+	Spirit   Attributes `json:"Spirit" yaml:"Spirit,omitempty"`
 }
 
 // AttributeValue is a numeric value that represents a character's base ability.
@@ -58,17 +58,17 @@ var AttributeTypeToStringMap = map[AttributeType]string{
 // Attributes represent the attribute scores for skills, combat, and more.
 type Attributes struct {
 	// Might represents general strength. Used for damage.
-	Might AttributeValue `yaml:"Might,omitempty"`
+	Might AttributeValue `json:"Might" yaml:"Might,omitempty"`
 	// Prowess represents endurance. Used for hit/arcane/divine points.
-	Prowess AttributeValue `yaml:"Prowess,omitempty"`
+	Prowess AttributeValue `json:"Prowess" yaml:"Prowess,omitempty"`
 	// Focus represents accuracy. Used for criticals.
-	Focus AttributeValue `yaml:"Focus,omitempty"`
+	Focus AttributeValue `json:"Focus" yaml:"Focus,omitempty"`
 	// Sense represents ability to sense things. Used primary for passive skills.
-	Sense AttributeValue `yaml:"Sense,omitempty"`
+	Sense AttributeValue `json:"Sense" yaml:"Sense,omitempty"`
 	// Haste represents how quickly one can do things. Used for attack speed and movement speed.
-	Haste AttributeValue `yaml:"Haste,omitempty"`
+	Haste AttributeValue `json:"Haste" yaml:"Haste,omitempty"`
 	// Reaction represents how well one can dodge. Used for dodging attacks.
-	Reaction AttributeValue `yaml:"Reaction,omitempty"`
+	Reaction AttributeValue `json:"Reaction" yaml:"Reaction,omitempty"`
 }
 
 // Add adds together all attributes from another Attributes object.

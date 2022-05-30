@@ -30,15 +30,15 @@ type RandomArchetype struct {
 
 // ExitInfo represents the information used for simple exits and teleporters.
 type ExitInfo struct {
-	Name       string   `yaml:"Name,omitempty"`
-	Y          *int     `yaml:"Y,omitempty"`
-	X          *int     `yaml:"X,omitempty"`
-	Z          *int     `yaml:"Z,omitempty"`
-	Touch      bool     `yaml:"Touch,omitempty"`
-	Cooldown   Duration `yaml:"Cooldown,omitempty"`
-	SizeRatio  float64  `yaml:"SizeRatio,omitempty"`
-	Uses       int      `yaml:"Uses,omitempty"`
-	UniqueUses int      `yaml:"UniqueUses,omitempty"`
+	Name       string   `json:"Name" yaml:"Name,omitempty"`
+	Y          *int     `json:"Y" yaml:"Y,omitempty"`
+	X          *int     `json:"X" yaml:"X,omitempty"`
+	Z          *int     `json:"Z" yaml:"Z,omitempty"`
+	Touch      bool     `json:"Touch" yaml:"Touch,omitempty"`
+	Cooldown   Duration `json:"Cooldown" yaml:"Cooldown,omitempty"`
+	SizeRatio  float64  `json:"SizeRatio" yaml:"SizeRatio,omitempty"`
+	Uses       int      `json:"Uses" yaml:"Uses,omitempty"`
+	UniqueUses int      `json:"UniqueUses" yaml:"UniqueUses,omitempty"`
 }
 
 // Archetype represents a collection of data that should be used for the
@@ -46,83 +46,83 @@ type ExitInfo struct {
 type Archetype struct {
 	ArchID       StringID     `yaml:"-"` // Archetype ID used for generating objects and inheriting from.
 	ArchIDs      []MergeArch  `yaml:"-"`
-	Archs        []string     `yaml:"Archs,omitempty"` // Archetypes to inherit from.
+	Archs        []string     `json:"Archs" yaml:"Archs,omitempty"` // Archetypes to inherit from.
 	ArchPointers []*Archetype `yaml:"-"`
-	Arch         string       `yaml:"Arch,omitempty"` // Archetype to inherit from. During post-parsing this is used to acquire and set the ArchID for inventory archetypes.
-	SelfID       StringID     `yaml:"-"`              // The Archetype's own SelfID
-	Name         *string      `yaml:"Name,omitempty"` //
+	Arch         string       `json:"Arch" yaml:"Arch,omitempty"` // Archetype to inherit from. During post-parsing this is used to acquire and set the ArchID for inventory archetypes.
+	SelfID       StringID     `yaml:"-"`                          // The Archetype's own SelfID
+	Name         *string      `json:"Name" yaml:"Name,omitempty"` //
 	//Name string
-	Description *string             `yaml:"Description,omitempty"`
-	Type        cdata.ArchetypeType `yaml:"Type,omitempty"`
-	Anim        string              `yaml:"Anim,omitempty"`
+	Description *string             `json:"Description" yaml:"Description,omitempty"`
+	Type        cdata.ArchetypeType `json:"Type" yaml:"Type,omitempty"`
+	Anim        string              `json:"Anim" yaml:"Anim,omitempty"`
 	AnimID      StringID            `yaml:"-"`
-	Face        string              `yaml:"Face,omitempty"`
+	Face        string              `json:"Face" yaml:"Face,omitempty"`
 	FaceID      StringID            `yaml:"-"`
-	Height      uint8               `yaml:"Height,omitempty"`
-	Width       uint8               `yaml:"Width,omitempty"`
-	Depth       uint8               `yaml:"Depth,omitempty"`
-	Matter      cdata.MatterType    `yaml:"Matter,omitempty"`
-	Blocking    cdata.MatterType    `yaml:"Blocking,omitempty"`
+	Height      uint8               `json:"Height" yaml:"Height,omitempty"`
+	Width       uint8               `json:"Width" yaml:"Width,omitempty"`
+	Depth       uint8               `json:"Depth" yaml:"Depth,omitempty"`
+	Matter      cdata.MatterType    `json:"Matter" yaml:"Matter,omitempty"`
+	Blocking    cdata.MatterType    `json:"Blocking" yaml:"Blocking,omitempty"`
 	//
-	Audio      string   `yaml:"Audio,omitempty"`
+	Audio      string   `json:"Audio" yaml:"Audio,omitempty"`
 	AudioID    StringID `yaml:"-"`
-	SoundSet   string   `yaml:"SoundSet,omitempty"`
+	SoundSet   string   `json:"SoundSet" yaml:"SoundSet,omitempty"`
 	SoundSetID StringID `yaml:"-"`
-	SoundIndex int8     `yaml:"SoundIndex,omitempty"`
+	SoundIndex int8     `json:"SoundIndex" yaml:"SoundIndex,omitempty"`
 	// Lighting
-	Light *Light `yaml:"Light,omitempty"`
+	Light *Light `json:"Light" yaml:"Light,omitempty"`
 	//
-	Worth      *string             `yaml:"Worth,omitempty"`
-	Value      *string             `yaml:"Value,omitempty"`
-	Count      *string             `yaml:"Count,omitempty"`
-	Weight     *string             `yaml:"Weight,omitempty"`
-	Properties map[string]Variable `yaml:"Properties,omitempty"`
+	Worth      *string             `json:"Worth" yaml:"Worth,omitempty"`
+	Value      *string             `json:"Value" yaml:"Value,omitempty"`
+	Count      *string             `json:"Count" yaml:"Count,omitempty"`
+	Weight     *string             `json:"Weight" yaml:"Weight,omitempty"`
+	Properties map[string]Variable `json:"Properties" yaml:"Properties,omitempty"`
 	// Exit-related
-	Exit *ExitInfo `yaml:"Exit,omitempty"`
+	Exit *ExitInfo `json:"Exit" yaml:"Exit,omitempty"`
 	//
-	Timers []ArchetypeTimer `yaml:"Timers,omitempty"`
+	Timers []ArchetypeTimer `json:"Timers" yaml:"Timers,omitempty"`
 	//
-	Inventory []Archetype `yaml:"Inventory,omitempty"`
+	Inventory []Archetype `json:"Inventory" yaml:"Inventory,omitempty"`
 	// SkillTypes correspond to the skills used by weapons and similar.
-	SkillTypes []SkillType `yaml:"SkillTypes,omitempty"`
+	SkillTypes []SkillType `json:"SkillTypes" yaml:"SkillTypes,omitempty"`
 	// CompetencyTypes are the competency types of a weapon or armor.
-	CompetencyTypes []CompetencyType `yaml:"CompetencyTypes,omitempty"`
+	CompetencyTypes []CompetencyType `json:"CompetencyTypes" yaml:"CompetencyTypes,omitempty"`
 	// Skills are the skills levels contained by a character.
-	Skills map[SkillType]Skill `yaml:"Skills,omitempty"`
+	Skills map[SkillType]Skill `json:"Skills" yaml:"Skills,omitempty"`
 	// Competencies are the associated competencies' values that a character has.
-	Competencies map[CompetencyType]Competency `yaml:"Competencies,omitempty"`
+	Competencies map[CompetencyType]Competency `json:"Competencies" yaml:"Competencies,omitempty"`
 	// Resistances represents the attack type resistances of armor or a character.
-	Resistances cdata.AttackTypes `yaml:"Resistances,omitempty"`
+	Resistances cdata.AttackTypes `json:"Resistances" yaml:"Resistances,omitempty"`
 	// AttackTypes represents the attack types of a weapon or a character.
-	AttackTypes cdata.AttackTypes `yaml:"AttackTypes,omitempty"`
+	AttackTypes cdata.AttackTypes `json:"AttackTypes" yaml:"AttackTypes,omitempty"`
 	// Reach represents how far this object can reach.
-	Reach      uint8 `yaml:"Reach,omitempty"`
-	Attackable bool  `yaml:"Attackable,omitempty"`
+	Reach      uint8 `json:"Reach" yaml:"Reach,omitempty"`
+	Attackable bool  `json:"Attackable" yaml:"Attackable,omitempty"`
 	// Damage represents the damage of a weapon or otherwise.
-	Damage *Damage `yaml:"Damage,omitempty"`
-	Armor  float64 `yaml:"Armor,omitempty"`
+	Damage *Damage `json:"Damage" yaml:"Damage,omitempty"`
+	Armor  float64 `json:"Armor" yaml:"Armor,omitempty"`
 	// Dodge represents an intrinsic dodge %. Only applicable to characters.
-	Dodge        float64 `yaml:"Dodge,omitempty"`
-	ChannelTime  uint16  `yaml:"ChannelTime,omitempty"`
-	RecoveryTime uint16  `yaml:"RecoveryTime,omitempty"`
+	Dodge        float64 `json:"Dodge" yaml:"Dodge,omitempty"`
+	ChannelTime  uint16  `json:"ChannelTime" yaml:"ChannelTime,omitempty"`
+	RecoveryTime uint16  `json:"RecoveryTime" yaml:"RecoveryTime,omitempty"`
 	// Level represents the level of a skill or character.
-	Level int `yaml:"Level,omitempty"`
+	Level int `json:"Level" yaml:"Level,omitempty"`
 	// Advancement represents the advancement of a skill or a character into the next level.
-	Advancement float64 `yaml:"Advancement,omitempty"`
+	Advancement float64 `json:"Advancement" yaml:"Advancement,omitempty"`
 	// Efficiency represents the current efficiency of a skill.
-	Efficiency float64 `yaml:"Efficiency,omitempty"`
+	Efficiency float64 `json:"Efficiency" yaml:"Efficiency,omitempty"`
 	//
-	Attributes AttributeSets `yaml:"Attributes,omitempty"`
+	Attributes AttributeSets `json:"Attributes" yaml:"Attributes,omitempty"`
 	// Hmm
-	Statuses map[string]map[string]interface{} `yaml:"Statuses,omitempty"`
+	Statuses map[string]map[string]interface{} `json:"Statuses" yaml:"Statuses,omitempty"`
 	// Attitudes represent attitudes towards factions and similar.
-	Attitudes Attitudes `yaml:"Attitudes,omitempty"`
-	Genera    string    `yaml:"Genera,omitempty"`
-	Species   string    `yaml:"Species,omitempty"`
-	Factions  []string  `yaml:"Factions,omitempty"`
-	Legacy    string    `yaml:"Legacy,omitempty"`
+	Attitudes Attitudes `json:"Attitudes" yaml:"Attitudes,omitempty"`
+	Genera    string    `json:"Genera" yaml:"Genera,omitempty"`
+	Species   string    `json:"Species" yaml:"Species,omitempty"`
+	Factions  []string  `json:"Factions" yaml:"Factions,omitempty"`
+	Legacy    string    `json:"Legacy" yaml:"Legacy,omitempty"`
 	// Events are maps of EventIDs to EventResponses.
-	Events *Events `yaml:"Events,omitempty"`
+	Events *Events `json:"Events" yaml:"Events,omitempty"`
 	//
 	isCompiled   bool `yaml:"-"`
 	isProcessing bool `yaml:"-"`

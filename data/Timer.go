@@ -7,8 +7,8 @@ import (
 
 // TimeRange just defines a range between two times.
 type TimeRange struct {
-	Min int `yaml:"Min,omitempty"`
-	Max int `yaml:"Max,omitempty"`
+	Min int `json:"Min" yaml:"Min,omitempty"`
+	Max int `json:"Max" yaml:"Max,omitempty"`
 }
 
 // Random returns a duration between min and max.
@@ -21,7 +21,7 @@ func (t TimeRange) Random() time.Duration {
 
 // ArchetypeTimer represents a built-in timer for an archetype. The result of these timers will be the triggering of an Event.
 type ArchetypeTimer struct {
-	Event  string    `yaml:"Event,omitempty"`
-	Repeat int       `yaml:"Repeat,omitempty"`
-	Wait   TimeRange `yaml:"Wait,omitempty"`
+	Event  string    `json:"Event" yaml:"Event,omitempty"`
+	Repeat int       `json:"Repeat" yaml:"Repeat,omitempty"`
+	Wait   TimeRange `json:"Wait" yaml:"Wait,omitempty"`
 }

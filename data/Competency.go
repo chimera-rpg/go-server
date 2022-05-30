@@ -4,7 +4,7 @@ import "fmt"
 
 // Competency is the floating value of competency for a competency type. These range from 0 to 100.
 type Competency struct {
-	Efficiency float64 `yaml:"Efficiency,omitempty"`
+	Efficiency float64 `json:"Efficiency" yaml:"Efficiency,omitempty"`
 }
 
 // CompetencyType is a type for a given competency.
