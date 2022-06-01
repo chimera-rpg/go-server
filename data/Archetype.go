@@ -172,6 +172,16 @@ func (arch *Archetype) SetCompiled(b bool) {
 	arch.isCompiled = b
 }
 
+// IsCompiling returns if the archetype is compiling.
+func (arch *Archetype) IsCompiling() bool {
+	return arch.isCompiling
+}
+
+// SetCompiling sets the archetype to the given compiling state.
+func (arch *Archetype) SetCompiling(b bool) {
+	arch.isCompiling = b
+}
+
 // Add adds properties from another archetype to itself, adding missing values and combining numerical values where able.
 func (arch *Archetype) Add(other *Archetype) error {
 	arch.Matter |= other.Matter
