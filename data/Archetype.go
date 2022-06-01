@@ -115,7 +115,7 @@ type Archetype struct {
 	//
 	Attributes AttributeSets `json:"Attributes" yaml:"Attributes,omitempty"`
 	// Hmm
-	Statuses map[string]map[string]interface{} `json:"Statuses" yaml:"Statuses,omitempty"`
+	Statuses map[string]StatusMap `json:"Statuses" yaml:"Statuses,omitempty"`
 	// Attitudes represent attitudes towards factions and similar.
 	Attitudes Attitudes `json:"Attitudes" yaml:"Attitudes,omitempty"`
 	Genera    string    `json:"Genera" yaml:"Genera,omitempty"`
@@ -129,6 +129,8 @@ type Archetype struct {
 	isProcessing bool `yaml:"-"`
 	isCompiling  bool `yaml:"-"`
 }
+
+type StatusMap map[string]interface{}
 
 // NewArchetype creates a new, blank archetype.
 func NewArchetype() Archetype {
