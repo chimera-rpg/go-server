@@ -10,7 +10,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/cosmos72/gomacro/fast"
 	log "github.com/sirupsen/logrus"
 
 	"gopkg.in/yaml.v2"
@@ -694,7 +693,6 @@ func (m *Manager) GetMap(name string) (Map *Map, err error) {
 
 // Setup sets up the data Manager for use by the server.
 func (m *Manager) Setup(config *config.Config) error {
-	Interpreter = fast.New()
 	m.archetypes = make(map[StringID]*Archetype)
 	m.animations = make(map[StringID]*Animation)
 	m.audio = make(map[StringID]*Audio)
