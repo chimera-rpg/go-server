@@ -50,6 +50,7 @@ type Archetype struct {
 	ArchPointers []*Archetype `yaml:"-"`
 	Arch         string       `json:"Arch" yaml:"Arch,omitempty"` // Archetype to inherit from. During post-parsing this is used to acquire and set the ArchID for inventory archetypes.
 	SelfID       StringID     `yaml:"-"`                          // The Archetype's own SelfID
+	Self         string       `json:"Self" yaml:"-"`
 	Name         *string      `json:"Name" yaml:"Name,omitempty"` //
 	//Name string
 	Description *string             `json:"Description" yaml:"Description,omitempty"`
