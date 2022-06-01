@@ -9,6 +9,7 @@ import (
 	"github.com/chimera-rpg/go-server/config"
 	"github.com/chimera-rpg/go-server/data"
 	"github.com/chimera-rpg/go-server/world"
+	"github.com/cosmos72/gomacro/fast"
 	"github.com/cosmos72/gomacro/imports"
 	log "github.com/sirupsen/logrus"
 )
@@ -57,6 +58,8 @@ func (s *GameServer) Setup(cfg *config.Config) error {
 
 	imports.Packages["chimera"].Binds["self"] = reflect.ValueOf(&o).Elem()
 	imports.Packages["chimera"].Binds["event"] = reflect.ValueOf(&e).Elem()
+
+	data.Interpreter = fast.New()
 
 	data.Interpreter.ImportPackage("lname", "chimera")
 	data.Interpreter.ChangePackage("lname", "chimera")
