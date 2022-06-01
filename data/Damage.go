@@ -26,7 +26,9 @@ func (d *Damage) Add(other *Damage) {
 	}
 }
 
-type DamageAttributeBonuses map[cdata.AttackType]map[AttributeType]float64
+type DamageAttributeBonuses map[cdata.AttackType]AttributeTypes
+
+type AttributeTypes map[AttributeType]float64
 
 // UnmarshalYAML unmarshals, converting attack type strings into AttackTypes.
 func (d *DamageAttributeBonuses) UnmarshalYAML(unmarshal func(interface{}) error) error {
