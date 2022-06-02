@@ -6,7 +6,7 @@ import (
 
 type Damage struct {
 	Value          int                    `json:"Value" yaml:"Value,omitempty"`
-	AttributeBonus DamageAttributeBonuses `json:"AttributeBonus" yaml:"AttributeBonus,omitempty"`
+	AttributeBonus DamageAttributeBonuses `json:"AttributeBonus" ts_type:"{[key:number]: {[key:number]: number}}" yaml:"AttributeBonus,omitempty"`
 }
 
 func (d *Damage) Add(other *Damage) {
