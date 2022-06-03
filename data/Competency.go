@@ -10,6 +10,9 @@ type Competency struct {
 // CompetencyType is a type for a given competency.
 type CompetencyType uint32
 
+// CompetenciesMap is a convenience type mapping for our competencies.
+type CompetenciesMap map[CompetencyType]Competency
+
 // These are the various competency types within chimera.
 const (
 	//Incompetency CompetencyType = 0

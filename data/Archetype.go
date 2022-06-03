@@ -91,7 +91,7 @@ type Archetype struct {
 	// Skills are the skills levels contained by a character.
 	Skills map[SkillType]Skill `json:"Skills" ts_type:"{[key:number]: Skill}" yaml:"Skills,omitempty"`
 	// Competencies are the associated competencies' values that a character has.
-	Competencies map[CompetencyType]Competency `json:"Competencies" ts_type:"{[key:number]: Competency}" yaml:"Competencies,omitempty"`
+	Competencies CompetenciesMap `json:"Competencies" ts_type:"{[key:number]: Competency}" yaml:"Competencies,omitempty"`
 	// Resistances represents the attack type resistances of armor or a character.
 	Resistances cdata.AttackTypes `json:"Resistances" ts_type:"{[key:number]: {[key:number]: number}}" yaml:"Resistances,omitempty"`
 	// AttackTypes represents the attack types of a weapon or a character.
