@@ -89,13 +89,13 @@ type Archetype struct {
 	// CompetencyTypes are the competency types of a weapon or armor.
 	CompetencyTypes []CompetencyType `json:"CompetencyTypes" yaml:"CompetencyTypes,omitempty"`
 	// Skills are the skills levels contained by a character.
-	Skills map[SkillType]Skill `json:"Skills" yaml:"Skills,omitempty"`
+	Skills map[SkillType]Skill `json:"Skills" ts_type:"{[key:number]: Skill}" yaml:"Skills,omitempty"`
 	// Competencies are the associated competencies' values that a character has.
-	Competencies map[CompetencyType]Competency `json:"Competencies" yaml:"Competencies,omitempty"`
+	Competencies map[CompetencyType]Competency `json:"Competencies" ts_type:"{[key:number]: Competency}" yaml:"Competencies,omitempty"`
 	// Resistances represents the attack type resistances of armor or a character.
-	Resistances cdata.AttackTypes `json:"Resistances" yaml:"Resistances,omitempty"`
+	Resistances cdata.AttackTypes `json:"Resistances" ts_type:"{[key:number]: {[key:number]: number}}" yaml:"Resistances,omitempty"`
 	// AttackTypes represents the attack types of a weapon or a character.
-	AttackTypes cdata.AttackTypes `json:"AttackTypes" yaml:"AttackTypes,omitempty"`
+	AttackTypes cdata.AttackTypes `json:"AttackTypes" ts_type:"{[key:number]: {[key:number]:number}}" yaml:"AttackTypes,omitempty"`
 	// Reach represents how far this object can reach.
 	Reach      uint8 `json:"Reach" yaml:"Reach,omitempty"`
 	Attackable bool  `json:"Attackable" yaml:"Attackable,omitempty"`
@@ -115,7 +115,7 @@ type Archetype struct {
 	//
 	Attributes AttributeSets `json:"Attributes" yaml:"Attributes,omitempty"`
 	// Hmm
-	Statuses map[string]StatusMap `json:"Statuses" yaml:"Statuses,omitempty"`
+	Statuses map[string]StatusMap `json:"Statuses" ts_type:"{[key:string]: {[key:string]: any}}" yaml:"Statuses,omitempty"`
 	// Attitudes represent attitudes towards factions and similar.
 	Attitudes Attitudes `json:"Attitudes" yaml:"Attitudes,omitempty"`
 	Genera    string    `json:"Genera" yaml:"Genera,omitempty"`
