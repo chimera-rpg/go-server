@@ -294,6 +294,20 @@ func (arch *Archetype) Add(other *Archetype) error {
 		}
 	}
 
+	// Factions
+	for _, f := range other.Factions {
+		exists := false
+		for _, f2 := range arch.Factions {
+			if f == f2 {
+				exists = true
+				break
+			}
+		}
+		if !exists {
+			arch.Factions = append(arch.Factions, f)
+		}
+	}
+
 	return nil
 }
 
