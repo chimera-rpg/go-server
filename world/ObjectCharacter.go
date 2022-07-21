@@ -28,7 +28,7 @@ type ObjectCharacter struct {
 	resistances  *cdata.AttackTypes
 	attacktypes  *cdata.AttackTypes
 	attributes   *data.AttributeSets
-	competencies *map[data.CompetencyType]data.Competency
+	competencies *data.CompetenciesMap
 	skills       []ObjectSkill
 	//
 	equipment             []ObjectI // Equipment is all equipped inventory items.
