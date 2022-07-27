@@ -15,6 +15,7 @@ type Map struct {
 	Y           int               `json:"Y" yaml:"Y"`
 	X           int               `json:"X" yaml:"X"`
 	Z           int               `json:"Z" yaml:"Z"`
+	Haven       bool              `json:"Haven" yaml:"Haven"`
 	Tiles       [][][][]Archetype `json:"Tiles" yaml:"Tiles"`
 	Script      string            `json:"Script" yaml:"Script"` // Script is stored as full code, as each map data instance holds its own complete interpreter.
 }
