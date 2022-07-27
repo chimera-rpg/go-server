@@ -39,6 +39,7 @@ type Map struct {
 	height         int
 	depth          int
 	y, x, z        int           // Default entry point.
+	haven          bool          // If the map is a haven.
 	updateTime     uint8         // Whenever this is updated, owners will check their surroundings for updates.
 	turnTime       time.Duration // Time until the next map turn (when characters have their actions restored)
 	turnElapsed    time.Duration
@@ -65,6 +66,7 @@ func NewMap(world *World, name string) (*Map, error) {
 		y:             gd.Y,
 		x:             gd.X,
 		z:             gd.Z,
+		haven:         gd.Haven,
 	}
 	gmap.owners = make([]OwnerI, 0)
 	// Size map and populate it with the data tiles
