@@ -21,6 +21,7 @@ type Tile struct {
 	modTime      uint16  // Last time this tile was updated.
 	lightModTime uint16  // Last time this tile's light was updated.
 	sky          float32 // How much this time is considered to be exposed to the open sky. Only calculated on map creation (for now).
+	haven        bool    // Whether this tile is considered as a safe location for the player to disconnect and their character to be saved in.
 }
 
 // insertObject inserts the provided Object at the given index.
@@ -46,7 +47,7 @@ func (tile *Tile) insertObject(object ObjectI, index int) error {
 	// Update object's tile reference.
 	object.SetTile(tile)
 
-	tile.updateBlocking()
+	tile.updateStates()
 	tile.modTime++
 
 	return nil
@@ -58,7 +59,7 @@ func (tile *Tile) removeObject(object ObjectI) error {
 		tile.objects = append(tile.objects[:i], tile.objects[i+1:]...)
 		object.SetTile(nil)
 		tile.modTime++
-		tile.updateBlocking()
+		tile.updateStates()
 		return nil
 	}
 	return errors.New("object to remove does not exist")
@@ -80,7 +81,7 @@ func (tile *Tile) insertObjectPart(object ObjectI, index int) {
 		}
 	}
 
-	tile.updateBlocking()
+	tile.updateStates()
 }
 
 // removeObjectPart removes a collision object reference.
@@ -89,7 +90,7 @@ func (tile *Tile) removeObjectPart(object ObjectI) {
 	if i >= 0 {
 		tile.objectParts = append(tile.objectParts[:i], tile.objectParts[i+1:]...)
 	}
-	tile.updateBlocking()
+	tile.updateStates()
 }
 
 func (tile *Tile) getObjectPartIndex(object ObjectI) int {
@@ -139,16 +140,21 @@ func (tile *Tile) CheckObjects(f func(ObjectI) bool) bool {
 	return false
 }
 
-func (tile *Tile) updateBlocking() {
+// updateStates updates various cached states of the tile, such as blocking or haven.
+func (tile *Tile) updateStates() {
 	tile.matter = 0
 	tile.blocking = 0
 	tile.opaque = false
+	tile.haven = false
 	for _, o := range tile.objects {
 		a := o.GetArchetype()
 		tile.blocking |= a.Blocking
 		tile.matter |= o.Matter()
 		if a.Matter.Is(cdata.OpaqueMatter) {
 			tile.opaque = true
+		}
+		if a.Specials.Haven {
+			tile.haven = true
 		}
 	}
 }

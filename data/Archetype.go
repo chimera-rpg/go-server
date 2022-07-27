@@ -125,6 +125,8 @@ type Archetype struct {
 	// Events are maps of EventIDs to EventResponses.
 	Events *Events `json:"Events" yaml:"Events,omitempty"`
 	//
+	Specials Specials `json:"Specials" yaml:"Specials,omitempty"`
+	//
 	isCompiled   bool `yaml:"-"`
 	isProcessing bool `yaml:"-"`
 	isCompiling  bool `yaml:"-"`
