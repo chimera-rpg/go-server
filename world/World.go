@@ -455,6 +455,8 @@ func (w *World) CreateObjectFromArch(arch *data.Archetype) (o ObjectI, err error
 		o = NewObjectFood(arch)
 	case cdata.ArchetypeAudio:
 		o = NewObjectAudio(arch)
+	case cdata.ArchetypeSpecial:
+		o = NewObjectSpecial(arch)
 	case cdata.ArchetypeFlora:
 		o = NewObjectFlora(arch)
 	case cdata.ArchetypeExit:
