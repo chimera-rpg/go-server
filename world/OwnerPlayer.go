@@ -20,6 +20,28 @@ type clientConnectionI interface {
 	GetID() int
 }
 
+type dummyConnection struct {
+	owner *OwnerPlayer
+	user  *data.User
+	id    int
+}
+
+func (c *dummyConnection) GetUser() *data.User {
+	return c.user
+}
+func (c *dummyConnection) SetOwner(p *OwnerPlayer) {
+	c.owner = p
+}
+func (c *dummyConnection) GetOwner() *OwnerPlayer {
+	return c.owner
+}
+func (c *dummyConnection) Send(network.Command) error {
+	return nil
+}
+func (c *dummyConnection) GetID() int {
+	return c.id
+}
+
 // OwnerPlayer represents a player character through a network
 // connection and the associated player object.
 type OwnerPlayer struct {
@@ -31,11 +53,18 @@ type OwnerPlayer struct {
 	view                             [][][]TileView
 	knownIDs                         map[ID]struct{}
 	lastKnownStamina                 time.Duration
+	disconnected                     bool
+	disconnectedElapsed              time.Duration
 }
 
 // GetTarget returns the player's target object.
 func (player *OwnerPlayer) GetTarget() ObjectI {
 	return player.target
+}
+
+func (player *OwnerPlayer) HasDummyConnection() bool {
+	_, ok := player.ClientConnection.(*dummyConnection)
+	return ok
 }
 
 // SetTarget sets the given object as the target of the player.

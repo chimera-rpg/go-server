@@ -109,6 +109,8 @@ func (w *World) Update(delta time.Duration) error {
 			if err := w.addPlayerByConnection(t.Client, t.Character); err != nil {
 				log.Println("TODO: Kick player as we errored while adding them.")
 			}
+		case MessageReplaceClient:
+			w.ReplacePlayerConnection(t.Player, t.Client)
 		case MessageRemoveClient:
 			w.RemovePlayerByConnection(t.Client)
 		default:
@@ -116,9 +118,23 @@ func (w *World) Update(delta time.Duration) error {
 	default:
 	}
 	// Process our players.
+	temp := w.players[:0]
 	for _, player := range w.players {
+		if player.disconnected {
+			player.disconnectedElapsed += delta
+			// TODO: Make this influenced by map reset as well as server settings!
+			if player.disconnectedElapsed > time.Duration(5)*time.Minute {
+				player.GetMap().RemoveOwner(player)
+				w.DeleteObject(player.GetTarget(), true)
+			} else {
+				temp = append(temp, player)
+			}
+		} else {
+			temp = append(temp, player)
+		}
 		player.Update(delta)
 	}
+	w.players = temp
 	// Update all our active maps.
 	//w.activeMapsMutex.Lock()
 	for _, activeMap := range w.activeMaps {
@@ -238,7 +254,7 @@ func (w *World) isMapLoaded(name string) (mapIndex int, isActive bool) {
 }
 
 func (w *World) addPlayerByConnection(conn clientConnectionI, character *data.Character) error {
-	if index := w.getExistingPlayerConnectionIndex(conn); index == -1 {
+	if index := w.GetExistingPlayerConnectionIndex(conn); index == -1 {
 		player := NewOwnerPlayer(conn)
 		conn.SetOwner(player)
 		// Process and compile the character's Archetype so it inherits properly.
@@ -291,7 +307,7 @@ func (w *World) addPlayerByConnection(conn clientConnectionI, character *data.Ch
 
 func (w *World) SyncPlayerSaveInfo(conn clientConnectionI) error {
 	fmt.Println("Syncing, it would seem")
-	index := w.getExistingPlayerConnectionIndex(conn)
+	index := w.GetExistingPlayerConnectionIndex(conn)
 	if index < 0 {
 		return fmt.Errorf("couldn't find player matching connection to save")
 	}
@@ -317,6 +333,13 @@ func (w *World) SyncPlayerSaveInfo(conn clientConnectionI) error {
 	s.X = t.X
 	s.Y = t.Y
 	s.Z = t.Z
+	s.Time = time.Now()
+	if m.haven || t.haven {
+		s.HavenMap = m.dataName
+		s.HavenX = t.X
+		s.HavenY = t.Y
+		s.HavenZ = t.Z
+	}
 	u.Characters[o.Name()].SaveInfo = s
 	fmt.Println("Set SaveInfo")
 	return nil
@@ -334,21 +357,60 @@ func (w *World) SavePlayerByUsername(username string) error {
 	return nil
 }
 
+// ReplacePlayerConnection replaces the connection for the given player.
+func (w *World) ReplacePlayerConnection(player *OwnerPlayer, conn clientConnectionI) {
+	player.disconnected = false
+	player.disconnectedElapsed = 0
+	player.ClientConnection = conn
+
+	// Refresh the client's target object.
+	player.ClientConnection.Send(network.CommandObject{
+		ObjectID: player.GetTarget().GetID(),
+		Payload:  network.CommandObjectPayloadViewTarget{},
+	})
+
+	// SetMap causes the initial map command to be sent, as well as resetting known IDs and view.
+	player.SetMap(player.currentMap)
+
+}
+
 // RemovePlayerByConnection does as it implies.
 func (w *World) RemovePlayerByConnection(conn clientConnectionI) {
-	if index := w.getExistingPlayerConnectionIndex(conn); index >= 0 {
-		// TODO: Save ObjectCharacter to connection's associated Character data.
-		// Remove owner from map -- this also deletes the character object.
-		if playerMap := w.players[index].GetMap(); playerMap != nil {
-			playerMap.RemoveOwner(w.players[index])
-			w.DeleteObject(w.players[index].GetTarget(), true)
+	if index := w.GetExistingPlayerConnectionIndex(conn); index >= 0 {
+		// Note, we do not remove the player if the player's target is not in a haven.
+		player := w.players[index]
+		if w.IsPlayerInHaven(player) {
+			w.RemovePlayerByIndex(index)
+		} else {
+			w.players[index].disconnected = true
+			w.players[index].disconnectedElapsed = 0
+			// Replace connection with a dummy one if not in haven.
+			w.players[index].ClientConnection = &dummyConnection{
+				user:  player.ClientConnection.GetUser(),
+				id:    player.ClientConnection.GetID(),
+				owner: player.ClientConnection.GetOwner(),
+			}
 		}
-		// Remove from our slice.
-		w.players = append(w.players[:index], w.players[index+1:]...)
 	}
 }
 
-func (w *World) getExistingPlayerConnectionIndex(conn clientConnectionI) int {
+func (w *World) RemovePlayerByIndex(index int) {
+	player := w.players[index]
+	player.GetMap().RemoveOwner(player)
+	w.DeleteObject(player.GetTarget(), true)
+	w.players = append(w.players[:index], w.players[index+1:]...)
+}
+
+func (w *World) IsPlayerInHaven(player *OwnerPlayer) bool {
+	if playerMap := player.GetMap(); playerMap != nil {
+		if playerMap.haven || player.GetTarget().GetTile().haven {
+			return true
+		}
+	}
+	return false
+}
+
+func (w *World) GetExistingPlayerConnectionIndex(conn clientConnectionI) int {
 	for index, player := range w.players {
 		if conn.GetID() == player.ClientConnection.GetID() {
 			return index

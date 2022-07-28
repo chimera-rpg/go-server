@@ -18,3 +18,9 @@ type MessageAddClient struct {
 type MessageRemoveClient struct {
 	Client clientConnectionI
 }
+
+// MessageReplaceClient replaces the client connection for the associated player.
+type MessageReplaceClient struct {
+	Client clientConnectionI
+	Player *OwnerPlayer
+}

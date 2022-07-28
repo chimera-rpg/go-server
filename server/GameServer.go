@@ -98,12 +98,20 @@ func (s *GameServer) cleanupConnection(c *ClientConnection) (err error) {
 
 	// Unload user data.
 	if c.user != nil {
-		fmt.Println("About to call SyncPlayerSaveInfo")
-		if err = s.world.SyncPlayerSaveInfo(c); err != nil {
-			log.Errorln(err)
+		pl := s.world.GetPlayerByUsername(c.user.Username)
+		if pl == nil {
+			if err = s.world.SyncPlayerSaveInfo(c); err != nil {
+				log.Errorln(err)
+			}
+			s.dataManager.CleanupUser(c.user.Username)
+		} else {
+			if s.world.IsPlayerInHaven(pl) {
+				if err = s.world.SyncPlayerSaveInfo(c); err != nil {
+					log.Errorln(err)
+				}
+				s.dataManager.CleanupUser(c.user.Username)
+			}
 		}
-		fmt.Println("About to call CleanupUser")
-		s.dataManager.CleanupUser(c.user.Username)
 	}
 
 	// NOTE: We've adjusted the code so as to use a remove channel from client connection -> game server, so world no longer needs channel messaging since it is on the same goroutine now.
@@ -118,6 +126,16 @@ func (s *GameServer) cleanupConnection(c *ClientConnection) (err error) {
 	}
 
 	return
+}
+
+// GetConnectionIndexByUsername gets a connection by the given username if it exists.
+func (s *GameServer) GetConnectionIndexByUsername(u string) int {
+	for i, c := range s.connectedClients {
+		if c.user.Username == u {
+			return i
+		}
+	}
+	return -1
 }
 
 // GetDataManager returns the server's data manager.

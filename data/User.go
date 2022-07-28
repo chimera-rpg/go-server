@@ -161,6 +161,13 @@ func (m *Manager) GetUser(user string) (u *User, err error) {
 	return
 }
 
+func (m *Manager) IsUserLoaded(user string) bool {
+	m.usersMutex.Lock()
+	defer m.usersMutex.Unlock()
+	_, ok := m.loadedUsers[user]
+	return ok
+}
+
 // CleanupUser unloads the given user by name.
 func (m *Manager) CleanupUser(user string) (err error) {
 	m.usersMutex.Lock()

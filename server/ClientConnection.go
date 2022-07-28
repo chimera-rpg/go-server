@@ -128,6 +128,7 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 	isWaiting := true
 	var cmd network.Command
 	var err error
+	var goToGame bool
 
 	for isWaiting {
 		isHandled, shouldReturn := c.Receive(s, &cmd)
@@ -155,12 +156,36 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 							Type:   network.Reject,
 							String: err.Error(),
 						}))
+						shouldReturn = true
 					} else {
-						c.Send(network.Command(network.CommandBasic{
-							Type:   network.Okay,
-							String: fmt.Sprintf("Welcome, %s!", t.User),
-						}))
-						isWaiting = false
+						// Reconnect client to disconnected players if needed.
+						owner := s.world.GetPlayerByUsername(t.User)
+						if owner != nil {
+							if owner.HasDummyConnection() {
+								c.Owner = owner
+								// Let the client know they're just reconnecting and not going to character selection.
+								c.Send(network.Command(network.CommandRejoin{}))
+								// Replace the world owner's connection.
+								s.world.MessageChannel <- world.MessageReplaceClient{
+									Client: c,
+									Player: owner,
+								}
+								isWaiting = false
+								goToGame = true
+							} else {
+								c.Send(network.Command(network.CommandBasic{
+									Type:   network.Reject,
+									String: "already connected",
+								}))
+								shouldReturn = true
+							}
+						} else { // If there is no user loaded already, then log them in normally.
+							c.Send(network.Command(network.CommandBasic{
+								Type:   network.Okay,
+								String: fmt.Sprintf("Welcome, %s!", t.User),
+							}))
+							isWaiting = false
+						}
 					}
 				}
 			} else if t.Type == network.Register {
@@ -186,7 +211,11 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 	}
 
 	// If we get to here, then the user has successfully logged in.
-	c.HandleCharacterCreation(s)
+	if goToGame {
+		c.HandleGame(s)
+	} else {
+		c.HandleCharacterCreation(s)
+	}
 }
 
 // HandleCharacterCreation handles the character creation/selection of a
@@ -302,6 +331,14 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 						String: err.Error(),
 					}))
 					continue
+				}
+
+				// Replace the client's save info with last know Haven.
+				if character.SaveInfo.HavenMap != "" {
+					character.SaveInfo.Map = character.SaveInfo.HavenMap
+					character.SaveInfo.Y = character.SaveInfo.HavenY
+					character.SaveInfo.X = character.SaveInfo.HavenX
+					character.SaveInfo.Z = character.SaveInfo.HavenZ
 				}
 
 				// Send a ChooseCharacter command to let the player know we have accepted the character.
