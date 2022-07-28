@@ -274,7 +274,7 @@ func (player *OwnerPlayer) sendTile(tile *Tile) {
 		// Filter out things we don't want to send to the client.
 		filteredMapObjects := make([]ObjectI, 0)
 		for _, o := range tile.GetObjects() {
-			if o.getType() != cdata.ArchetypeAudio {
+			if o.getType() != cdata.ArchetypeAudio && o.getType() != cdata.ArchetypeSpecial {
 				filteredMapObjects = append(filteredMapObjects, o)
 			}
 		}
