@@ -144,6 +144,15 @@ func (player *OwnerPlayer) SetViewSize(h, w, d int) {
 	player.viewHeight = h
 	player.viewWidth = w
 	player.viewDepth = d
+	// When our view size changes, send it to the client.
+	player.ClientConnection.Send(network.CommandObject{
+		ObjectID: player.GetTarget().GetID(),
+		Payload: network.CommandObjectPayloadViewTarget{
+			Height: uint8(player.viewHeight),
+			Width:  uint8(player.viewWidth),
+			Depth:  uint8(player.viewDepth),
+		},
+	})
 }
 
 // GetViewSize returns the view port size that is used to send map updates to the player.
@@ -207,7 +216,7 @@ func (player *OwnerPlayer) getVisionCube() (c [][3]int) {
 	}
 	ymax := y1 + vhh
 	if ymax > m.height {
-		ymax = m.height - 1
+		ymax = m.height
 	}
 
 	xmin := tile.X - vwh
@@ -216,7 +225,7 @@ func (player *OwnerPlayer) getVisionCube() (c [][3]int) {
 	}
 	xmax := tile.X + vwh
 	if xmax > m.width {
-		xmax = m.width - 1
+		xmax = m.width
 	}
 
 	zmin := tile.Z - vdh
@@ -225,7 +234,7 @@ func (player *OwnerPlayer) getVisionCube() (c [][3]int) {
 	}
 	zmax := tile.Z + vdh
 	if zmax > m.depth {
-		zmax = m.depth - 1
+		zmax = m.depth
 	}
 
 	for y := ymin; y < ymax; y += 2 {
