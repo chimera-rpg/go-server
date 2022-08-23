@@ -366,7 +366,11 @@ func (w *World) ReplacePlayerConnection(player *OwnerPlayer, conn clientConnecti
 	// Refresh the client's target object.
 	player.ClientConnection.Send(network.CommandObject{
 		ObjectID: player.GetTarget().GetID(),
-		Payload:  network.CommandObjectPayloadViewTarget{},
+		Payload: network.CommandObjectPayloadViewTarget{
+			Height: uint8(player.viewHeight),
+			Width:  uint8(player.viewWidth),
+			Depth:  uint8(player.viewDepth),
+		},
 	})
 
 	// SetMap causes the initial map command to be sent, as well as resetting known IDs and view.

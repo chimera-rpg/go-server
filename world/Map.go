@@ -276,7 +276,11 @@ func (gmap *Map) AddOwner(owner OwnerI, y, x, z int) error {
 		// Let client know that this object should be its view target.
 		po.ClientConnection.Send(network.CommandObject{
 			ObjectID: owner.GetTarget().GetID(),
-			Payload:  network.CommandObjectPayloadViewTarget{},
+			Payload: network.CommandObjectPayloadViewTarget{
+				Height: uint8(po.viewHeight),
+				Width:  uint8(po.viewWidth),
+				Depth:  uint8(po.viewDepth),
+			},
 		})
 	}
 
