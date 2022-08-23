@@ -43,18 +43,23 @@ type ObjectCharacter struct {
 	armor   Armors
 	dodge   float64
 	//
-	shouldRecalculate bool
-	speed             int
-	health            int
-	reach             int
+	shouldRecalculate       bool
+	shouldRecalculateSenses bool
+	speed                   int
+	health                  int
+	reach                   int
+	seeRange                int
+	hearRange               int
 }
 
 // NewObjectCharacter creates a new ObjectCharacter from the given archetype.
 func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 	o = &ObjectCharacter{
-		Object:                 NewObject(a),
-		speedPenaltyMultiplier: 1,
-		reach:                  1,
+		Object:                  NewObject(a),
+		speedPenaltyMultiplier:  1,
+		reach:                   1,
+		shouldRecalculate:       true,
+		shouldRecalculateSenses: true,
 	}
 	*o.name = *a.Name
 	*o.level = a.Level
@@ -80,20 +85,23 @@ func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 // NewObjectCharacterFromCharacter creates a new ObjectCharacter from the given character data.
 func NewObjectCharacterFromCharacter(c *data.Character, completeArchetype *data.Archetype) (o *ObjectCharacter) {
 	o = &ObjectCharacter{
-		Object:                 NewObject(completeArchetype),
-		name:                   &c.Name,
-		level:                  &c.Archetype.Level,
-		resistances:            &c.Archetype.Resistances,
-		attacktypes:            &c.Archetype.AttackTypes,
-		attributes:             &c.Archetype.Attributes,
-		competencies:           &c.Archetype.Competencies,
-		reach:                  int(c.Archetype.Reach),
-		speedPenaltyMultiplier: 1,
+		Object:                  NewObject(completeArchetype),
+		name:                    &c.Name,
+		level:                   &c.Archetype.Level,
+		resistances:             &c.Archetype.Resistances,
+		attacktypes:             &c.Archetype.AttackTypes,
+		attributes:              &c.Archetype.Attributes,
+		competencies:            &c.Archetype.Competencies,
+		reach:                   int(c.Archetype.Reach),
+		speedPenaltyMultiplier:  1,
+		shouldRecalculate:       true,
+		shouldRecalculateSenses: true,
 	}
 	o.AltArchetype = &c.Archetype
 	//o.maxStamina = time.Duration(o.CalculateStamina())
 	o.maxStamina = o.CalculateStamina()
 	o.Recalculate()
+	o.RecalculateSenses()
 	// TODO: Move elsewhere.
 	/*for statusID, statusMap := range c.SaveInfo.Statuses {
 		if statusID == int(cdata.CrouchingStatus) {
@@ -127,6 +135,10 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 	if o.shouldRecalculate {
 		o.Recalculate()
 		o.shouldRecalculate = false
+	}
+	if o.shouldRecalculateSenses {
+		o.RecalculateSenses()
+		o.shouldRecalculateSenses = false
 	}
 
 	// Add a falling timer if we've moved and should fall.
@@ -644,6 +656,14 @@ func (o *ObjectCharacter) Recalculate() {
 	o.dodge = o.CalculateDodge()
 }
 
+func (o *ObjectCharacter) RecalculateSenses() {
+	o.seeRange = o.CalculateSeeRange()
+	o.hearRange = o.CalculateHearRange()
+	if o.owner != nil {
+		o.owner.SetViewSize(o.seeRange, o.seeRange, o.seeRange)
+	}
+}
+
 // CalculateStamina calculates the maximum stamina based upon our attributes.
 func (o *ObjectCharacter) CalculateStamina() int {
 	result := 1 // Baseline 1, so the player can always somewhat move.
@@ -777,6 +797,20 @@ func (o *ObjectCharacter) CalculateDodge() (dodge float64) {
 	}
 
 	return
+}
+
+func (o *ObjectCharacter) CalculateSeeRange() (see int) {
+	see = 30
+	see += int(o.Archetype.Attributes.Physical.GetAttribute(data.Sense)) * 5
+	see += int(o.Archetype.Attributes.Physical.GetAttribute(data.Focus)) * 2
+	return see
+}
+
+func (o *ObjectCharacter) CalculateHearRange() (hear int) {
+	hear = 30
+	hear += int(o.Archetype.Attributes.Physical.GetAttribute(data.Focus)) * 2
+	hear += int(o.Archetype.Attributes.Physical.GetAttribute(data.Sense))
+	return hear
 }
 
 // GetAttributeValue gets the calculated value for a given attribute.
