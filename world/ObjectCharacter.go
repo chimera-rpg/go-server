@@ -630,6 +630,9 @@ func (o *ObjectCharacter) EquipWeapon(armor *ObjectWeapon) error {
 
 // Name returns the name of the character.
 func (o *ObjectCharacter) Name() string {
+	if o.name == nil {
+		return "ol' no name"
+	}
 	return *o.name
 }
 
