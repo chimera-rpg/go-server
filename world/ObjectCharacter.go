@@ -50,6 +50,9 @@ type ObjectCharacter struct {
 	reach                   int
 	seeRange                int
 	hearRange               int
+	//
+	reachCube     [][][]struct{}
+	intersectCube [][][]struct{}
 }
 
 // NewObjectCharacter creates a new ObjectCharacter from the given archetype.
@@ -302,8 +305,10 @@ func (o *ObjectCharacter) AddStatus(s StatusI) {
 	switch s.(type) {
 	case *StatusSqueeze:
 		o.speedPenaltyMultiplier++
+		o.CalculateReach()
 	case *StatusCrouch:
 		o.speedPenaltyMultiplier += 2
+		o.CalculateReach()
 	case *StatusSwimming:
 		t := o.GetTile()
 		h, w, d := o.GetDimensions()
@@ -319,8 +324,10 @@ func (o *ObjectCharacter) RemoveStatus(s StatusI) StatusI {
 		switch s.(type) {
 		case *StatusSqueeze:
 			o.speedPenaltyMultiplier--
+			o.CalculateReach()
 		case *StatusCrouch:
 			o.speedPenaltyMultiplier -= 2
+			o.CalculateReach()
 		case *StatusSwimming:
 			t := o.GetTile()
 			h, w, d := o.GetDimensions()
@@ -705,7 +712,7 @@ func (o *ObjectCharacter) CalculateHealth() int {
 }
 
 func (o *ObjectCharacter) CalculateReach() int {
-	result := 1
+	result := 0
 
 	// Add any bonuses from our ancestry.
 	for _, a := range o.Archetype.ArchPointers {
@@ -713,6 +720,23 @@ func (o *ObjectCharacter) CalculateReach() int {
 	}
 	// Add from our own archetype.
 	result += int(o.AltArchetype.Reach)
+
+	// Recalculate our reach cube.
+	h, w, d := o.GetDimensions()
+	maxY := int(h) + o.reach*2
+	maxX := int(w) + o.reach*2
+	maxZ := o.reach * 2
+	if d > 1 {
+		maxZ += d
+	}
+
+	o.reachCube = make([][][]struct{}, maxY)
+	for y := range o.reachCube {
+		o.reachCube[y] = make([][]struct{}, maxX)
+		for x := range o.reachCube[y] {
+			o.reachCube[y][x] = make([]struct{}, maxZ)
+		}
+	}
 
 	return result
 }
@@ -862,6 +886,18 @@ func (o *ObjectCharacter) GetAttributeValue(set data.AttributesType, a data.Attr
 func (o *Object) CanHear(distance float64) bool {
 	// TODO: Use Sense + Focus(minor)
 	return true // FIXME
+}
+
+// InReachRange returns if the target coordinates are within the object's reach range.
+func (o *ObjectCharacter) InReachRange(y, x, z int) bool {
+	h, w, d := o.GetDimensions()
+	pt := o.GetTile()
+	if y >= pt.Y-o.reach && y <= pt.Y+h+o.reach &&
+		x >= pt.X-o.reach && x <= pt.X+w+o.reach &&
+		z >= pt.Z-o.reach && z <= pt.Z+d+o.reach {
+		return true
+	}
+	return false
 }
 
 // HandleSound processes a sound at a given coordinate to see if it should be heard.

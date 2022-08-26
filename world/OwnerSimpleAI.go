@@ -19,6 +19,8 @@ type OwnerSimpleAI struct {
 	knownIDs                         map[ID]struct{}
 	attitudes                        map[ID]data.Attitude
 	viewHeight, viewWidth, viewDepth int
+	//
+	pathingMode int // wander, chase, ???
 }
 
 // GetTarget returns the owners's target object.

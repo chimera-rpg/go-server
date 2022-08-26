@@ -11,17 +11,13 @@ import (
 // ObjectWeapon represents a skill.
 type ObjectWeapon struct {
 	Object
-	name        string
-	damaged     float32 // How damaged the weapon is.
-	attackTypes cdata.AttackTypes
 	// TODO: attack types
 }
 
 // NewObjectWeapon creates a skill object from the given archetype.
 func NewObjectWeapon(a *data.Archetype) (o *ObjectWeapon) {
 	o = &ObjectWeapon{
-		Object:      Object{Archetype: a},
-		attackTypes: a.AttackTypes,
+		Object: Object{Archetype: a},
 	}
 
 	//o.setArchetype(a)
@@ -117,4 +113,10 @@ func GetDamages(w *ObjectWeapon, c *ObjectCharacter) (damages Damages, err error
 	}
 
 	return damages, nil
+}
+
+func (o *ObjectWeapon) GetMundaneInfo(near bool) cdata.ObjectInfo {
+	info := o.Object.GetMundaneInfo(near)
+	// TODO: ???
+	return info
 }

@@ -505,8 +505,12 @@ func (o *Object) GetAttitude(o2 ObjectI) data.Attitude {
 	return attitude
 }
 
-func (o *Object) GetMundaneInfo() cdata.ObjectInfo {
-	return cdata.ObjectInfo{
+func (o *Object) GetMundaneInfo(near bool) cdata.ObjectInfo {
+	info := cdata.ObjectInfo{
 		Name: o.Name(),
 	}
+	if near {
+		info.Matter = o.Matter()
+	}
+	return info
 }

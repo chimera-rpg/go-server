@@ -49,5 +49,5 @@ type ObjectI interface {
 	//
 	GetAttitude(ObjectI) data.Attitude
 	//
-	GetMundaneInfo() cdata.ObjectInfo
+	GetMundaneInfo(near bool) cdata.ObjectInfo
 }

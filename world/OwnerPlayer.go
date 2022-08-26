@@ -304,6 +304,7 @@ func (player *OwnerPlayer) sendTile(tile *Tile) {
 							Height:      oArch.Height,
 							Width:       oArch.Width,
 							Depth:       oArch.Depth,
+							Reach:       oArch.Reach,
 							Opaque:      oArch.Matter.Is(cdata.OpaqueMatter),
 						},
 					})
@@ -590,21 +591,17 @@ func (player *OwnerPlayer) Inspect(oID ID) {
 	var infos []cdata.ObjectInfo
 	var near bool
 	if po := player.GetTarget(); po != nil {
+		po := po.(*ObjectCharacter)
 		if o := player.GetMap().world.GetObject(oID); o != nil {
 			if po.GetTile().GetMap() == o.GetTile().GetMap() {
-				t := o.GetTile()
-				distance := po.GetDistance(t.Y, t.X, t.Z)
-				reach := float64(po.GetArchetype().Reach)
-				if reach <= 0 {
-					reach = 3
-				}
-				if distance <= reach {
+				ot := o.GetTile()
+				if po.InReachRange(ot.Y, ot.X, ot.Z) {
+					// TODO: Do a line of sight check from the character's intersection cube.
 					near = true
 					// Send detailed info?
 				}
-
 				// Always get the mundane info.
-				mundaneInfo := o.GetMundaneInfo()
+				mundaneInfo := o.GetMundaneInfo(near)
 				mundaneInfo.Near = near
 				infos = append(infos, mundaneInfo)
 			}
