@@ -892,9 +892,9 @@ func (o *Object) CanHear(distance float64) bool {
 func (o *ObjectCharacter) InReachRange(y, x, z int) bool {
 	h, w, d := o.GetDimensions()
 	pt := o.GetTile()
-	if y >= pt.Y-o.reach && y <= pt.Y+h+o.reach &&
-		x >= pt.X-o.reach && x <= pt.X+w+o.reach &&
-		z >= pt.Z-o.reach && z <= pt.Z+d+o.reach {
+	if y >= pt.Y-o.reach && y < pt.Y+h+o.reach &&
+		x >= pt.X-o.reach && x < pt.X+w+o.reach &&
+		z >= pt.Z-o.reach && z < pt.Z+d+o.reach {
 		return true
 	}
 	return false
