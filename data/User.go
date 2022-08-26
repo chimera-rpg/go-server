@@ -194,7 +194,6 @@ func (m *Manager) CreateUserCharacter(u *User, name string) (err error) {
 	}
 
 	c := &Character{
-		Name: name,
 		Archetype: Archetype{
 			Name: &name,
 		},

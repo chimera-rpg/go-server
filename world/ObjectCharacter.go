@@ -89,7 +89,7 @@ func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 func NewObjectCharacterFromCharacter(c *data.Character, completeArchetype *data.Archetype) (o *ObjectCharacter) {
 	o = &ObjectCharacter{
 		Object:                  NewObject(completeArchetype),
-		name:                    &c.Name,
+		name:                    c.Archetype.Name,
 		level:                   &c.Archetype.Level,
 		resistances:             &c.Archetype.Resistances,
 		attacktypes:             &c.Archetype.AttackTypes,
