@@ -29,6 +29,11 @@ type OwnerAttackCommand struct {
 	Target    ID
 }
 
+// OwnerInspectCommand represents an inspection request for the given target.
+type OwnerInspectCommand struct {
+	Target ID
+}
+
 // OwnerClearCommand clears the owner's commands.
 type OwnerClearCommand struct{}
 

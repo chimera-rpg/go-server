@@ -373,7 +373,11 @@ func (o *Object) Matter() cdata.MatterType {
 
 // Name returns the name of the object, if available.
 func (o *Object) Name() string {
-	return ""
+	a := o.GetArchetype()
+	if a.Name == nil {
+		return ""
+	}
+	return *a.Name
 }
 
 func (o *Object) GetDimensions() (h, w, d int) {
@@ -499,4 +503,10 @@ func (o *Object) GetAttitude(o2 ObjectI) data.Attitude {
 	}
 
 	return attitude
+}
+
+func (o *Object) GetMundaneInfo() cdata.ObjectInfo {
+	return cdata.ObjectInfo{
+		Name: o.Name(),
+	}
 }

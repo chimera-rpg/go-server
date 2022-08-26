@@ -48,4 +48,6 @@ type ObjectI interface {
 	Resistances() Armors
 	//
 	GetAttitude(ObjectI) data.Attitude
+	//
+	GetMundaneInfo() cdata.ObjectInfo
 }

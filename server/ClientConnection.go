@@ -597,6 +597,11 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 			c.log.WithFields(log.Fields{
 				"cmd": t,
 			}).Print("CommandRepeatCmd")
+		case network.CommandInspect:
+			c.Owner.GetCommandChannel() <- world.OwnerInspectCommand{Target: t.ObjectID}
+			c.log.WithFields(log.Fields{
+				"cmd": t,
+			}).Print("CommandInspect")
 		case network.CommandStatus:
 			c.log.WithFields(log.Fields{
 				"cmd": t,
