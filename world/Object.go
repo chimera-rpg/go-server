@@ -380,6 +380,11 @@ func (o *Object) Name() string {
 	return *a.Name
 }
 
+// SetName sets the name of the object.
+func (o *Object) SetName(name string) {
+	//
+}
+
 func (o *Object) GetDimensions() (h, w, d int) {
 	a := o.GetArchetype()
 	if a != nil {

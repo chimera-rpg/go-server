@@ -30,6 +30,7 @@ type ObjectI interface {
 	ResolveEvent(EventI) bool
 	Blocks(cdata.MatterType) bool
 	Matter() cdata.MatterType
+	SetName(string)
 	Name() string
 	GetDimensions() (h, w, d int)
 	GetDistance(y, x, z int) float64
