@@ -588,13 +588,10 @@ func (player *OwnerPlayer) ForgetObject(oID ID) {
 
 func (player *OwnerPlayer) Inspect(oID ID) {
 	var infos []cdata.ObjectInfo
+	var near bool
 	if po := player.GetTarget(); po != nil {
 		if o := player.GetMap().world.GetObject(oID); o != nil {
 			if po.GetTile().GetMap() == o.GetTile().GetMap() {
-				// Always get the mundane info.
-				mundaneInfo := o.GetMundaneInfo()
-				infos = append(infos, mundaneInfo)
-
 				t := o.GetTile()
 				distance := po.GetDistance(t.Y, t.X, t.Z)
 				reach := float64(po.GetArchetype().Reach)
@@ -602,8 +599,14 @@ func (player *OwnerPlayer) Inspect(oID ID) {
 					reach = 3
 				}
 				if distance <= reach {
+					near = true
 					// Send detailed info?
 				}
+
+				// Always get the mundane info.
+				mundaneInfo := o.GetMundaneInfo()
+				mundaneInfo.Near = near
+				infos = append(infos, mundaneInfo)
 			}
 		}
 	}
