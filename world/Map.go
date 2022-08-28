@@ -962,6 +962,11 @@ func (gmap *Map) RefreshSky() {
 	for x := 0; x < gmap.width; x++ {
 		for z := 0; z < gmap.depth; z++ {
 			for y := gmap.height - 1; y >= 0; y-- {
+				// Bail if the tile is opaque.
+				if gmap.tiles[y][x][z].opaque {
+					break
+				}
+
 				gmap.tiles[y][x][z].sky = 1.0
 				traversedCoords[[3]int{y, x, z}] = struct{}{}
 
@@ -979,10 +984,6 @@ func (gmap *Map) RefreshSky() {
 					}
 				}
 
-				// Bail if the tile is opaque, but still count it as being exposed to the sky.
-				if gmap.tiles[y][x][z].opaque {
-					break
-				}
 			}
 		}
 	}
@@ -1001,8 +1002,10 @@ func (gmap *Map) RefreshSky() {
 						if t2 := gmap.GetTile(c[0]+y2, c[1]+x2, c[2]+z2); t2 != nil {
 							// Only pull from already traversed coordinates.
 							if _, ok := traversedCoords[[3]int{c[0] + y2, c[1] + x2, c[2] + z2}]; ok {
-								total += t2.sky
-								count++
+								if !t2.opaque {
+									total += t2.sky
+									count++
+								}
 							} else {
 								// Add non-traversed coordinates to our next coordinates slice.
 								nextCoords = append(nextCoords, [3]int{c[0] + y2, c[1] + x2, c[2] + z2})
@@ -1015,7 +1018,7 @@ func (gmap *Map) RefreshSky() {
 			if t.sky < 1 {
 				t.sky = total / count
 				// Might as well round up numbers close enough to 1.
-				if t.sky >= 0.99 {
+				if t.sky >= 0.8 {
 					t.sky = 1
 				}
 			}
