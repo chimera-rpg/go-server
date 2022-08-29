@@ -14,12 +14,13 @@ type Tile struct {
 	objectParts  []ObjectI // objectParts contains Object pointers that are used for collisions, pathing, and otherwise. This data is never sent over the network.
 	objectLights []ObjectI // objectLights contains Objects that give light to this tile.
 	brightness   float32
-	r, g, b      uint8
+	hue          float64
 	blocking     cdata.MatterType
 	matter       cdata.MatterType
 	opaque       bool
 	modTime      uint16  // Last time this tile was updated.
 	lightModTime uint16  // Last time this tile's light was updated.
+	skyModTime   uint16  // Last time this tile's sky was updated.
 	sky          float32 // How much this time is considered to be exposed to the open sky. Only calculated on map creation (for now).
 	haven        bool    // Whether this tile is considered as a safe location for the player to disconnect and their character to be saved in.
 }

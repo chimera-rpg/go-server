@@ -46,6 +46,11 @@ type Map struct {
 	refreshObjects []ID
 	interpreter    *fast.Interp
 	handlers       MapHandlers
+	//
+	outdoor           bool
+	ambientBrightness float32
+	outdoorBrightness float32
+	ambientHue        float32
 }
 
 // NewMap loads the given map file from the data manager.
@@ -57,16 +62,20 @@ func NewMap(world *World, name string) (*Map, error) {
 	}
 
 	gmap := &Map{
-		world:         world,
-		mapID:         gd.MapID,
-		name:          gd.Name,
-		dataName:      gd.DataName,
-		activeObjects: make(map[ID]ObjectI),
-		lightObjects:  make(map[ID]ObjectI),
-		y:             gd.Y,
-		x:             gd.X,
-		z:             gd.Z,
-		haven:         gd.Haven,
+		world:             world,
+		mapID:             gd.MapID,
+		name:              gd.Name,
+		dataName:          gd.DataName,
+		activeObjects:     make(map[ID]ObjectI),
+		lightObjects:      make(map[ID]ObjectI),
+		y:                 gd.Y,
+		x:                 gd.X,
+		z:                 gd.Z,
+		haven:             gd.Haven,
+		ambientBrightness: gd.AmbientBrightness,
+		ambientHue:        gd.AmbientHue,
+		outdoor:           gd.Outdoor,
+		outdoorBrightness: gd.OutdoorBrightness,
 	}
 	gmap.owners = make([]OwnerI, 0)
 	// Size map and populate it with the data tiles
@@ -970,6 +979,7 @@ func (gmap *Map) RefreshSky() {
 				}
 
 				gmap.tiles[y][x][z].sky = 1.0
+				gmap.tiles[y][x][z].skyModTime++
 				traversedCoords[[3]int{y, x, z}] = struct{}{}
 
 				// Also add all adjacent tiles to our nextCoords slice that we will use to calculate their sky value.
@@ -996,6 +1006,7 @@ func (gmap *Map) RefreshSky() {
 		for _, c := range current {
 			t := gmap.GetTile(c[0], c[1], c[2])
 			traversedCoords[c] = struct{}{}
+			t.skyModTime++
 			total := t.sky
 			count := float32(1)
 
