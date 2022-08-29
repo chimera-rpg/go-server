@@ -96,7 +96,9 @@ func NewMap(world *World, name string) (*Map, error) {
 	}
 
 	// Generate map tile's sky lighting logic.
-	gmap.RefreshSky()
+	if gd.Outdoor {
+		gmap.RefreshSky()
+	}
 
 	return gmap, nil
 }
