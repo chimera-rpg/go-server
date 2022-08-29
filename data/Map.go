@@ -11,6 +11,7 @@ type Map struct {
 	Width             int               `json:"Width" yaml:"Width"`
 	Height            int               `json:"Height" yaml:"Height"`
 	AmbientBrightness float32           `json:"AmbientBrightness" yaml:"AmbientBrightness"`
+	AmbientHue        float32           `json:"AmbientHue" yaml:"AmbientHue"`
 	Outdoor           bool              `json:"Outdoor" yaml:"Outdoor"`
 	OutdoorBrightness float32           `json:"OutdoorBrightness" yaml:"OutdoorBrightness"`
 	ResetTime         int               `json:"ResetTime" yaml:"ResetTime"`
