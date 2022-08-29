@@ -996,24 +996,32 @@ func (gmap *Map) RefreshSky() {
 			traversedCoords[c] = struct{}{}
 			total := t.sky
 			count := float32(1)
-			for y2 := -1; y2 < 2; y2 += 2 {
-				for x2 := -1; x2 < 2; x2 += 2 {
-					for z2 := -1; z2 < 2; z2 += 2 {
-						if t2 := gmap.GetTile(c[0]+y2, c[1]+x2, c[2]+z2); t2 != nil {
-							// Only pull from already traversed coordinates.
-							if _, ok := traversedCoords[[3]int{c[0] + y2, c[1] + x2, c[2] + z2}]; ok {
-								if !t2.opaque {
-									total += t2.sky
-									count++
-								}
-							} else {
-								// Add non-traversed coordinates to our next coordinates slice.
-								nextCoords = append(nextCoords, [3]int{c[0] + y2, c[1] + x2, c[2] + z2})
-							}
+
+			// Check non-diagonals.
+			targetCoords := [][3]int{
+				{c[0] + 1, c[1], c[2]},
+				{c[0] - 1, c[1], c[2]},
+				{c[0], c[1], c[2] + 1},
+				{c[0], c[1], c[2] - 1},
+				{c[0], c[1] + 1, c[2]},
+				{c[0], c[1] - 1, c[2]},
+			}
+
+			for _, target := range targetCoords {
+				if t2 := gmap.GetTile(target[0], target[1], target[2]); t2 != nil {
+					if _, ok := traversedCoords[target]; ok {
+						if !t2.opaque {
+							total += t2.sky
+							count++
 						}
+					} else {
+						// Add non-traversed coordinates to our next coordinates slice.
+						nextCoords = append(nextCoords, target)
 					}
+
 				}
 			}
+
 			// Only adjust the sky value if it is less than 1.
 			if t.sky < 1 {
 				t.sky = total / count
