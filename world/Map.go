@@ -929,7 +929,7 @@ func (gmap *Map) RemoveObjectLighting(object ObjectI, y, x, z int) {
 		gmap.ShootCube(float64(y+h/2), float64(x+w/2), float64(z+d/2), float64(a.Light.Intensity), float64(a.Light.Intensity), float64(a.Light.Intensity), func(t *Tile) bool {
 			t.removeObjectLight(object, v)
 			v -= r
-			if t.opaque || v == 0 {
+			if t.opaque || v <= 0 {
 				return false
 			}
 			return true
@@ -951,7 +951,7 @@ func (gmap *Map) AddObjectLighting(object ObjectI, y, x, z int) {
 		gmap.ShootCube(float64(y+h/2), float64(x+w/2), float64(z+d/2), float64(a.Light.Intensity), float64(a.Light.Intensity), float64(a.Light.Intensity), func(t *Tile) bool {
 			t.addObjectLight(object, v)
 			v -= r
-			if t.opaque || v == 0 {
+			if t.opaque || v <= 0 {
 				return false
 			}
 			return true
@@ -1039,7 +1039,7 @@ func (gmap *Map) RefreshSky() {
 			if t.sky < 1 {
 				t.sky = total / count
 				// Might as well round up numbers close enough to 1.
-				if t.sky >= 0.8 {
+				if t.sky >= 0.9 {
 					t.sky = 1
 				}
 			}
