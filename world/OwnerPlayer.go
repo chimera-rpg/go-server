@@ -369,12 +369,25 @@ func (player *OwnerPlayer) checkVisionRing() error {
 			hasUpdates = true
 		}
 	}
+	batchUpdates := false
 	if hasUpdates {
-		player.ClientConnection.Send(network.CommandTiles{
-			TileUpdates:  tileUpdates,
-			LightUpdates: lightUpdates,
-			SkyUpdates:   skyUpdates,
-		})
+		if batchUpdates {
+			player.ClientConnection.Send(network.CommandTiles{
+				TileUpdates:  tileUpdates,
+				LightUpdates: lightUpdates,
+				SkyUpdates:   skyUpdates,
+			})
+		} else {
+			for _, t := range tileUpdates {
+				player.ClientConnection.Send(t)
+			}
+			for _, t := range lightUpdates {
+				player.ClientConnection.Send(t)
+			}
+			for _, t := range skyUpdates {
+				player.ClientConnection.Send(t)
+			}
+		}
 	}
 
 	return nil
