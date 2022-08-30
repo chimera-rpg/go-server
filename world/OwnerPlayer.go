@@ -138,8 +138,6 @@ func (player *OwnerPlayer) CreateView() {
 
 // CheckView checks the view around the player and calls any associated network functions to update the client.
 func (player *OwnerPlayer) CheckView() {
-	// Map has changed in some way, so let's check our viewable tiles for updates.
-	//player.checkVisibleTiles()
 	player.checkVisionRing()
 }
 
@@ -252,13 +250,25 @@ func (player *OwnerPlayer) getVisionCube() (c [][3]int) {
 }
 
 func (player *OwnerPlayer) checkVisionRing() error {
+	var tiles []*Tile
+	var tileUpdates []network.CommandTile
+	var skyUpdates []network.CommandTileSky
+	var lightUpdates []network.CommandTileLight
+
 	gmap := player.GetMap()
 	tile := player.GetTarget().GetTile()
 	//coords := player.getVisionRing()
 	coords := player.getVisionCube()
 
 	// Ensure our own tile is updated.
-	player.sendTile(tile)
+	if player.checkTile(tile) {
+		tileUpdates = append(tileUpdates, network.CommandTile{
+			Y:         uint32(tile.Y),
+			X:         uint32(tile.X),
+			Z:         uint32(tile.Z),
+			ObjectIDs: player.view[tile.Y][tile.X][tile.Z].knownIDs,
+		})
+	}
 
 	a := player.GetTarget().GetArchetype()
 
@@ -270,17 +280,58 @@ func (player *OwnerPlayer) checkVisionRing() error {
 	}
 	x1 := float64(tile.X) + float64(a.Width)/2
 	z1 := float64(tile.Z) + float64(a.Depth)/2
+
 	for _, c := range coords {
-		for _, tile := range gmap.ShootRay(y1, x1, z1, float64(c[0]), float64(c[1]), float64(c[2]), func(t *Tile) bool {
+		tiles = append(tiles, gmap.ShootRay(y1, x1, z1, float64(c[0]), float64(c[1]), float64(c[2]), func(t *Tile) bool {
 			return !t.opaque
-		}) {
-			player.sendTile(tile)
+		})...)
+	}
+
+	var hasUpdates bool
+	for _, tile := range tiles {
+		if player.checkTile(tile) {
+			tileUpdates = append(tileUpdates, network.CommandTile{
+				Y:         uint32(tile.Y),
+				X:         uint32(tile.X),
+				Z:         uint32(tile.Z),
+				ObjectIDs: player.view[tile.Y][tile.X][tile.Z].knownIDs,
+			})
+			hasUpdates = true
+		}
+		if tile.skyModTime != player.view[tile.Y][tile.X][tile.Z].skyModTime {
+			player.view[tile.Y][tile.X][tile.Z].skyModTime = tile.skyModTime
+			skyUpdates = append(skyUpdates, network.CommandTileSky{
+				Y:   uint32(tile.Y),
+				X:   uint32(tile.X),
+				Z:   uint32(tile.Z),
+				Sky: float64(tile.sky),
+			})
+			hasUpdates = true
+		}
+		if tile.lightModTime != player.view[tile.Y][tile.X][tile.Z].lightModTime {
+			player.view[tile.Y][tile.X][tile.Z].lightModTime = tile.lightModTime
+			lightUpdates = append(lightUpdates, network.CommandTileLight{
+				Y:          uint32(tile.Y),
+				X:          uint32(tile.X),
+				Z:          uint32(tile.Z),
+				Brightness: tile.brightness,
+				Hue:        tile.hue,
+			})
+			hasUpdates = true
 		}
 	}
+	if hasUpdates {
+		player.ClientConnection.Send(network.CommandTiles{
+			TileUpdates:  tileUpdates,
+			LightUpdates: lightUpdates,
+			SkyUpdates:   skyUpdates,
+		})
+	}
+
 	return nil
 }
 
-func (player *OwnerPlayer) sendTile(tile *Tile) {
+func (player *OwnerPlayer) checkTile(tile *Tile) bool {
 	if tile.modTime != player.view[tile.Y][tile.X][tile.Z].modTime {
 		player.view[tile.Y][tile.X][tile.Z].modTime = tile.modTime
 		// NOTE: We could maintain a list of known objects on a tile in the player's tile view and send the difference instead. For large stacks of infrequently changing tiles, this would be more bandwidth efficient, though at the expense of server-side RAM and CPU time.
@@ -333,75 +384,9 @@ func (player *OwnerPlayer) sendTile(tile *Tile) {
 			}
 		}
 		player.view[tile.Y][tile.X][tile.Z].knownIDs = tileObjectIDs
-		// Update the client's perception of the given tile.
-		player.ClientConnection.Send(network.CommandTile{
-			Y:         uint32(tile.Y),
-			X:         uint32(tile.X),
-			Z:         uint32(tile.Z),
-			ObjectIDs: tileObjectIDs,
-		})
+		return true
 	}
-	if tile.skyModTime != player.view[tile.Y][tile.X][tile.Z].skyModTime {
-		player.view[tile.Y][tile.X][tile.Z].skyModTime = tile.skyModTime
-		player.ClientConnection.Send(network.CommandTileSky{
-			Y:   uint32(tile.Y),
-			X:   uint32(tile.X),
-			Z:   uint32(tile.Z),
-			Sky: float64(tile.sky),
-		})
-	}
-	if tile.lightModTime != player.view[tile.Y][tile.X][tile.Z].lightModTime {
-		player.view[tile.Y][tile.X][tile.Z].lightModTime = tile.lightModTime
-		player.ClientConnection.Send(network.CommandTileLight{
-			Y:          uint32(tile.Y),
-			X:          uint32(tile.X),
-			Z:          uint32(tile.Z),
-			Brightness: tile.brightness,
-			Hue:        tile.hue,
-		})
-	}
-}
-
-// checkVisibleTiles gets the initial view of the player. This sends tile information equal to how far the owner's PC can see.
-func (player *OwnerPlayer) checkVisibleTiles() error {
-	gmap := player.GetMap()
-	// Get owner's viewport.
-	vh, vw, vd := player.GetViewSize()
-	vhh := vh / 2
-	vwh := vw / 2
-	vdh := vd / 2
-	// Get tile where owner is, then send from negative half owner object's viewport to positive half in y, x, and z.
-	if tile := player.target.GetTile(); tile != nil {
-		var sy, sx, sz, ey, ex, ez int
-		if sy = tile.Y - vhh; sy < 0 {
-			sy = 0
-		}
-		if sx = tile.X - vwh; sx < 0 {
-			sx = 0
-		}
-		if sz = tile.Z - vdh; sz < 0 {
-			sz = 0
-		}
-		if ey = tile.Y + vhh; ey > len(player.view) {
-			ey = len(player.view)
-		}
-		if ex = tile.X + vwh; ex > len(player.view[0]) {
-			ex = len(player.view[0])
-		}
-		if ez = tile.Z + vdh; ez > len(player.view[0][0]) {
-			ez = len(player.view[0][0])
-		}
-
-		for yi := sy; yi < ey; yi++ {
-			for xi := sx; xi < ex; xi++ {
-				for zi := sz; zi < ez; zi++ {
-					player.sendTile(gmap.GetTile(yi, xi, zi))
-				}
-			}
-		}
-	}
-
-	return nil
+	return false
 }
 
 // Update does something.?
