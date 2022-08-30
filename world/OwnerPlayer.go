@@ -203,6 +203,55 @@ func (player *OwnerPlayer) getVisionRing() (c [][3]int) {
 	return
 }
 
+// getVisionCube2 acquires a hollow cube.
+func (player *OwnerPlayer) getVisionCube2() (c [][3]int) {
+	tile := player.GetTarget().GetTile()
+	m := tile.GetMap()
+	vh, vw, vd := player.GetViewSize()
+	vhh := vh / 2
+	vwh := vw / 2
+	vdh := vd / 2
+	y1 := tile.Y + int(player.GetTarget().GetArchetype().Height) - 1
+
+	ymin := y1 - vhh
+	if ymin < 0 {
+		ymin = 0
+	}
+	ymax := y1 + vhh
+	if ymax > m.height {
+		ymax = m.height
+	}
+
+	xmin := tile.X - vwh
+	if xmin < 0 {
+		xmin = 0
+	}
+	xmax := tile.X + vwh
+	if xmax > m.width {
+		xmax = m.width
+	}
+
+	zmin := tile.Z - vdh
+	if zmin < 0 {
+		zmin = 0
+	}
+	zmax := tile.Z + vdh
+	if zmax > m.depth {
+		zmax = m.depth
+	}
+
+	for y := ymin; y < ymax; y++ {
+		for x := xmin; x < xmax; x++ {
+			for z := zmin; z < zmax; z++ {
+				if (y == ymin || y == ymax-1) || (x == xmin || x == xmax-1) || (z == zmin || z == zmax-1) {
+					c = append(c, [3]int{y, x, z})
+				}
+			}
+		}
+	}
+	return
+}
+
 func (player *OwnerPlayer) getVisionCube() (c [][3]int) {
 	tile := player.GetTarget().GetTile()
 	m := tile.GetMap()
@@ -258,7 +307,7 @@ func (player *OwnerPlayer) checkVisionRing() error {
 	gmap := player.GetMap()
 	tile := player.GetTarget().GetTile()
 	//coords := player.getVisionRing()
-	coords := player.getVisionCube()
+	coords := player.getVisionCube2()
 
 	// Ensure our own tile is updated.
 	if player.checkTile(tile) {
