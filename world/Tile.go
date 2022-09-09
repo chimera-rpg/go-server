@@ -6,15 +6,19 @@ import (
 	cdata "github.com/chimera-rpg/go-common/data"
 )
 
+type TileLight struct {
+	o       ObjectI
+	R, G, B uint8
+}
+
 // Tile represents a location on the ground.
 type Tile struct {
 	gameMap      *Map      // I guess this okay.
 	Y, X, Z      int       // Location of the tile.
 	objects      []ObjectI // objects contains Objects that origin from this tile. This data is used in network transmission.
 	objectParts  []ObjectI // objectParts contains Object pointers that are used for collisions, pathing, and otherwise. This data is never sent over the network.
-	objectLights []ObjectI // objectLights contains Objects that give light to this tile.
-	brightness   float32
-	hue          float64
+	lights       []TileLight
+	r, g, b      uint8 // r, g, b are the final computed values from lights.
 	blocking     cdata.MatterType
 	matter       cdata.MatterType
 	opaque       bool
@@ -113,8 +117,8 @@ func (tile *Tile) getObjectIndex(object ObjectI) int {
 }
 
 func (tile *Tile) getObjectLightIndex(object ObjectI) int {
-	for i, o := range tile.objectLights {
-		if o.GetID() == object.GetID() {
+	for i, l := range tile.lights {
+		if l.o.GetID() == object.GetID() {
 			return i
 		}
 	}
@@ -178,20 +182,50 @@ func getUniqueObjectsInTiles(tiles []*Tile) (objs []ObjectI) {
 	return
 }
 
-func (tile *Tile) addObjectLight(object ObjectI, brightness float32) {
+func (tile *Tile) addObjectLight(object ObjectI, r, g, b uint8) {
 	i := tile.getObjectLightIndex(object)
 	if i == -1 {
-		tile.objectLights = append(tile.objectLights, object)
-		tile.brightness += brightness
-		tile.lightModTime++
+		tile.lights = append(tile.lights, TileLight{
+			o: object,
+			R: r,
+			G: g,
+			B: b,
+		})
+		tile.calculateLight()
 	}
 }
 
-func (tile *Tile) removeObjectLight(object ObjectI, brightness float32) {
+func (tile *Tile) removeObjectLight(object ObjectI, r, g, b uint8) {
 	i := tile.getObjectLightIndex(object)
 	if i >= 0 {
-		tile.objectLights = append(tile.objectLights[:i], tile.objectLights[i+1:]...)
-		tile.brightness -= brightness
-		tile.lightModTime++
+		tile.lights = append(tile.lights[:i], tile.lights[i+1:]...)
+		tile.calculateLight()
+	}
+}
+
+func (tile *Tile) calculateLight() {
+	tile.lightModTime++
+	r := uint32(0)
+	g := uint32(0)
+	b := uint32(0)
+	for _, l := range tile.lights {
+		r += uint32(l.R)
+		g += uint32(l.G)
+		b += uint32(l.B)
+	}
+	if r >= 255 {
+		tile.r = 255
+	} else {
+		tile.r = uint8(r)
+	}
+	if g >= 255 {
+		tile.g = 255
+	} else {
+		tile.g = uint8(g)
+	}
+	if b >= 255 {
+		tile.b = 255
+	} else {
+		tile.b = uint8(b)
 	}
 }

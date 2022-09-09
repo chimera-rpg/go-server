@@ -47,10 +47,9 @@ type Map struct {
 	interpreter    *fast.Interp
 	handlers       MapHandlers
 	//
-	outdoor           bool
-	ambientBrightness float32
-	outdoorBrightness float32
-	ambientHue        float32
+	outdoor                               bool
+	ambientRed, ambientGreen, ambientBlue uint8
+	outdoorRed, outdoorGreen, outdoorBlue uint8
 }
 
 // NewMap loads the given map file from the data manager.
@@ -62,21 +61,25 @@ func NewMap(world *World, name string) (*Map, error) {
 	}
 
 	gmap := &Map{
-		world:             world,
-		mapID:             gd.MapID,
-		name:              gd.Name,
-		dataName:          gd.DataName,
-		activeObjects:     make(map[ID]ObjectI),
-		lightObjects:      make(map[ID]ObjectI),
-		y:                 gd.Y,
-		x:                 gd.X,
-		z:                 gd.Z,
-		haven:             gd.Haven,
-		ambientBrightness: gd.AmbientBrightness,
-		ambientHue:        gd.AmbientHue,
-		outdoor:           gd.Outdoor,
-		outdoorBrightness: gd.OutdoorBrightness,
+		world:         world,
+		mapID:         gd.MapID,
+		name:          gd.Name,
+		dataName:      gd.DataName,
+		activeObjects: make(map[ID]ObjectI),
+		lightObjects:  make(map[ID]ObjectI),
+		y:             gd.Y,
+		x:             gd.X,
+		z:             gd.Z,
+		haven:         gd.Haven,
+		ambientRed:    gd.AmbientRed,
+		ambientGreen:  gd.AmbientGreen,
+		ambientBlue:   gd.AmbientBlue,
+		outdoor:       gd.Outdoor,
+		outdoorRed:    gd.OutdoorRed,
+		outdoorGreen:  gd.OutdoorGreen,
+		outdoorBlue:   gd.OutdoorBlue,
 	}
+	fmt.Println(gd.OutdoorRed, gd.OutdoorGreen, gd.OutdoorBlue)
 	gmap.owners = make([]OwnerI, 0)
 	// Size map and populate it with the data tiles
 	gmap.sizeMap(gd.Height, gd.Width, gd.Depth)
@@ -924,17 +927,18 @@ func (gmap *Map) RemoveObjectLighting(object ObjectI, y, x, z int) {
 	if _, ok := gmap.lightObjects[object.GetID()]; ok {
 		a := object.GetArchetype()
 		h, w, d := object.GetDimensions()
-		r := a.Light.Brightness / a.Light.Intensity
-		v := a.Light.Brightness
-		gmap.ShootCube(float64(y+h/2), float64(x+w/2), float64(z+d/2), float64(a.Light.Intensity), float64(a.Light.Intensity), float64(a.Light.Intensity), func(t *Tile) bool {
-			t.removeObjectLight(object, v)
-			v -= r
-			if t.opaque || v <= 0 {
+		step := a.Light.Distance / (a.Light.Distance * a.Light.Falloff)
+		start := a.Light.Distance
+		gmap.ShootCube(float64(y+h/2), float64(x+w/2), float64(z+d/2), a.Light.Distance, a.Light.Distance, a.Light.Distance, func(t *Tile) bool {
+			r := start / a.Light.Distance
+			t.removeObjectLight(object, uint8(float64(a.Light.Red)*r), uint8(float64(a.Light.Green)*r), uint8(float64(a.Light.Blue)*r))
+			start -= step
+			if t.opaque || start <= 0 {
 				return false
 			}
 			return true
 		}, func() {
-			v = a.Light.Brightness
+			start = a.Light.Distance
 		})
 		delete(gmap.lightObjects, object.GetID())
 	} else {
@@ -946,17 +950,18 @@ func (gmap *Map) AddObjectLighting(object ObjectI, y, x, z int) {
 	if _, ok := gmap.lightObjects[object.GetID()]; !ok {
 		a := object.GetArchetype()
 		h, w, d := object.GetDimensions()
-		r := a.Light.Brightness / a.Light.Intensity
-		v := a.Light.Brightness
-		gmap.ShootCube(float64(y+h/2), float64(x+w/2), float64(z+d/2), float64(a.Light.Intensity), float64(a.Light.Intensity), float64(a.Light.Intensity), func(t *Tile) bool {
-			t.addObjectLight(object, v)
-			v -= r
-			if t.opaque || v <= 0 {
+		step := a.Light.Distance / (a.Light.Distance * a.Light.Falloff)
+		start := a.Light.Distance
+		gmap.ShootCube(float64(y+h/2), float64(x+w/2), float64(z+d/2), a.Light.Distance, a.Light.Distance, a.Light.Distance, func(t *Tile) bool {
+			r := start / a.Light.Distance
+			t.addObjectLight(object, uint8(float64(a.Light.Red)*r), uint8(float64(a.Light.Green)*r), uint8(float64(a.Light.Blue)*r))
+			start -= step
+			if t.opaque || start <= 0 {
 				return false
 			}
 			return true
 		}, func() {
-			v = a.Light.Brightness
+			start = a.Light.Distance
 		})
 		gmap.lightObjects[object.GetID()] = object
 	} else {

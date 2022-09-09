@@ -88,15 +88,18 @@ func (player *OwnerPlayer) SetMap(m *Map) {
 	// Might as well let the client know what's up.
 	if m != nil {
 		player.ClientConnection.Send(network.CommandMap{
-			Name:              m.name,
-			MapID:             m.mapID,
-			Height:            m.height,
-			Width:             m.width,
-			Depth:             m.depth,
-			Outdoor:           m.outdoor,
-			OutdoorBrightness: float64(m.outdoorBrightness),
-			AmbientHue:        float64(m.ambientHue),
-			AmbientBrightness: float64(m.ambientBrightness),
+			Name:         m.name,
+			MapID:        m.mapID,
+			Height:       m.height,
+			Width:        m.width,
+			Depth:        m.depth,
+			AmbientRed:   m.ambientRed,
+			AmbientGreen: m.ambientGreen,
+			AmbientBlue:  m.ambientBlue,
+			Outdoor:      m.outdoor,
+			OutdoorRed:   m.outdoorRed,
+			OutdoorGreen: m.outdoorGreen,
+			OutdoorBlue:  m.outdoorBlue,
 		})
 	}
 	// Reset player's known IDs... TODO: Probably manage IDs on the client.
@@ -360,11 +363,12 @@ func (player *OwnerPlayer) checkVisionRing() error {
 		if tile.lightModTime != player.view[tile.Y][tile.X][tile.Z].lightModTime {
 			player.view[tile.Y][tile.X][tile.Z].lightModTime = tile.lightModTime
 			lightUpdates = append(lightUpdates, network.CommandTileLight{
-				Y:          uint32(tile.Y),
-				X:          uint32(tile.X),
-				Z:          uint32(tile.Z),
-				Brightness: tile.brightness,
-				Hue:        tile.hue,
+				Y: uint32(tile.Y),
+				X: uint32(tile.X),
+				Z: uint32(tile.Z),
+				R: tile.r,
+				G: tile.g,
+				B: tile.b,
 			})
 			hasUpdates = true
 		}

@@ -1,17 +1,18 @@
 package data
 
 type Light struct {
-	Brightness float32 `yaml:"Brightness,omitempty"` // Brightness represents... something
-	Red        float32 `yaml:"Red,omitempty"`        // Multiplier for red
-	Green      float32 `yaml:"Green,omitempty"`      // Multiplier for green
-	Blue       float32 `yaml:"Blue,omitempty"`       // Mulitplier for blue
-	Intensity  float32 `yaml:"Intensity,omitempty"`  // Intensity represents how far the light travels.
+	Red      uint8   `yaml:"Red,omitempty"`      // Multiplier for red
+	Green    uint8   `yaml:"Green,omitempty"`    // Multiplier for green
+	Blue     uint8   `yaml:"Blue,omitempty"`     // Multiplier for blue
+	Distance float64 `yaml:"Distance,omitempty"` // Distance the light travels.
+	Falloff  float64 `yaml:"Falloff,omitempty"`  // How fast the light falls off, relative to its distance, in terms of 0..1 of distance.
 }
 
 // Add adds other's values to ourself.
 func (l *Light) Add(other *Light) {
-	l.Brightness += other.Brightness
 	l.Red += other.Red
 	l.Green += other.Green
-	l.Intensity += other.Intensity
+	l.Blue += other.Blue
+	l.Distance += other.Distance
+	l.Falloff += other.Falloff
 }
