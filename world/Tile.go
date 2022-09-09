@@ -208,10 +208,26 @@ func (tile *Tile) calculateLight() {
 	r := uint32(0)
 	g := uint32(0)
 	b := uint32(0)
-	for _, l := range tile.lights {
-		r += uint32(l.R)
-		g += uint32(l.G)
-		b += uint32(l.B)
+	if len(tile.lights) > 0 {
+		var maxR, maxG, maxB uint8
+		for _, l := range tile.lights {
+			if l.R > maxR {
+				maxR = l.R
+			}
+			if l.G > maxG {
+				maxG = l.G
+			}
+			if l.B > maxB {
+				maxB = l.B
+			}
+
+			r += uint32(l.R)
+			g += uint32(l.G)
+			b += uint32(l.B)
+		}
+		r = (r-uint32(maxR))/uint32(len(tile.lights)) + uint32(maxR)
+		g = (g-uint32(maxG))/uint32(len(tile.lights)) + uint32(maxG)
+		b = (b-uint32(maxB))/uint32(len(tile.lights)) + uint32(maxB)
 	}
 	if r >= 255 {
 		tile.r = 255
