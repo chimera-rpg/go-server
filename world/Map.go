@@ -800,7 +800,7 @@ func (gmap *Map) ShootCube(y1, x1, z1 float64, h, w, d float64, onTileTouch func
 		zmax = float64(gmap.depth) - 1
 	}
 
-	for y := ymin; y < ymax; y += 2 {
+	for y := ymin; y < ymax; y++ {
 		for x := xmin; x < xmax; x++ {
 			for z := zmin; z < zmax; z++ {
 				c = append(c, [3]float64{y, x, z})
@@ -929,7 +929,7 @@ func (gmap *Map) RemoveObjectLighting(object ObjectI, y, x, z int) {
 		h, w, d := object.GetDimensions()
 		step := a.Light.Distance / (a.Light.Distance * a.Light.Falloff)
 		start := a.Light.Distance
-		gmap.ShootCube(float64(y+h/2), float64(x+w/2), float64(z+d/2), a.Light.Distance, a.Light.Distance, a.Light.Distance, func(t *Tile) bool {
+		gmap.ShootCube(float64(y+h), float64(x+w/2), float64(z+d/2), a.Light.Distance, a.Light.Distance, a.Light.Distance, func(t *Tile) bool {
 			r := start / a.Light.Distance
 			t.removeObjectLight(object, uint8(float64(a.Light.Red)*r), uint8(float64(a.Light.Green)*r), uint8(float64(a.Light.Blue)*r))
 			start -= step
@@ -952,7 +952,7 @@ func (gmap *Map) AddObjectLighting(object ObjectI, y, x, z int) {
 		h, w, d := object.GetDimensions()
 		step := a.Light.Distance / (a.Light.Distance * a.Light.Falloff)
 		start := a.Light.Distance
-		gmap.ShootCube(float64(y+h/2), float64(x+w/2), float64(z+d/2), a.Light.Distance, a.Light.Distance, a.Light.Distance, func(t *Tile) bool {
+		gmap.ShootCube(float64(y+h), float64(x+w/2), float64(z+d/2), a.Light.Distance, a.Light.Distance, a.Light.Distance, func(t *Tile) bool {
 			r := start / a.Light.Distance
 			t.addObjectLight(object, uint8(float64(a.Light.Red)*r), uint8(float64(a.Light.Green)*r), uint8(float64(a.Light.Blue)*r))
 			start -= step
