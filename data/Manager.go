@@ -649,6 +649,7 @@ func (m *Manager) parseMapFile(filepath string) error {
 		m.maps[k] = v
 		m.maps[k].MapID = m.Strings.Acquire(k)
 		m.maps[k].DataName = k
+		m.maps[k].Filepath = filepath
 	}
 
 	return nil
@@ -689,6 +690,20 @@ func (m *Manager) GetMap(name string) (Map *Map, err error) {
 		return m.maps[name], nil
 	}
 	return nil, errors.New("Map does not exist")
+}
+
+// ReloadMap attempts to reload the given map. This does not restart any running instances.
+func (m *Manager) ReloadMap(name string) (err error) {
+	gmap, err := m.GetMap(name)
+	if err != nil {
+		return err
+	}
+	return m.parseMapFile(gmap.Filepath)
+}
+
+// ReloadMapFile attempts to reload the given maps by file. This does not restart any running instances.
+func (m *Manager) ReloadMapFile(file string) (err error) {
+	return m.parseMapFile(filepath.Join(m.mapsPath, file+".map.yaml"))
 }
 
 // Setup sets up the data Manager for use by the server.

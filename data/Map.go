@@ -4,6 +4,7 @@ package data
 type Map struct {
 	MapID        StringID          `json:"-" yaml:"-"`
 	DataName     string            `json:"-" yaml:"-"`
+	Filepath     string            `json:"-" yaml:"-"`
 	Name         string            `json:"Name" yaml:"Name"`
 	Description  string            `json:"Description" yaml:"Description"`
 	Lore         string            `json:"Lore" yaml:"Lore"`
