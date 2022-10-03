@@ -183,6 +183,24 @@ func (w *World) GetMap(name string) *Map {
 	return w.inactiveMaps[mapIndex]
 }
 
+// RestartMap restarts the given map if it is loaded. TODO: This should send any players in this map to a Safe Place (tm) before restarting.
+func (w *World) RestartMap(name string) {
+	mapIndex, isActive := w.isMapLoaded(name)
+	if mapIndex == -1 {
+		return
+	}
+	if isActive {
+		w.inactivateMap(mapIndex)
+	}
+	mapIndex, _ = w.isMapLoaded(name)
+	if mapIndex == -1 {
+		return
+	}
+	w.inactiveMaps[mapIndex].shouldExpire = true
+
+	return
+}
+
 // addMap adds the provided Map to the active maps slice.
 func (w *World) addMap(gm *Map) {
 	//w.activeMapsMutex.Lock()
