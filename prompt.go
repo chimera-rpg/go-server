@@ -5,13 +5,14 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
-	"github.com/chimera-rpg/go-server/server"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/chimera-rpg/go-server/server"
+	log "github.com/sirupsen/logrus"
 )
 
 type Prompt struct {
@@ -119,7 +120,7 @@ func (p *Prompt) handleCommand(c string) error {
 		p.Capture()
 		p.ShowPrompt()
 	} else if args[0] == "help" {
-		fmt.Fprintf(p.stdout, "\tlog\tshow log output\n\tplayers\tlist players\n\tlookup\tlookup information\n\tquit\tshutdown and close\n")
+		fmt.Fprintf(p.stdout, "\tlog\tshow log output\n\tplayers\tlist players\n\tlookup\tlookup information\n\tmap\treload or restart maps\n\tquit\tshutdown and close\n")
 		p.ShowPrompt()
 	} else if args[0] == "lookup" {
 		if len(args) != 3 {
@@ -176,6 +177,28 @@ func (p *Prompt) handleCommand(c string) error {
 		p.ShowPrompt()
 	} else if args[0] == "players" {
 		fmt.Fprintf(p.stdout, "%+v\n", p.gameServer.GetWorld().GetPlayers())
+		p.ShowPrompt()
+	} else if args[0] == "map" {
+		if len(args) != 3 {
+			fmt.Fprint(p.stdout, "Usage:\n\tmap reloadFile \"<map file>\"\n\tmap reload \"<name>\"\n\tmap restart \"<name>\"\n")
+		} else {
+			if args[1] == "reload" {
+				// TODO: Reload from disque.
+				if err := p.gameServer.GetDataManager().ReloadMap(args[2]); err != nil {
+					fmt.Fprint(p.stderr, err)
+				} else {
+					fmt.Fprint(p.stdout, "reloaded")
+				}
+			} else if args[1] == "reloadFile" {
+				if err := p.gameServer.GetDataManager().ReloadMapFile(args[2]); err != nil {
+					fmt.Fprint(p.stderr, err)
+				} else {
+					fmt.Fprint(p.stdout, "reloaded")
+				}
+			} else if args[2] == "restart" {
+				p.gameServer.GetWorld().RestartMap(args[2])
+			}
+		}
 		p.ShowPrompt()
 	} else if args[0] == "quit" {
 		os.Exit(0)
