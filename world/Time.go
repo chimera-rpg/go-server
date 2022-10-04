@@ -102,6 +102,7 @@ func (c Cycle) Diel() Diel {
 type Time struct {
 	realTime             time.Time
 	cacheTime            time.Time
+	lastUpdate           time.Time // lastUpdate is used to limit heavy updates to a periodic time stored here.
 	season               Season
 	cycle                Cycle
 	year                 int
@@ -112,9 +113,22 @@ type Time struct {
 }
 
 // Set sets the world time to the given "real world" time. It calculates and caches necessary values for the current time, date, cycle, and season.
-func (w *Time) Set(t time.Time) {
+func (w *Time) Set(t time.Time) (updates []Update) {
 	w.realTime = t
-	// TODO: If season is not the same as last set's season, somehow notify World of the cycle change. We moved updating to a separate function, since it was a bit too heavy to update all time-related properties on each tick. We should do periodic checks, perhaps every 1-10 seconds, for season/cycle world/map updates.
+	// FIXME: Make the time update check specifiable.
+	if t.Sub(w.lastUpdate) >= 10*time.Second {
+		p := *w
+		w.Ensure()
+		// Okay, let's generate our events.
+		if w.season != p.season {
+			updates = append(updates, w.season)
+		}
+		if w.cycle != p.cycle {
+			updates = append(updates, w.cycle)
+		}
+		w.lastUpdate = t
+	}
+	return
 }
 
 // Ensure ensures the current time-related properties have been updated to match the current real time.
@@ -131,6 +145,8 @@ func (w *Time) Ensure() {
 	w.cycle = (Cycle(w.hour) + Cycle(w.minute)/60) / 6
 
 	w.year -= 1070
+
+	w.cacheTime = w.realTime
 }
 
 // Cycle returns the current cycle.
