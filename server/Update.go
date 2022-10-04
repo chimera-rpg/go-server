@@ -7,13 +7,13 @@ import (
 )
 
 // Update runs update for the server world.
-func (server *GameServer) Update(delta time.Duration) error {
+func (server *GameServer) Update(currentTime time.Time, delta time.Duration) error {
 	select {
 	case cc := <-server.CleanupClientChannel:
 		server.cleanupConnection(cc)
 	default:
 	}
-	server.world.Update(delta)
+	server.world.Update(currentTime, delta)
 	return nil
 }
 

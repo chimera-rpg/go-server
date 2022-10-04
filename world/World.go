@@ -30,6 +30,8 @@ type World struct {
 	objectIDs         IDMap
 	objects           map[ID]ObjectI // global objects reference.
 	MessageChannel    chan MessageI
+	//
+	currentTime time.Time
 }
 
 // Setup loads our initial starting world location and starts the
@@ -100,7 +102,8 @@ func (w *World) cleanupMaps() {
 }
 
 // Update processes updates for each player then updates each map as necessary.
-func (w *World) Update(delta time.Duration) error {
+func (w *World) Update(currentTime time.Time, delta time.Duration) error {
+	w.currentTime = currentTime
 	// Process world event channel.
 	select {
 	case msg := <-w.MessageChannel:
