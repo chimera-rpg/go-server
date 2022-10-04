@@ -116,7 +116,7 @@ type Time struct {
 func (w *Time) Set(t time.Time) (updates []Update) {
 	w.realTime = t
 	// FIXME: Make the time update check specifiable.
-	if t.Sub(w.lastUpdate) >= 10*time.Second {
+	if t.Sub(w.lastUpdate) >= 30*time.Second {
 		p := *w
 		w.Ensure()
 		// Okay, let's generate our events.
