@@ -102,7 +102,6 @@ func (w *World) cleanupMaps() {
 
 // Update processes updates for each player then updates each map as necessary.
 func (w *World) Update(currentTime time.Time, delta time.Duration) error {
-	// NOTE: We might want to update currentTime in a more limited fashion, since it is a _tiny_ bit heavy to run every update. Ideally, we should store currentTime in w.Time, then whenever an object/otherwise calls one of its functions, it stores and caches the necessary values according to the current time.
 	w.Time.Set(currentTime)
 	// Process world event channel.
 	select {
