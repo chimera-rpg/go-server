@@ -78,18 +78,38 @@ type Diel float64
 // String returns the human-friendly "shorthand" strings for dawn, day, dusk, and night.
 func (d Diel) String() string {
 	// Assume "6"(0.25) as AM and "18"(0.75) as PM. Presume dawn/dusk to remain for roughly 1 hour(0.5).
-	if d >= 0.25 && d <= 0.70 {
-		if d <= 0.30 {
+	if d.Light() {
+		if d.Dawn() {
 			return "dawn"
 		}
 		return "light"
-	} else if d < 0.25 || d > 0.70 {
-		if d > 0.70 && d <= 0.75 {
+	} else if d.Night() {
+		if d.Dusk() {
 			return "dusk"
 		}
 		return "night"
 	}
 	return "drugs o'clock"
+}
+
+// Dawn returns true if it is dawn.
+func (d Diel) Dawn() bool {
+	return d >= 0.25 && d < 0.30
+}
+
+// Dusk returns true if it is dusk.
+func (d Diel) Dusk() bool {
+	return d > 0.70 && d <= 0.75
+}
+
+// Light returns true if it is light out, including dawn.
+func (d Diel) Light() bool {
+	return d >= 0.25 && d <= 0.70
+}
+
+// Night returns true if it is night out, including dusk.
+func (d Diel) Night() bool {
+	return d < 0.25 || d > 0.70
 }
 
 // Diel returns the diel portion of the cycle.
