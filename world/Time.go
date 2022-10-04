@@ -84,7 +84,7 @@ func (d Diel) String() string {
 		}
 		return "light"
 	} else if d < 0.25 || d > 0.70 {
-		if d >= 0.70 {
+		if d > 0.70 && d <= 0.75 {
 			return "dusk"
 		}
 		return "night"
