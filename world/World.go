@@ -102,7 +102,10 @@ func (w *World) cleanupMaps() {
 
 // Update processes updates for each player then updates each map as necessary.
 func (w *World) Update(currentTime time.Time, delta time.Duration) error {
-	w.Time.Set(currentTime)
+	updates := Updates{
+		Delta: delta,
+	}
+	updates.Updates = append(updates.Updates, w.Time.Set(currentTime))
 	// Process world event channel.
 	select {
 	case msg := <-w.MessageChannel:
@@ -140,7 +143,7 @@ func (w *World) Update(currentTime time.Time, delta time.Duration) error {
 	// Update all our active maps.
 	//w.activeMapsMutex.Lock()
 	for _, activeMap := range w.activeMaps {
-		activeMap.Update(w, delta)
+		activeMap.Update(w, updates)
 	}
 	//w.activeMapsMutex.Unlock()
 	return nil

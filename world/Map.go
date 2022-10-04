@@ -156,8 +156,8 @@ func (gmap *Map) sizeMap(height int, width int, depth int) error {
 }
 
 // Update updates all active tiles and objects within the map.
-func (gmap *Map) Update(gm *World, delta time.Duration) error {
-	gmap.lifeTime += delta
+func (gmap *Map) Update(gm *World, updates Updates) error {
+	gmap.lifeTime += updates.Delta
 
 	// Refresh our actions.
 	gmap.actions = make([]ActionI, 0)
@@ -173,11 +173,11 @@ func (gmap *Map) Update(gm *World, delta time.Duration) error {
 	}
 
 	for _, owner := range gmap.owners {
-		owner.OnMapUpdate(delta)
+		owner.OnMapUpdate(updates.Delta)
 	}
 
 	for _, object := range gmap.activeObjects {
-		object.update(delta)
+		object.update(updates.Delta)
 	}
 
 	for i := range gmap.activeTiles {
@@ -187,7 +187,21 @@ func (gmap *Map) Update(gm *World, delta time.Duration) error {
 
 	// This might be a bit heavy...
 	if gmap.handlers.updateFunc != nil {
-		gmap.handlers.updateFunc(delta)
+		gmap.handlers.updateFunc(updates.Delta)
+	}
+
+	// Call non-delta updates.
+	for _, u := range updates.Updates {
+		switch v := u.(type) {
+		case Season:
+			if gmap.handlers.seasonFunc != nil {
+				gmap.handlers.seasonFunc(v)
+			}
+		case Cycle:
+			if gmap.handlers.cycleFunc != nil {
+				gmap.handlers.cycleFunc(v)
+			}
+		}
 	}
 
 	// Process our actions.

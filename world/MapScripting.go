@@ -19,6 +19,8 @@ type MapHandlers struct {
 	sleepFunc      MapSleepFunc
 	wakeFunc       MapWakeFunc
 	updateFunc     MapUpdateFunc
+	seasonFunc     MapSeasonFunc
+	cycleFunc      MapCycleFunc
 }
 
 type MapOwnerJoinFunc = func(o OwnerI)
@@ -27,6 +29,8 @@ type MapCleanupFunc = func()
 type MapSleepFunc = func()
 type MapWakeFunc = func()
 type MapUpdateFunc = func(delta time.Duration)
+type MapSeasonFunc = func(season Season)
+type MapCycleFunc = func(cycle Cycle)
 
 // setupMapHandlers sets up the gmap's handlers struct to point to the interpreter's funcs as needed.
 func (gmap *Map) setupMapHandlers() {
@@ -54,7 +58,14 @@ func (gmap *Map) setupMapHandlers() {
 	if v.IsValid() {
 		gmap.handlers.updateFunc = v.Interface().(MapUpdateFunc)
 	}
-
+	v = gmap.interpreter.ValueOf("OnSeason")
+	if v.IsValid() {
+		gmap.handlers.seasonFunc = v.Interface().(MapSeasonFunc)
+	}
+	v = gmap.interpreter.ValueOf("OnCycle")
+	if v.IsValid() {
+		gmap.handlers.cycleFunc = v.Interface().(MapCycleFunc)
+	}
 }
 
 // evalInterpreter attempts to evaluate the given map code.
