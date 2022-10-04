@@ -12,7 +12,6 @@ import (
 	"sync"
 
 	"github.com/chimera-rpg/go-server/server"
-	"github.com/chimera-rpg/go-server/world"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -202,12 +201,12 @@ func (p *Prompt) handleCommand(c string) error {
 		}
 		p.ShowPrompt()
 	} else if args[0] == "clock" {
-		h, m, s := p.gameServer.GetWorld().Clock()
+		h, m, s := p.gameServer.GetWorld().Time.Clock()
 		fmt.Fprintf(p.stdout, "%02d:%02d:%02d\n", h, m, s)
 		p.ShowPrompt()
 	} else if args[0] == "date" {
-		y, m, _, d := p.gameServer.GetWorld().Date()
-		fmt.Fprintf(p.stdout, "%02d/%02d/%02d | %s %s\n", y, m, d, world.Month(m), p.gameServer.GetWorld().Weekday())
+		y, m, d := p.gameServer.GetWorld().Time.Date()
+		fmt.Fprintf(p.stdout, "%02d/%02d/%02d, %s %s cycle(%f) of the %d day in the season of %s\n", y, m, d, p.gameServer.GetWorld().Time.Cycle(), p.gameServer.GetWorld().Time.Cycle().Diel(), p.gameServer.GetWorld().Time.Cycle(), d, p.gameServer.GetWorld().Time.Season())
 		p.ShowPrompt()
 	} else if args[0] == "quit" {
 		os.Exit(0)
