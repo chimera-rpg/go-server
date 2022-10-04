@@ -110,6 +110,9 @@ type Time struct {
 	week                 time.Weekday
 	day                  int
 	hour, minute, second int
+	// Cached properties for Set calls
+	lastSeason Season
+	lastCycle  Cycle
 }
 
 // Set sets the world time to the given "real world" time. It calculates and caches necessary values for the current time, date, cycle, and season.
@@ -117,14 +120,15 @@ func (w *Time) Set(t time.Time) (updates []Update) {
 	w.realTime = t
 	// FIXME: Make the time update check specifiable.
 	if t.Sub(w.lastUpdate) >= 30*time.Second {
-		p := *w
 		w.Ensure()
 		// Okay, let's generate our events.
-		if w.season != p.season {
+		if w.lastSeason != w.season {
 			updates = append(updates, w.season)
+			w.lastSeason = w.season
 		}
-		if w.cycle != p.cycle {
+		if w.lastCycle != w.cycle {
 			updates = append(updates, w.cycle)
+			w.lastCycle = w.cycle
 		}
 		w.lastUpdate = t
 	}
