@@ -201,6 +201,11 @@ func (gmap *Map) Update(gm *World, updates Updates) error {
 			if gmap.handlers.cycleFunc != nil {
 				gmap.handlers.cycleFunc(v)
 			}
+		// TODO: For the following events, send messages to the client to notify them of the time, providing it is an outdoor map.
+		case DawnEvent:
+		case LightEvent:
+		case DuskEvent:
+		case NightEvent:
 		}
 	}
 

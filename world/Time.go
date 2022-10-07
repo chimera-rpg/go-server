@@ -135,6 +135,18 @@ type Time struct {
 	lastCycle  Cycle
 }
 
+// DawnEvent represents when dawn first occurs.
+type DawnEvent struct{}
+
+// LightEvent represents the time after dawn.
+type LightEvent struct{}
+
+// DuskEvent represents when dusk first occurs.
+type DuskEvent struct{}
+
+// NightEvent represents the time after dusk.
+type NightEvent struct{}
+
 // Set sets the world time to the given "real world" time. It calculates and caches necessary values for the current time, date, cycle, and season.
 func (w *Time) Set(t time.Time) (updates []Update) {
 	w.realTime = t
@@ -148,6 +160,23 @@ func (w *Time) Set(t time.Time) (updates []Update) {
 		}
 		if w.lastCycle != w.cycle {
 			updates = append(updates, w.cycle)
+			// Also update when dawn and dusk ends and begins.
+			currentDiel := w.cycle.Diel()
+			lastDiel := w.lastCycle.Diel()
+			// FIXME: We need timezone-relative events for the following... probably need a map or array in Time containining or referencing the various regions and timezones.
+			if currentDiel.Dawn() && !lastDiel.Dawn() {
+				// Dawn begins
+				updates = append(updates, DawnEvent{})
+			} else if !currentDiel.Dawn() && lastDiel.Dawn() {
+				// Dawn ends
+				updates = append(updates, LightEvent{})
+			} else if currentDiel.Dusk() && !lastDiel.Dusk() {
+				// Dusk begins
+				updates = append(updates, DuskEvent{})
+			} else if !currentDiel.Dusk() && lastDiel.Dusk() {
+				// Dusk ends
+				updates = append(updates, NightEvent{})
+			}
 			w.lastCycle = w.cycle
 		}
 		w.lastUpdate = t
