@@ -72,6 +72,7 @@ func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 	*o.competencies = a.Competencies
 	o.reach = int(a.Reach)
 	o.maxStamina = o.CalculateStamina()
+	o.hasMoved = true // Set moved to true to ensure falling and any other situations are checked for on first update.
 
 	// Create a new Owner AI if it is an NPC.
 	if a.Type == cdata.ArchetypeNPC {
@@ -100,6 +101,7 @@ func NewObjectCharacterFromCharacter(c *data.Character, completeArchetype *data.
 		shouldRecalculate:       true,
 		shouldRecalculateSenses: true,
 	}
+	o.hasMoved = true // Set moved to true to ensure falling and any other situations are checked for on first update.
 	o.AltArchetype = &c.Archetype
 	//o.maxStamina = time.Duration(o.CalculateStamina())
 	o.maxStamina = o.CalculateStamina()
