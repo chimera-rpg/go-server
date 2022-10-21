@@ -275,6 +275,13 @@ func (arch *Archetype) Add(other *Archetype) error {
 	arch.Attributes.Arcane.Add(other.Attributes.Arcane)
 	arch.Attributes.Spirit.Add(other.Attributes.Spirit)
 
+	// Slots
+	arch.Slots.Has = append(arch.Slots.Has, other.Slots.Has...)
+	arch.Slots.Gives = append(arch.Slots.Gives, other.Slots.Gives...)
+	arch.Slots.Uses = append(arch.Slots.Uses, other.Slots.Uses...)
+	arch.Slots.Needs.Min = append(arch.Slots.Needs.Min, other.Slots.Needs.Min...)
+	arch.Slots.Needs.Max = append(arch.Slots.Needs.Max, other.Slots.Needs.Max...)
+
 	// Brightness
 	if arch.Light != nil {
 		arch.Light.Add(other.Light)
