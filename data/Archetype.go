@@ -193,9 +193,12 @@ func (arch *Archetype) SetCompiling(b bool) {
 
 // Add adds properties from another archetype to itself, adding missing values and combining numerical values where able.
 func (arch *Archetype) Add(other *Archetype) error {
+	// Type hints are sent to the client during inspect or for inventory listings, so as to give hints as to what the item should be classified as.
+	arch.TypeHintIDs = append(arch.TypeHintIDs, other.TypeHintIDs...)
+
+	// Base values
 	arch.Matter |= other.Matter
 	arch.Blocking |= other.Blocking
-	arch.Attackable = other.Attackable
 	if arch.Worth == nil && other.Worth != nil {
 		arch.Worth = &*other.Worth
 	} else if other.Worth != nil {
@@ -217,9 +220,12 @@ func (arch *Archetype) Add(other *Archetype) error {
 		*arch.Weight += *other.Weight
 	}
 
+	// Inventory
 	for _, o := range other.Inventory {
 		arch.Inventory = append(arch.Inventory, o)
 	}
+
+	// Skills and Competencies
 	for k, v := range other.Skills {
 		v2, ok := arch.Skills[k]
 		if ok {
@@ -262,6 +268,8 @@ func (arch *Archetype) Add(other *Archetype) error {
 		}
 	}
 
+	// Combat-related
+	arch.Attackable = other.Attackable
 	arch.Resistances.Add(other.Resistances)
 	arch.AttackTypes.Add(other.AttackTypes)
 	arch.Level += other.Level
@@ -271,13 +279,15 @@ func (arch *Archetype) Add(other *Archetype) error {
 	if arch.Damage == nil {
 		arch.Damage = &Damage{}
 	}
-	arch.Damage.Add(other.Damage)
 
+	if other.Damage != nil {
+		arch.Damage.Add(other.Damage)
+	}
+
+	// Attributes
 	arch.Attributes.Physical.Add(other.Attributes.Physical)
 	arch.Attributes.Arcane.Add(other.Attributes.Arcane)
 	arch.Attributes.Spirit.Add(other.Attributes.Spirit)
-
-	arch.TypeHintIDs = append(arch.TypeHintIDs, other.TypeHintIDs...)
 
 	// Slots. Note we're just using the resulting IDs, since add/merge is generally done after processing, which converts these to their appropriate IDs.
 	arch.Slots.HasIDs = append(arch.Slots.HasIDs, other.Slots.HasIDs...)
@@ -294,6 +304,7 @@ func (arch *Archetype) Add(other *Archetype) error {
 		arch.Light.Add(other.Light)
 	}
 
+	// Exit-related logic
 	if arch.Exit == nil && other.Exit != nil {
 		y := *other.Exit.Y
 		x := *other.Exit.X
