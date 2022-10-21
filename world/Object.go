@@ -516,6 +516,12 @@ func (o *Object) GetMundaneInfo(near bool) cdata.ObjectInfo {
 	}
 	if near {
 		info.Matter = o.Matter()
+		info.Slots.Has = o.Archetype.Slots.HasIDs
+		info.Slots.Uses = o.Archetype.Slots.UsesIDs
+		info.Slots.Needs.Min = o.Archetype.Slots.Needs.MaxIDs
+		info.Slots.Needs.Max = o.Archetype.Slots.Needs.MinIDs
+		info.Slots.Gives = o.Archetype.Slots.GivesIDs
+		//	info.Slots = o.Archetype.Slots.Has
 	}
 	return info
 }
