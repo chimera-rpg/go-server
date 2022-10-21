@@ -91,6 +91,11 @@ func (a *Attributes) GetHealthBonus() AttributeValue {
 	return a.Prowess*8 + a.Might*2
 }
 
+// GetInspectBonus gets the inspect bonus for these attributes.
+func (a *Attributes) GetInspectBonus() AttributeValue {
+	return a.Sense + a.Haste/2 + a.Reaction/4
+}
+
 // GetAttributes gets the target attribute.
 func (a *Attributes) GetAttribute(w AttributeType) AttributeValue {
 	switch w {

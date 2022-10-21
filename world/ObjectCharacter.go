@@ -46,6 +46,7 @@ type ObjectCharacter struct {
 	shouldRecalculate       bool
 	shouldRecalculateSenses bool
 	speed                   int
+	inspectSpeed            int
 	health                  int
 	reach                   int
 	seeRange                int
@@ -271,6 +272,10 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 			case OwnerStatusCommand:
 				duration := calcDuration(200*time.Millisecond, 50*time.Millisecond, time.Duration(o.speed)*time.Millisecond)
 				o.currentAction = NewActionStatus(c.Status, duration)
+				o.currentActionDuration = 0 // TODO: Add remainder from last operation if possible.
+			case OwnerInspectCommand:
+				duration := calcDuration(200*time.Millisecond, 50*time.Millisecond, time.Duration(o.inspectSpeed)*time.Millisecond)
+				o.currentAction = NewActionInspect(c.Target, duration)
 				o.currentActionDuration = 0 // TODO: Add remainder from last operation if possible.
 			}
 		}
@@ -651,6 +656,7 @@ func (o *ObjectCharacter) RestoreStamina() {
 // Recalculate caches all the stats of the player.
 func (o *ObjectCharacter) Recalculate() {
 	o.speed = o.CalculateSpeed()
+	o.inspectSpeed = o.CalculateInspectSpeed() // Should this be in recalculate senses?
 	o.health = o.CalculateHealth()
 	o.reach = o.CalculateReach()
 	o.damages = o.CalculateDamages()
@@ -685,6 +691,20 @@ func (o *ObjectCharacter) CalculateSpeed() int {
 	// Add any bonuses from our ancestry.
 	for _, a := range o.Archetype.ArchPointers {
 		result += int(a.Attributes.Physical.GetSpeedBonus())
+	}
+	// Add from our own archetype.
+	result += int(o.AltArchetype.Attributes.Physical.GetSpeedBonus())
+
+	return result
+}
+
+// CalculateInspectSpeed calculates the speed a character inspects at.
+func (o *ObjectCharacter) CalculateInspectSpeed() int {
+	result := 10 // Baseline 10.
+
+	// Add any bonuses from our ancestry.
+	for _, a := range o.Archetype.ArchPointers {
+		result += int(a.Attributes.Physical.GetInspectBonus())
 	}
 	// Add from our own archetype.
 	result += int(o.AltArchetype.Attributes.Physical.GetSpeedBonus())
