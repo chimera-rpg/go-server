@@ -151,6 +151,11 @@ func (m *Manager) ProcessArchetype(archetype *Archetype) error {
 		}
 	}
 
+	// Process type hint
+	for _, v := range archetype.TypeHints {
+		archetype.TypeHintIDs = append(archetype.TypeHintIDs, m.Strings.Acquire(v))
+	}
+
 	// Process Slots.
 	for _, v := range archetype.Slots.Has {
 		archetype.Slots.HasIDs = append(archetype.Slots.HasIDs, m.Strings.Acquire(v))

@@ -55,6 +55,8 @@ type Archetype struct {
 	//Name string
 	Description *string             `json:"Description" yaml:"Description,omitempty"`
 	Type        cdata.ArchetypeType `json:"Type" yaml:"Type,omitempty"`
+	TypeHints   []string            `json:"TypeHints" yaml:"TypeHints,omitempty"`
+	TypeHintIDs []StringID          `yaml:"-"`
 	Anim        string              `json:"Anim" yaml:"Anim,omitempty"`
 	AnimID      StringID            `yaml:"-"`
 	Face        string              `json:"Face" yaml:"Face,omitempty"`
@@ -274,6 +276,8 @@ func (arch *Archetype) Add(other *Archetype) error {
 	arch.Attributes.Physical.Add(other.Attributes.Physical)
 	arch.Attributes.Arcane.Add(other.Attributes.Arcane)
 	arch.Attributes.Spirit.Add(other.Attributes.Spirit)
+
+	arch.TypeHintIDs = append(arch.TypeHintIDs, other.TypeHintIDs...)
 
 	// Slots. Note we're just using the resulting IDs, since add/merge is generally done after processing, which converts these to their appropriate IDs.
 	arch.Slots.HasIDs = append(arch.Slots.HasIDs, other.Slots.HasIDs...)
