@@ -37,7 +37,7 @@ type Manager struct {
 	animations map[StringID]*Animation // ID to Animation map
 	audio      map[StringID]*Audio
 	// Hmm... almost map[uint32]*Archetype... with CRC id
-	Strings      StringsMap
+	Strings      Strings
 	imageFileMap FileMap
 	soundFileMap FileMap
 	// images map[string][]bytes
@@ -48,6 +48,9 @@ type Manager struct {
 	maps              map[string]*Map  // Full map of Maps.
 	loadedUsers       map[string]*User // Map of loaded Players
 	cryptParams       cryptParams      // Cryptography parameters
+	// FIXME: Made these exported because I'm lazy.
+	TypeHints map[StringID]string
+	Slots     map[StringID]string
 }
 
 type objectTemplate struct {
@@ -154,23 +157,29 @@ func (m *Manager) ProcessArchetype(archetype *Archetype) error {
 	// Process type hint
 	for _, v := range archetype.TypeHints {
 		archetype.TypeHintIDs = append(archetype.TypeHintIDs, m.Strings.Acquire(v))
+		m.TypeHints[m.Strings.Acquire(v)] = v
 	}
 
-	// Process Slots.
+	// Process Slots. FIXME: This parsing of all strings for sending slot information feels awful.
 	for _, v := range archetype.Slots.Has {
 		archetype.Slots.HasIDs = append(archetype.Slots.HasIDs, m.Strings.Acquire(v))
+		m.Slots[m.Strings.Acquire(v)] = v
 	}
 	for _, v := range archetype.Slots.Uses {
 		archetype.Slots.UsesIDs = append(archetype.Slots.UsesIDs, m.Strings.Acquire(v))
+		m.Slots[m.Strings.Acquire(v)] = v
 	}
 	for _, v := range archetype.Slots.Gives {
 		archetype.Slots.GivesIDs = append(archetype.Slots.GivesIDs, m.Strings.Acquire(v))
+		m.Slots[m.Strings.Acquire(v)] = v
 	}
 	for _, v := range archetype.Slots.Needs.Min {
 		archetype.Slots.Needs.MinIDs = append(archetype.Slots.Needs.MinIDs, m.Strings.Acquire(v))
+		m.Slots[m.Strings.Acquire(v)] = v
 	}
 	for _, v := range archetype.Slots.Needs.Max {
 		archetype.Slots.Needs.MaxIDs = append(archetype.Slots.Needs.MaxIDs, m.Strings.Acquire(v))
+		m.Slots[m.Strings.Acquire(v)] = v
 	}
 
 	// Process Events' archetypes.
@@ -735,7 +744,7 @@ func (m *Manager) Setup(config *config.Config) error {
 	m.audio = make(map[StringID]*Audio)
 	m.maps = make(map[string]*Map)
 	m.loadedUsers = make(map[string]*User)
-	m.Strings = NewStringsMap()
+	m.Strings = NewStrings()
 	m.imageFileMap = NewFileMap()
 	m.soundFileMap = NewFileMap()
 	m.cryptParams = cryptParams{
@@ -745,6 +754,8 @@ func (m *Manager) Setup(config *config.Config) error {
 		saltLength:  16,
 		keyLength:   32,
 	}
+	m.TypeHints = make(map[uint32]string)
+	m.Slots = make(map[uint32]string)
 	// Get the parent dir of command; should resolve like /path/bin/server -> /path/
 	dir, err := filepath.Abs(os.Args[0])
 	if err != nil {
