@@ -512,7 +512,8 @@ func (o *Object) GetAttitude(o2 ObjectI) data.Attitude {
 
 func (o *Object) GetMundaneInfo(near bool) cdata.ObjectInfo {
 	info := cdata.ObjectInfo{
-		Name: o.Name(),
+		Name:      o.Name(),
+		TypeHints: o.Archetype.TypeHintIDs,
 	}
 	if near {
 		info.Matter = o.Matter()
@@ -521,7 +522,6 @@ func (o *Object) GetMundaneInfo(near bool) cdata.ObjectInfo {
 		info.Slots.Needs.Min = o.Archetype.Slots.Needs.MaxIDs
 		info.Slots.Needs.Max = o.Archetype.Slots.Needs.MinIDs
 		info.Slots.Gives = o.Archetype.Slots.GivesIDs
-		//	info.Slots = o.Archetype.Slots.Has
 	}
 	return info
 }
