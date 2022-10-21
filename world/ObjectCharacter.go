@@ -580,13 +580,11 @@ func (o *ObjectCharacter) getType() cdata.ArchetypeType {
 	return cdata.ArchetypePC
 }
 
-// EquipObject attempts to equip a given object. The object must be in the character's inventory and must be equippable (weapon, shield, or armor).
-// This removes the item from the inventory and adds it to the equipment if the equipping was successful.
-func (o *ObjectCharacter) EquipObject(ob ObjectI) error {
-	// Ensure we are only equipping from our inventory.
+// Equip attempts to add the given object to the equipment slice from the inventory slice.
+func (o *ObjectCharacter) Equip(ob *ObjectEquippable) error {
 	index := -1
 	for i, v := range o.inventory {
-		if v == o {
+		if v == ob {
 			index = i
 			break
 		}
@@ -594,40 +592,32 @@ func (o *ObjectCharacter) EquipObject(ob ObjectI) error {
 	if index == -1 {
 		return errors.New("object does not exist in inventory")
 	}
-	// Ensure the item can be equipped.
-	var err error
-	switch obj := ob.(type) {
-	case *ObjectWeapon:
-		err = o.EquipWeapon(obj)
-	case *ObjectShield:
-		err = o.EquipShield(obj)
-	case *ObjectArmor:
-		err = o.EquipArmor(obj)
-	default:
-		return errors.New("object cannot be equipped")
-	}
-	if err == nil {
-		o.equipment = append(o.equipment, o.inventory[index])
-		o.inventory = append(o.inventory[:index], o.inventory[index+1:]...)
-	}
+
+	o.equipment = append(o.equipment, o.inventory[index])
+	o.inventory = append(o.inventory[:index], o.inventory[index+1:]...)
+
+	ob.CalculateArmors()
+	ob.GetArmors(o)
+	ob.CalculateDamages()
+	ob.GetDamages(o)
 
 	o.shouldRecalculate = true
-	return err
-}
 
-// EquipArmor equips armor.
-func (o *ObjectCharacter) EquipArmor(armor *ObjectArmor) error {
 	return nil
 }
 
-// EquipShield equips a shield.
-func (o *ObjectCharacter) EquipShield(armor *ObjectShield) error {
-	return nil
-}
+// Unequip attempts to remove the given object from the equipment slice and into the inventory slice.
+func (o *ObjectCharacter) Unequip(ob *ObjectEquippable) error {
+	for i, v := range o.equipment {
+		if v == ob {
+			o.equipment = append(o.equipment[:i], o.equipment[i+1:]...)
+			o.inventory = append(o.inventory, v)
 
-// EquipWeapon equips a weapon.
-func (o *ObjectCharacter) EquipWeapon(armor *ObjectWeapon) error {
-	return nil
+			o.shouldRecalculate = true
+			return nil
+		}
+	}
+	return errors.New("object is not equipped")
 }
 
 // Name returns the name of the character.
