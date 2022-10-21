@@ -477,8 +477,6 @@ func (player *OwnerPlayer) Update(delta time.Duration) error {
 				if c.Command == "wiz" && player.wizard {
 					player.handleWizardCommand(c.Args...)
 				}
-			case OwnerInspectCommand:
-				player.Inspect(c.Target)
 			default:
 				player.PushCommand(c)
 			}
@@ -639,34 +637,4 @@ func (player *OwnerPlayer) handleWizardCommand(args ...string) {
 // ForgotObject makes the player forget a given object. This will force the object to be resent to the player if it still exists.
 func (player *OwnerPlayer) ForgetObject(oID ID) {
 	delete(player.knownIDs, oID)
-}
-
-func (player *OwnerPlayer) Inspect(oID ID) {
-	var infos []cdata.ObjectInfo
-	var near bool
-	if po := player.GetTarget(); po != nil {
-		po := po.(*ObjectCharacter)
-		if o := player.GetMap().world.GetObject(oID); o != nil {
-			if po.GetTile().GetMap() == o.GetTile().GetMap() {
-				ot := o.GetTile()
-				if po.InReachRange(ot.Y, ot.X, ot.Z) {
-					// TODO: Do a line of sight check from the character's intersection cube.
-					near = true
-					// Send detailed info?
-				}
-				// Always get the mundane info.
-				mundaneInfo := o.GetMundaneInfo(near)
-				mundaneInfo.Near = near
-				infos = append(infos, mundaneInfo)
-			}
-		}
-	}
-	if len(infos) > 0 {
-		player.ClientConnection.Send(network.CommandObject{
-			ObjectID: oID,
-			Payload: network.CommandObjectPayloadInfo{
-				Info: infos,
-			},
-		})
-	}
 }
