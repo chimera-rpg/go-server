@@ -96,6 +96,8 @@ type Archetype struct {
 	Resistances cdata.AttackTypes `json:"Resistances" ts_type:"{[key:number]: {[key:number]: number}}" yaml:"Resistances,omitempty"`
 	// AttackTypes represents the attack types of a weapon or a character.
 	AttackTypes cdata.AttackTypes `json:"AttackTypes" ts_type:"{[key:number]: {[key:number]:number}}" yaml:"AttackTypes,omitempty"`
+	// Slots represents the slots information for equipment and characters.
+	Slots Slots `json:"Slots" yaml:"Slots,omitempty"`
 	// Reach represents how far this object can reach.
 	Reach      uint8 `json:"Reach" yaml:"Reach,omitempty"`
 	Attackable bool  `json:"Attackable" yaml:"Attackable,omitempty"`
