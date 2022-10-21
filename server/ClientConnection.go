@@ -119,6 +119,8 @@ func (c *ClientConnection) HandleHandshake(s *GameServer) {
 	// Send Features
 	c.Send(network.Command(network.CommandFeatures{
 		AnimationsConfig: s.dataManager.AnimationsConfig,
+		TypeHints:        s.dataManager.TypeHints,
+		Slots:            s.dataManager.Slots,
 	}))
 	c.HandleLogin(s)
 }
