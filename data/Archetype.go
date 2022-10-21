@@ -275,12 +275,12 @@ func (arch *Archetype) Add(other *Archetype) error {
 	arch.Attributes.Arcane.Add(other.Attributes.Arcane)
 	arch.Attributes.Spirit.Add(other.Attributes.Spirit)
 
-	// Slots
-	arch.Slots.Has = append(arch.Slots.Has, other.Slots.Has...)
-	arch.Slots.Gives = append(arch.Slots.Gives, other.Slots.Gives...)
-	arch.Slots.Uses = append(arch.Slots.Uses, other.Slots.Uses...)
-	arch.Slots.Needs.Min = append(arch.Slots.Needs.Min, other.Slots.Needs.Min...)
-	arch.Slots.Needs.Max = append(arch.Slots.Needs.Max, other.Slots.Needs.Max...)
+	// Slots. Note we're just using the resulting IDs, since add/merge is generally done after processing, which converts these to their appropriate IDs.
+	arch.Slots.HasIDs = append(arch.Slots.HasIDs, other.Slots.HasIDs...)
+	arch.Slots.GivesIDs = append(arch.Slots.GivesIDs, other.Slots.GivesIDs...)
+	arch.Slots.UsesIDs = append(arch.Slots.UsesIDs, other.Slots.UsesIDs...)
+	arch.Slots.Needs.MinIDs = append(arch.Slots.Needs.MinIDs, other.Slots.Needs.MinIDs...)
+	arch.Slots.Needs.MaxIDs = append(arch.Slots.Needs.MaxIDs, other.Slots.Needs.MaxIDs...)
 
 	// Brightness
 	if arch.Light != nil {

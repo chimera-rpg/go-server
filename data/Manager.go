@@ -151,6 +151,23 @@ func (m *Manager) ProcessArchetype(archetype *Archetype) error {
 		}
 	}
 
+	// Process Slots.
+	for _, v := range archetype.Slots.Has {
+		archetype.Slots.HasIDs = append(archetype.Slots.HasIDs, m.Strings.Acquire(v))
+	}
+	for _, v := range archetype.Slots.Uses {
+		archetype.Slots.UsesIDs = append(archetype.Slots.UsesIDs, m.Strings.Acquire(v))
+	}
+	for _, v := range archetype.Slots.Gives {
+		archetype.Slots.GivesIDs = append(archetype.Slots.GivesIDs, m.Strings.Acquire(v))
+	}
+	for _, v := range archetype.Slots.Needs.Min {
+		archetype.Slots.Needs.MinIDs = append(archetype.Slots.Needs.MinIDs, m.Strings.Acquire(v))
+	}
+	for _, v := range archetype.Slots.Needs.Max {
+		archetype.Slots.Needs.MaxIDs = append(archetype.Slots.Needs.MaxIDs, m.Strings.Acquire(v))
+	}
+
 	// Process Events' archetypes.
 	processEventResponses := func(e *EventResponses) error {
 		if e == nil {
