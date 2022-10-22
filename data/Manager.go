@@ -161,26 +161,32 @@ func (m *Manager) ProcessArchetype(archetype *Archetype) error {
 	}
 
 	// Process Slots. FIXME: This parsing of all strings for sending slot information feels awful.
+	archetype.Slots.HasIDs = make(map[uint32]int)
 	for k, v := range archetype.Slots.Has {
 		slot := m.Strings.Acquire(k)
 		archetype.Slots.HasIDs[slot] = v
 		m.Slots[slot] = k
 	}
+	archetype.Slots.UsesIDs = make(map[uint32]int)
 	for k, v := range archetype.Slots.Uses {
 		slot := m.Strings.Acquire(k)
 		archetype.Slots.UsesIDs[slot] = v
 		m.Slots[slot] = k
 	}
+	archetype.Slots.GivesIDs = make(map[uint32]int)
 	for k, v := range archetype.Slots.Gives {
 		slot := m.Strings.Acquire(k)
 		archetype.Slots.GivesIDs[slot] = v
 		m.Slots[slot] = k
 	}
+	archetype.Slots.Needs.MinIDs = make(map[uint32]int)
+	archetype.Slots.Needs.Min = make(map[string]int)
 	for k, v := range archetype.Slots.Needs.Min {
 		slot := m.Strings.Acquire(k)
 		archetype.Slots.Needs.MinIDs[slot] = v
 		m.Slots[slot] = k
 	}
+	archetype.Slots.Needs.MaxIDs = make(map[uint32]int)
 	for k, v := range archetype.Slots.Needs.Max {
 		slot := m.Strings.Acquire(k)
 		archetype.Slots.Needs.MaxIDs[slot] = v
