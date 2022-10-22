@@ -161,25 +161,30 @@ func (m *Manager) ProcessArchetype(archetype *Archetype) error {
 	}
 
 	// Process Slots. FIXME: This parsing of all strings for sending slot information feels awful.
-	for _, v := range archetype.Slots.Has {
-		archetype.Slots.HasIDs = append(archetype.Slots.HasIDs, m.Strings.Acquire(v))
-		m.Slots[m.Strings.Acquire(v)] = v
+	for k, v := range archetype.Slots.Has {
+		slot := m.Strings.Acquire(k)
+		archetype.Slots.HasIDs[slot] = v
+		m.Slots[slot] = k
 	}
-	for _, v := range archetype.Slots.Uses {
-		archetype.Slots.UsesIDs = append(archetype.Slots.UsesIDs, m.Strings.Acquire(v))
-		m.Slots[m.Strings.Acquire(v)] = v
+	for k, v := range archetype.Slots.Uses {
+		slot := m.Strings.Acquire(k)
+		archetype.Slots.UsesIDs[slot] = v
+		m.Slots[slot] = k
 	}
-	for _, v := range archetype.Slots.Gives {
-		archetype.Slots.GivesIDs = append(archetype.Slots.GivesIDs, m.Strings.Acquire(v))
-		m.Slots[m.Strings.Acquire(v)] = v
+	for k, v := range archetype.Slots.Gives {
+		slot := m.Strings.Acquire(k)
+		archetype.Slots.GivesIDs[slot] = v
+		m.Slots[slot] = k
 	}
-	for _, v := range archetype.Slots.Needs.Min {
-		archetype.Slots.Needs.MinIDs = append(archetype.Slots.Needs.MinIDs, m.Strings.Acquire(v))
-		m.Slots[m.Strings.Acquire(v)] = v
+	for k, v := range archetype.Slots.Needs.Min {
+		slot := m.Strings.Acquire(k)
+		archetype.Slots.Needs.MinIDs[slot] = v
+		m.Slots[slot] = k
 	}
-	for _, v := range archetype.Slots.Needs.Max {
-		archetype.Slots.Needs.MaxIDs = append(archetype.Slots.Needs.MaxIDs, m.Strings.Acquire(v))
-		m.Slots[m.Strings.Acquire(v)] = v
+	for k, v := range archetype.Slots.Needs.Max {
+		slot := m.Strings.Acquire(k)
+		archetype.Slots.Needs.MaxIDs[slot] = v
+		m.Slots[slot] = k
 	}
 
 	// Process Events' archetypes.

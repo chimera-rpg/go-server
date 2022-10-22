@@ -27,7 +27,7 @@ func NewObjectEquippable(a *data.Archetype) (o *ObjectEquippable) {
 	return
 }
 
-func (o *ObjectEquippable) Slots() []data.StringID {
+func (o *ObjectEquippable) Slots() map[data.StringID]int {
 	return o.Archetype.Slots.HasIDs
 }
 

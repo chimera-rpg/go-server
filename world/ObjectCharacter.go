@@ -54,6 +54,9 @@ type ObjectCharacter struct {
 	//
 	reachCube     [][][]struct{}
 	intersectCube [][][]struct{}
+	//
+	hasSlots  map[uint32]int
+	usedSlots map[uint32]int
 }
 
 // NewObjectCharacter creates a new ObjectCharacter from the given archetype.
@@ -64,6 +67,8 @@ func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 		reach:                   1,
 		shouldRecalculate:       true,
 		shouldRecalculateSenses: true,
+		hasSlots:                make(map[uint32]int),
+		usedSlots:               make(map[uint32]int),
 	}
 	*o.name = *a.Name
 	*o.level = a.Level
@@ -101,6 +106,8 @@ func NewObjectCharacterFromCharacter(c *data.Character, completeArchetype *data.
 		speedPenaltyMultiplier:  1,
 		shouldRecalculate:       true,
 		shouldRecalculateSenses: true,
+		hasSlots:                make(map[uint32]int),
+		usedSlots:               make(map[uint32]int),
 	}
 	o.hasMoved = true // Set moved to true to ensure falling and any other situations are checked for on first update.
 	o.AltArchetype = &c.Archetype
@@ -585,6 +592,48 @@ func (o *ObjectCharacter) getType() cdata.ArchetypeType {
 	return cdata.ArchetypePC
 }
 
+// CanEquip returns if the object can be equipped. FIXME: Make this return an error so we can provide a message to the user saying why they couldn't equip the item.
+func (o *ObjectCharacter) CanEquip(ob *ObjectEquippable) bool {
+	// FIXME: Add a "used" slots property.
+	for k, v := range ob.Archetype.Slots.Uses {
+		v2, ok := o.Archetype.Slots.Has[k]
+		if !ok {
+			// No such slot exists.
+			return false
+		}
+		if v2 < v {
+			// We have the slot, but are missing v - v2 count.
+			return false
+		}
+	}
+
+	for k, v := range ob.Archetype.Slots.Needs.Min {
+		v2, ok := o.Archetype.Slots.Has[k]
+		if !ok {
+			// No such slot exists.
+			return false
+		}
+		if v2 < v {
+			// We have the slot, but are missing v - v2 count.
+			return false
+		}
+	}
+
+	for k, v := range ob.Archetype.Slots.Needs.Max {
+		v2, ok := o.Archetype.Slots.Has[k]
+		if !ok {
+			// No such slot exists.
+			return false
+		}
+		if v2 > v {
+			// We have the slot, but are in excess by v2 - v
+			return false
+		}
+	}
+
+	return true
+}
+
 // Equip attempts to add the given object to the equipment slice from the inventory slice.
 func (o *ObjectCharacter) Equip(ob *ObjectEquippable) error {
 	index := -1
@@ -596,6 +645,10 @@ func (o *ObjectCharacter) Equip(ob *ObjectEquippable) error {
 	}
 	if index == -1 {
 		return errors.New("object does not exist in inventory")
+	}
+
+	if !o.CanEquip(ob) {
+		return errors.New("cannot equip object")
 	}
 
 	o.equipment = append(o.equipment, o.inventory[index])
