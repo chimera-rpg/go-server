@@ -338,15 +338,16 @@ func (m *Manager) parseArchetypeFiles() error {
 		"path": m.archetypesPath,
 	})
 	l.Print("Archetypes: Loading...")
-	err := filepath.Walk(m.archetypesPath, func(filepath string, info os.FileInfo, err error) error {
+	err := filepath.Walk(m.archetypesPath, func(fp string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 		if !info.IsDir() {
-			if strings.HasSuffix(filepath, ".arch.yaml") {
-				err = m.parseArchetypeFile(filepath)
+			if strings.HasSuffix(fp, ".arch.yaml") {
+				err = m.parseArchetypeFile(fp)
 				if err != nil {
-					return err
+					fp, _ := filepath.Rel(m.archetypesPath, fp)
+					return fmt.Errorf("%s: %v", fp, err)
 				}
 			}
 		}
