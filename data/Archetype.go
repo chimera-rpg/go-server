@@ -86,6 +86,8 @@ type Archetype struct {
 	Timers []ArchetypeTimer `json:"Timers" yaml:"Timers,omitempty"`
 	//
 	Inventory []Archetype `json:"Inventory" yaml:"Inventory,omitempty"`
+	// Equipment contains items that are equipped and using slots. When a character loads in, all of the equipment will attempt to be worn in order of definition. If any equipment cannot be worn, they will be moved to Inventory.
+	Equipment []Archetype `json:"Equipment" yaml:"Equipment,omitempty"`
 	// SkillTypes correspond to the skills used by weapons and similar.
 	SkillTypes []SkillType `json:"SkillTypes" yaml:"SkillTypes,omitempty"`
 	// CompetencyTypes are the competency types of a weapon or armor.

@@ -55,8 +55,6 @@ type ObjectCharacter struct {
 	reachCube     [][][]struct{}
 	intersectCube [][][]struct{}
 	//
-	hasSlots  map[uint32]int
-	usedSlots map[uint32]int
 }
 
 // NewObjectCharacter creates a new ObjectCharacter from the given archetype.
@@ -67,8 +65,6 @@ func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 		reach:                   1,
 		shouldRecalculate:       true,
 		shouldRecalculateSenses: true,
-		hasSlots:                make(map[uint32]int),
-		usedSlots:               make(map[uint32]int),
 	}
 	*o.name = *a.Name
 	*o.level = a.Level
@@ -106,8 +102,6 @@ func NewObjectCharacterFromCharacter(c *data.Character, completeArchetype *data.
 		speedPenaltyMultiplier:  1,
 		shouldRecalculate:       true,
 		shouldRecalculateSenses: true,
-		hasSlots:                make(map[uint32]int),
-		usedSlots:               make(map[uint32]int),
 	}
 	o.hasMoved = true // Set moved to true to ensure falling and any other situations are checked for on first update.
 	o.AltArchetype = &c.Archetype
@@ -592,11 +586,29 @@ func (o *ObjectCharacter) getType() cdata.ArchetypeType {
 	return cdata.ArchetypePC
 }
 
+// ValidateSlots iterates through the character's equipment to ensure that they do not have more slots used than what is available. This is to ensure that any data updates, such as bauplans or weapons, will not leave characters equipping more than they should.
+func (o *ObjectCharacter) ValidateSlots() {
+	// TODO
+}
+
 // CanEquip returns if the object can be equipped. FIXME: Make this return an error so we can provide a message to the user saying why they couldn't equip the item.
 func (o *ObjectCharacter) CanEquip(ob *ObjectEquippable) bool {
-	// FIXME: Add a "used" slots property.
-	for k, v := range ob.Archetype.Slots.Uses {
-		v2, ok := o.Archetype.Slots.Has[k]
+	// Check the object's uses against our free slots.
+	for k, v := range ob.Archetype.Slots.UsesIDs {
+		v2, ok := o.Archetype.Slots.FreeIDs[k]
+		if !ok {
+			// No such slot is available.
+			return false
+		}
+		if v2 < v {
+			// We have the slot, but are missing v - v2 count.
+			return false
+		}
+	}
+
+	// Check for minimum slot requirements.
+	for k, v := range ob.Archetype.Slots.Needs.MinIDs {
+		v2, ok := o.Archetype.Slots.HasIDs[k]
 		if !ok {
 			// No such slot exists.
 			return false
@@ -606,21 +618,9 @@ func (o *ObjectCharacter) CanEquip(ob *ObjectEquippable) bool {
 			return false
 		}
 	}
-
-	for k, v := range ob.Archetype.Slots.Needs.Min {
-		v2, ok := o.Archetype.Slots.Has[k]
-		if !ok {
-			// No such slot exists.
-			return false
-		}
-		if v2 < v {
-			// We have the slot, but are missing v - v2 count.
-			return false
-		}
-	}
-
-	for k, v := range ob.Archetype.Slots.Needs.Max {
-		v2, ok := o.Archetype.Slots.Has[k]
+	// Check for maximum slot requirements.
+	for k, v := range ob.Archetype.Slots.Needs.MaxIDs {
+		v2, ok := o.Archetype.Slots.HasIDs[k]
 		if !ok {
 			// No such slot exists.
 			return false
@@ -651,6 +651,10 @@ func (o *ObjectCharacter) Equip(ob *ObjectEquippable) error {
 		return errors.New("cannot equip object")
 	}
 
+	for k, v := range ob.Archetype.Slots.Uses {
+		o.Archetype.Slots.Free[k] -= v
+	}
+
 	o.equipment = append(o.equipment, o.inventory[index])
 	o.inventory = append(o.inventory[:index], o.inventory[index+1:]...)
 
@@ -670,6 +674,10 @@ func (o *ObjectCharacter) Unequip(ob *ObjectEquippable) error {
 		if v == ob {
 			o.equipment = append(o.equipment[:i], o.equipment[i+1:]...)
 			o.inventory = append(o.inventory, v)
+
+			for k, v := range ob.Archetype.Slots.Uses {
+				o.Archetype.Slots.Free[k] += v
+			}
 
 			o.shouldRecalculate = true
 			return nil
@@ -992,4 +1000,17 @@ func (o *ObjectCharacter) Attackable() bool {
 		return true
 	}
 	return false
+}
+
+// GetSaveableArchetype returns a modified version of AltArchetype with any important changes appled to it from Archetype.
+func (o *ObjectCharacter) GetSaveableArchetype() data.Archetype {
+	a := *o.AltArchetype
+
+	// Copy slot information.
+	a.Slots.Free = make(map[string]int)
+	for k, v := range o.Archetype.Slots.FreeIDs {
+		a.Slots.Free[data.StringsMap.Lookup(k)] = v
+	}
+
+	return a
 }

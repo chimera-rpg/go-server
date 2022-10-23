@@ -20,6 +20,8 @@ type ObjectI interface {
 	GetArchetype() *data.Archetype
 	GetAltArchetype() *data.Archetype
 	ReplaceArchetype(a *data.Archetype)
+	GetSaveableArchetype() data.Archetype
+	//
 	update(time.Duration)
 	getType() cdata.ArchetypeType
 	AddStatus(StatusI)

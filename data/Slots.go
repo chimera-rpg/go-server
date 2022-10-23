@@ -10,6 +10,9 @@ type Slots struct {
 	// Uses are the slots that the item takes up on its owner.
 	Uses    map[string]int   `json:"Uses" yaml:"Uses,omitempty"`
 	UsesIDs map[StringID]int `yaml:"-"`
+	// Free are the slots that are available on the live character. These _should not_ be defined directly on the archetype files, as they are used for serialization of characters.
+	Free    map[string]int   `json:"Free" yaml:"Free,omitempty"`
+	FreeIDs map[StringID]int `yaml:"-"`
 	// Gives are the slots that the item gives to its owner.
 	Gives    map[string]int   `json:"Gives" yaml:"Gives,omitempty"`
 	GivesIDs map[StringID]int `yaml:"-"`

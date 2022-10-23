@@ -525,3 +525,7 @@ func (o *Object) GetMundaneInfo(near bool) cdata.ObjectInfo {
 	}
 	return info
 }
+
+func (o *Object) GetSaveableArchetype() data.Archetype {
+	return data.Archetype{}
+}

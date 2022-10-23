@@ -364,6 +364,7 @@ func (w *World) SyncPlayerSaveInfo(conn clientConnectionI) error {
 		s.HavenZ = t.Z
 	}
 	u.Characters[o.Name()].SaveInfo = s
+	u.Characters[o.Name()].Archetype = o.GetSaveableArchetype()
 	fmt.Println("Set SaveInfo")
 	return nil
 }
