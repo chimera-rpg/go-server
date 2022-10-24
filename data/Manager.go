@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/jinzhu/copier"
 	log "github.com/sirupsen/logrus"
 
 	"gopkg.in/yaml.v2"
@@ -86,9 +87,12 @@ func (m *Manager) parseArchetypeFile(filepath string) error {
 		return err
 	}
 	for k, archetype := range archetypesMap {
+		var original Archetype
+		copier.Copy(&original, &archetype)
 		archID := m.Strings.Acquire(k)
 		m.archetypes[archID] = archetype
 		m.archetypes[archID].SelfID = archID
+		m.archetypes[archID].Original = &original
 	}
 	return nil
 }
@@ -297,6 +301,11 @@ func (m *Manager) CompileArchetype(archetype *Archetype) error {
 	}
 
 	archetype.isCompiled = true
+
+	// Delete the uncompiled version for blocks and tiles.
+	if archetype.Type == cdata.ArchetypeBlock || archetype.Type == cdata.ArchetypeTile {
+		archetype.Original = nil
+	}
 
 	return nil
 }

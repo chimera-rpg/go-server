@@ -281,13 +281,13 @@ func (w *World) addPlayerByConnection(conn clientConnectionI, character *data.Ch
 		player := NewOwnerPlayer(conn)
 		conn.SetOwner(player)
 		// Process and compile the character's Archetype so it inherits properly.
-		// TODO: We actually want to keep the character's Archetype distinct from its ancestors. Perhaps we should have 2 copies of the archetype, one uncompiled and the other compiled. Any requested stat changes, skill changes, and similar all go to the uncompiled one, while the compiled one is rebuilt upon each of those changes and used for data?
-		var completeArchetype data.Archetype
-		copier.Copy(&completeArchetype, &character.Archetype)
-		w.data.ProcessArchetype(&completeArchetype)
-		w.data.CompileArchetype(&completeArchetype)
+		var original data.Archetype
+		copier.Copy(&original, &character.Archetype)
+		character.Archetype.Original = &original
+		w.data.ProcessArchetype(&character.Archetype)
+		w.data.CompileArchetype(&character.Archetype)
 		// Create character object.
-		pc := NewObjectCharacterFromCharacter(character, &completeArchetype)
+		pc := NewObjectCharacterFromCharacter(character, &character.Archetype)
 		pc.id = w.objectIDs.acquire()
 		w.objects[pc.id] = pc
 		player.SetTarget(pc)

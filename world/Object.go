@@ -14,9 +14,8 @@ import (
 // Object is the base type that should be used as an embeded struct in
 // all game Objects.
 type Object struct {
-	Archetype    *data.Archetype
-	AltArchetype *data.Archetype
-	id           ID
+	Archetype *data.Archetype
+	id        ID
 	// Relationships
 	tile   *Tile
 	parent ObjectI
@@ -148,7 +147,7 @@ func (o *Object) GetArchetype() *data.Archetype {
 
 // GetAltArchetype gets the object's underlying alt archetype. This is used for ObjectCharacters to store an uncompiled version of their archetype that can be easily saved to disk.
 func (o *Object) GetAltArchetype() *data.Archetype {
-	return o.AltArchetype
+	return o.Archetype.Original
 }
 
 func (o *Object) getType() cdata.ArchetypeType {
