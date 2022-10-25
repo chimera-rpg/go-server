@@ -129,6 +129,9 @@ func (w *World) Update(currentTime time.Time, delta time.Duration) error {
 			player.disconnectedElapsed += delta
 			// TODO: Make this influenced by map reset as well as server settings!
 			if player.disconnectedElapsed > time.Duration(5)*time.Minute {
+				// I guess it is okay to save the player.
+				w.SyncPlayerSaveInfo(player.ClientConnection)
+				//
 				player.GetMap().RemoveOwner(player)
 				w.DeleteObject(player.GetTarget(), true)
 			} else {
