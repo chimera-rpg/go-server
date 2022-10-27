@@ -18,7 +18,7 @@ type ObjectI interface {
 	SetTile(*Tile)
 	setArchetype(*data.Archetype)
 	GetArchetype() *data.Archetype
-	GetAltArchetype() *data.Archetype
+	GetUncompiledArchetype() *data.Archetype
 	ReplaceArchetype(a *data.Archetype)
 	GetSaveableArchetype() data.Archetype
 	//

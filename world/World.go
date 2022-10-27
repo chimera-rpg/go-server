@@ -284,9 +284,9 @@ func (w *World) addPlayerByConnection(conn clientConnectionI, character *data.Ch
 		player := NewOwnerPlayer(conn)
 		conn.SetOwner(player)
 		// Process and compile the character's Archetype so it inherits properly.
-		var original data.Archetype
-		copier.Copy(&original, &character.Archetype)
-		character.Archetype.Original = &original
+		var Uncompiled data.Archetype
+		copier.Copy(&Uncompiled, &character.Archetype)
+		character.Archetype.Uncompiled = &Uncompiled
 		w.data.ProcessArchetype(&character.Archetype)
 		w.data.CompileArchetype(&character.Archetype)
 		// Create character object.

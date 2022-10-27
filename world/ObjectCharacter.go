@@ -753,7 +753,7 @@ func (o *ObjectCharacter) CalculateSpeed() int {
 		result += int(a.Attributes.Physical.GetSpeedBonus())
 	}
 	// Add from our own archetype.
-	result += int(o.GetAltArchetype().Attributes.Physical.GetSpeedBonus())
+	result += int(o.GetUncompiledArchetype().Attributes.Physical.GetSpeedBonus())
 
 	return result
 }
@@ -767,7 +767,7 @@ func (o *ObjectCharacter) CalculateInspectSpeed() int {
 		result += int(a.Attributes.Physical.GetInspectBonus())
 	}
 	// Add from our own archetype.
-	result += int(o.GetAltArchetype().Attributes.Physical.GetSpeedBonus())
+	result += int(o.GetUncompiledArchetype().Attributes.Physical.GetSpeedBonus())
 
 	return result
 }
@@ -781,7 +781,7 @@ func (o *ObjectCharacter) CalculateHealth() int {
 		result += int(a.Attributes.Physical.GetHealthBonus())
 	}
 	// Add from our own archetype.
-	result += int(o.GetAltArchetype().Attributes.Physical.GetHealthBonus())
+	result += int(o.GetUncompiledArchetype().Attributes.Physical.GetHealthBonus())
 
 	return result
 }
@@ -794,7 +794,7 @@ func (o *ObjectCharacter) CalculateReach() int {
 		result += int(a.Reach)
 	}
 	// Add from our own archetype.
-	result += int(o.GetAltArchetype().Reach)
+	result += int(o.GetUncompiledArchetype().Reach)
 
 	// Recalculate our reach cube.
 	h, w, d := o.GetDimensions()
@@ -1001,9 +1001,9 @@ func (o *ObjectCharacter) Attackable() bool {
 	return false
 }
 
-// GetSaveableArchetype returns a modified version of AltArchetype with any important changes appled to it from Archetype.
+// GetSaveableArchetype returns a modified version of UncompiledArchetype with any important changes appled to it from Archetype.
 func (o *ObjectCharacter) GetSaveableArchetype() data.Archetype {
-	a := *o.GetAltArchetype()
+	a := *o.GetUncompiledArchetype()
 
 	// Copy slot information.
 	a.Slots.Free = make(map[string]int)

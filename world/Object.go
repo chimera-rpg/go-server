@@ -145,9 +145,9 @@ func (o *Object) GetArchetype() *data.Archetype {
 	return o.Archetype
 }
 
-// GetAltArchetype gets the object's underlying alt archetype. This is used for ObjectCharacters to store an uncompiled version of their archetype that can be easily saved to disk.
-func (o *Object) GetAltArchetype() *data.Archetype {
-	return o.Archetype.Original
+// GetUncompiledArchetype gets the object's underlying alt archetype. This is used for ObjectCharacters to store an uncompiled version of their archetype that can be easily saved to disk.
+func (o *Object) GetUncompiledArchetype() *data.Archetype {
+	return o.Archetype.Uncompiled
 }
 
 func (o *Object) getType() cdata.ArchetypeType {

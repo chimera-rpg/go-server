@@ -44,7 +44,7 @@ type ExitInfo struct {
 // Archetype represents a collection of data that should be used for the
 // creation of Objects.
 type Archetype struct {
-	Original     *Archetype   `yaml:"-"`
+	Uncompiled   *Archetype   `yaml:"-"`
 	ArchID       StringID     `yaml:"-"` // Archetype ID used for generating objects and inheriting from.
 	ArchIDs      []MergeArch  `yaml:"-"`
 	Archs        []string     `json:"Archs" yaml:"Archs,omitempty"` // Archetypes to inherit from.

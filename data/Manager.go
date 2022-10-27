@@ -92,7 +92,7 @@ func (m *Manager) parseArchetypeFile(filepath string) error {
 		archID := m.Strings.Acquire(k)
 		m.archetypes[archID] = archetype
 		m.archetypes[archID].SelfID = archID
-		m.archetypes[archID].Original = &original
+		m.archetypes[archID].Uncompiled = &original
 	}
 	return nil
 }
@@ -304,7 +304,7 @@ func (m *Manager) CompileArchetype(archetype *Archetype) error {
 
 	// Delete the uncompiled version for blocks and tiles.
 	if archetype.Type == cdata.ArchetypeBlock || archetype.Type == cdata.ArchetypeTile {
-		archetype.Original = nil
+		archetype.Uncompiled = nil
 	}
 
 	return nil
