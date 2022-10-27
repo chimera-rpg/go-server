@@ -31,7 +31,7 @@ func SetupInterpreterTypes(interp *fast.Interp) {
 	interp.DeclType(interp.TypeOf(OwnerSimpleAI{}))
 
 	interp.DeclType(interp.TypeOf(Object{}))
-	interp.DeclType(interp.TypeOf(ObjectArmor{}))
+	interp.DeclType(interp.TypeOf(ObjectEquippable{}))
 	interp.DeclType(interp.TypeOf(ObjectAudio{}))
 	interp.DeclType(interp.TypeOf(ObjectBlock{}))
 	interp.DeclType(interp.TypeOf(ObjectCharacter{}))
@@ -40,10 +40,8 @@ func SetupInterpreterTypes(interp *fast.Interp) {
 	interp.DeclType(interp.TypeOf(ObjectFood{}))
 	interp.DeclType(interp.TypeOf(ObjectGeneric{}))
 	interp.DeclType(interp.TypeOf(ObjectItem{}))
-	interp.DeclType(interp.TypeOf(ObjectShield{}))
 	interp.DeclType(interp.TypeOf(ObjectSkill{}))
 	interp.DeclType(interp.TypeOf(ObjectTile{}))
-	interp.DeclType(interp.TypeOf(ObjectWeapon{}))
 
 	interp.DeclType(interp.TypeOf(ActionMove{}))
 	interp.DeclType(interp.TypeOf(ActionAttack{}))

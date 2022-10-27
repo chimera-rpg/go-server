@@ -577,7 +577,7 @@ func (o *ObjectCharacter) Attack(o2 ObjectI) bool {
 }
 
 // RollAttack rolls an attack with the given weapon.
-func (o *ObjectCharacter) RollAttack(w *ObjectWeapon) (a Attacks) {
+func (o *ObjectCharacter) RollAttack(w *ObjectEquippable) (a Attacks) {
 	//
 	return a
 }
@@ -817,15 +817,25 @@ func (o *ObjectCharacter) CalculateReach() int {
 	return result
 }
 
-func (o *ObjectCharacter) CalculateDamages() []Damages {
-	// Get our current weapon(s).
-	var weapons []*ObjectWeapon
-	for _, e := range o.equipment {
-		switch e := e.(type) {
-		case *ObjectWeapon:
-			weapons = append(weapons, e)
+// Weapons returns the list of items useable as weapons.
+func (o *ObjectCharacter) Weapons() []*ObjectEquippable {
+	// FIXME: cache this information.
+	var weapons []*ObjectEquippable
+	for _, w := range o.equipment {
+		if a := w.GetArchetype(); a != nil {
+			for _, t := range a.TypeHints {
+				if t == "weapon" {
+					weapons = append(weapons, w.(*ObjectEquippable))
+				}
+			}
 		}
 	}
+	return weapons
+}
+
+func (o *ObjectCharacter) CalculateDamages() []Damages {
+	// Get our current weapon(s).
+	weapons := o.Weapons()
 	// If we have no weapons, default to PUNCH.
 	if len(weapons) == 0 {
 		weapons = append(weapons, HandToHandWeapon)
@@ -846,23 +856,31 @@ func (o *ObjectCharacter) CalculateDamages() []Damages {
 	return damages
 }
 
-func (o *ObjectCharacter) CalculateArmor() (armors Armors) {
-	var armor *ObjectArmor
-	for _, e := range o.equipment {
-		switch e := e.(type) {
-		case *ObjectArmor:
-			armor = e
-			break
+func (o *ObjectCharacter) Armors() []*ObjectEquippable {
+	// FIXME: cache this information.
+	var armors []*ObjectEquippable
+	for _, w := range o.equipment {
+		if a := w.GetArchetype(); a != nil {
+			for _, t := range a.TypeHints {
+				if t == "armor" {
+					armors = append(armors, w.(*ObjectEquippable))
+				}
+			}
 		}
 	}
+	return armors
+}
 
-	if armor != nil {
-		armor, err := GetArmors(armor, o)
+func (o *ObjectCharacter) CalculateArmor() (armors Armors) {
+	armorObjects := o.Armors()
+
+	for _, armorObject := range armorObjects {
+		armor, err := GetArmors(armorObject, o)
 		if err != nil {
 			o.GetOwner().SendMessage(err.Error())
-			return
+			continue
 		}
-		armors = armor
+		armors.Merge(armor)
 	}
 	return
 }
@@ -880,18 +898,15 @@ func (o *ObjectCharacter) CalculateDodge() (dodge float64) {
 	dodge *= 0.0075 // Scale to 0.75% per unit.
 
 	// Get our current worn armor value.
-	var armor *ObjectArmor
-	for _, e := range o.equipment {
-		switch e := e.(type) {
-		case *ObjectArmor:
-			armor = e
-			break
-		}
+	// FIXME: Figure out how multiple armor stacks with itself, in terms of % reduction...
+	armorTotal := 0.0
+	for _, e := range o.Armors() {
+		armorTotal += e.Archetype.Armor
 	}
 
 	// Reduce dodge based upon our armor if worn, or gain a 20% dodge bonus if the character is not wearing armor.
-	if armor != nil && armor.Archetype.Armor > 0 {
-		dodge *= 1 - armor.Archetype.Armor
+	if armorTotal > 0 {
+		dodge *= 1 - armorTotal
 	} else {
 		dodge += 0.2
 	}
