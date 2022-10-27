@@ -32,6 +32,7 @@ type ObjectCharacter struct {
 	skills       []ObjectSkill
 	//
 	equipment             []ObjectI // Equipment is all equipped inventory items.
+	inventory             []ObjectI // Inventory contains all non-equipped items.
 	currentActionDuration time.Duration
 	// FIXME: Temporary code for testing a stamina system.
 	stamina                int // Stamina is a pool that recharges and is consumed by actions.
@@ -1001,7 +1002,7 @@ func (o *ObjectCharacter) Attackable() bool {
 	return false
 }
 
-// GetSaveableArchetype returns a modified version of UncompiledArchetype with any important changes appled to it from Archetype.
+// GetSaveableArchetype returns a modified version of UncompiledArchetype with any important changes applied to it.
 func (o *ObjectCharacter) GetSaveableArchetype() data.Archetype {
 	a := *o.GetUncompiledArchetype()
 
@@ -1009,6 +1010,20 @@ func (o *ObjectCharacter) GetSaveableArchetype() data.Archetype {
 	a.Slots.Free = make(map[string]int)
 	for k, v := range o.Archetype.Slots.FreeIDs {
 		a.Slots.Free[data.StringsMap.Lookup(k)] = v
+	}
+
+	// Copy inventory information.
+	for _, v := range o.inventory {
+		if a := v.GetUncompiledArchetype(); a != nil {
+			a.Inventory = append(a.Inventory, *a)
+		}
+	}
+
+	// Copy equipment information.
+	for _, v := range o.equipment {
+		if a := v.GetUncompiledArchetype(); a != nil {
+			a.Equipment = append(a.Equipment, *a)
+		}
 	}
 
 	return a
