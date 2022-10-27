@@ -17,7 +17,7 @@ import (
 )
 
 // FIXME: This shouldn't be here. We want to have default melee fallback, though certain genera should have alternatives that use edged or similar.
-var HandToHandWeapon *ObjectWeapon
+var HandToHandWeapon *ObjectEquippable
 
 // World contains and manages all map updating, loading, and otherwise.
 type World struct {
@@ -49,7 +49,7 @@ func (w *World) Setup(manager *data.Manager) error {
 		if o, err := w.CreateObjectFromArch(a); err != nil {
 			log.Errorln("couldn't load create striking object", err)
 		} else {
-			HandToHandWeapon = o.(*ObjectWeapon)
+			HandToHandWeapon = o.(*ObjectEquippable)
 		}
 	}
 
@@ -476,12 +476,8 @@ func (w *World) CreateObjectFromArch(arch *data.Archetype) (o ObjectI, err error
 		o = NewObjectCharacter(arch)
 	case cdata.ArchetypeNPC:
 		o = NewObjectCharacter(arch)
-	case cdata.ArchetypeArmor:
-		o = NewObjectArmor(arch)
-	case cdata.ArchetypeShield:
-		o = NewObjectShield(arch)
-	case cdata.ArchetypeWeapon:
-		o = NewObjectWeapon(arch)
+	case cdata.ArchetypeEquippable:
+		o = NewObjectEquippable(arch)
 	case cdata.ArchetypeFood:
 		o = NewObjectFood(arch)
 	case cdata.ArchetypeAudio:
