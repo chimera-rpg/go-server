@@ -202,39 +202,58 @@ func (e *MissingCompetencyError) Error() string {
 	return fmt.Sprintf("missing competency \"%s\"", data.CompetencyToStringMap[e.competencyType])
 }
 
-func GetDamages(w *ObjectEquippable, c *ObjectCharacter) (damages Damages, err error) {
-	base := 0
-	if w.Archetype.Damage != nil {
-		base = w.Archetype.Damage.Value
-	}
-	// Multiply by the weapon's skills
-	totalSkill := 0.0
-	totalSkillCount := 0
-	for _, s := range w.Archetype.SkillTypes {
-		v, ok := c.Archetype.Skills[s]
-		if !ok {
-			// No skill, we cannot process!
-			return nil, &MissingSkillError{s}
-		}
-		totalSkill += math.Floor(v.Experience)
-		totalSkillCount++
-	}
-	totalSkill /= float64(totalSkillCount)
-
+func GetCompetency(types []data.CompetencyType, competencies data.CompetenciesMap) (float64, error) {
 	// Get our competency float modifier.
 	totalCompetency := 0.0
 	totalCompetencyCount := 0
-	for _, ct := range w.Archetype.CompetencyTypes {
-		v, ok := c.Archetype.Competencies[ct]
+	for _, ct := range types {
+		v, ok := competencies[ct]
 		if !ok {
 			// No competency, we cannot process!
-			return nil, &MissingCompetencyError{ct}
+			return 0, &MissingCompetencyError{ct}
 		}
 		totalCompetency += v.Efficiency
 		totalCompetencyCount++
 	}
 	totalCompetency /= float64(totalCompetencyCount)
 	totalCompetency = 0.5 + totalCompetency/2
+
+	return totalCompetency, nil
+}
+
+func GetSkill(types []data.SkillType, skills map[data.SkillType]data.Skill) (float64, error) {
+	// Multiply by the weapon's skills
+	totalSkill := 0.0
+	totalSkillCount := 0
+	for _, s := range types {
+		v, ok := skills[s]
+		if !ok {
+			// No skill, we cannot process!
+			return 0, &MissingSkillError{s}
+		}
+		totalSkill += math.Floor(v.Experience)
+		totalSkillCount++
+	}
+	totalSkill /= float64(totalSkillCount)
+
+	return totalSkill, nil
+}
+
+func GetDamages(w *ObjectEquippable, c *ObjectCharacter) (damages Damages, err error) {
+	base := 0
+	if w.Archetype.Damage != nil {
+		base = w.Archetype.Damage.Value
+	}
+
+	totalSkill, err := GetSkill(w.Archetype.SkillTypes, c.Archetype.Skills)
+	if err != nil {
+		return nil, err
+	}
+
+	totalCompetency, err := GetCompetency(w.Archetype.CompetencyTypes, c.Archetype.Competencies)
+	if err != nil {
+		return nil, err
+	}
 
 	for k, a := range w.Archetype.AttackTypes {
 		damage := Damage{
