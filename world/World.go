@@ -354,6 +354,9 @@ func (w *World) SyncPlayerSaveInfo(conn clientConnectionI) error {
 	if m == nil {
 		return fmt.Errorf("player object %s's tile has no map", o.Name())
 	}
+	if _, ok := u.Characters[o.Name()]; !ok {
+		return fmt.Errorf("user '%s' has no matching character '%s'", u.Username, o.Name())
+	}
 	s := u.Characters[o.Name()].SaveInfo
 	s.Map = m.dataName
 	s.X = t.X
