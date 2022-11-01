@@ -292,34 +292,16 @@ func GetDamages(w *ObjectEquipable, c *ObjectCharacter) (damages Damages, err er
 
 func GetArmors(a *ObjectEquipable, c *ObjectCharacter) (armors Armors, err error) {
 	base := a.Archetype.Armor
-	// Multiply by the armors's skills
-	totalSkill := 0.0
-	totalSkillCount := 0
-	for _, s := range a.Archetype.SkillTypes {
-		v, ok := c.Archetype.Skills[s]
-		if !ok {
-			// No skill, we cannot process!
-			return nil, &MissingSkillError{s}
-		}
-		totalSkill += math.Floor(v.Experience)
-		totalSkillCount++
-	}
-	totalSkill /= float64(totalSkillCount)
 
-	// Get our competency float modifier.
-	totalCompetency := 0.0
-	totalCompetencyCount := 0
-	for _, ct := range a.Archetype.CompetencyTypes {
-		v, ok := c.Archetype.Competencies[ct]
-		if !ok {
-			// No competency, we cannot process!
-			return nil, &MissingCompetencyError{ct}
-		}
-		totalCompetency += v.Efficiency
-		totalCompetencyCount++
+	totalSkill, err := GetSkill(a.Archetype.SkillTypes, c.Archetype.Skills)
+	if err != nil {
+		return nil, err
 	}
-	totalCompetency /= float64(totalCompetencyCount)
-	totalCompetency = 0.5 + totalCompetency/2
+
+	totalCompetency, err := GetCompetency(a.Archetype.CompetencyTypes, c.Archetype.Competencies)
+	if err != nil {
+		return nil, err
+	}
 
 	for k, a := range a.Archetype.Resistances {
 		armor := Armor{
