@@ -1,7 +1,6 @@
 package world
 
 import (
-	"fmt"
 	"math"
 
 	cdata "github.com/chimera-rpg/go-common/data"
@@ -68,7 +67,7 @@ func (o *ObjectEquipable) GetDamages(c *ObjectCharacter) (damages Damages, err e
 		v, ok := c.Archetype.Skills[s]
 		if !ok {
 			// No skill, we cannot process!
-			return nil, &MissingSkillError{s}
+			return nil, &data.MissingSkillError{s}
 		}
 		totalSkill += math.Floor(v.Experience)
 		totalSkillCount++
@@ -82,7 +81,7 @@ func (o *ObjectEquipable) GetDamages(c *ObjectCharacter) (damages Damages, err e
 		v, ok := c.Archetype.Competencies[ct]
 		if !ok {
 			// No competency, we cannot process!
-			return nil, &MissingCompetencyError{ct}
+			return nil, &data.MissingCompetencyError{ct}
 		}
 		totalCompetency += v.Efficiency
 		totalCompetencyCount++
@@ -153,7 +152,7 @@ func (o *ObjectEquipable) GetArmors(c *ObjectCharacter) (armors Armors, err erro
 		v, ok := c.Archetype.Skills[s]
 		if !ok {
 			// No skill, we cannot process!
-			return nil, &MissingSkillError{s}
+			return nil, &data.MissingSkillError{s}
 		}
 		totalSkill += math.Floor(v.Experience)
 		totalSkillCount++
@@ -167,7 +166,7 @@ func (o *ObjectEquipable) GetArmors(c *ObjectCharacter) (armors Armors, err erro
 		v, ok := c.Archetype.Competencies[ct]
 		if !ok {
 			// No competency, we cannot process!
-			return nil, &MissingCompetencyError{ct}
+			return nil, &data.MissingCompetencyError{ct}
 		}
 		totalCompetency += v.Efficiency
 		totalCompetencyCount++
@@ -186,22 +185,6 @@ func (o *ObjectEquipable) GetArmors(c *ObjectCharacter) (armors Armors, err erro
 	return armors, nil
 }
 
-type MissingSkillError struct {
-	skillType data.SkillType
-}
-
-func (e *MissingSkillError) Error() string {
-	return fmt.Sprintf("missing skill \"%s\"", data.SkillTypeToStringMap[e.skillType])
-}
-
-type MissingCompetencyError struct {
-	competencyType data.CompetencyType
-}
-
-func (e *MissingCompetencyError) Error() string {
-	return fmt.Sprintf("missing competency \"%s\"", data.CompetencyToStringMap[e.competencyType])
-}
-
 func GetCompetency(types []data.CompetencyType, competencies data.CompetenciesMap) (float64, error) {
 	// Get our competency float modifier.
 	totalCompetency := 0.0
@@ -210,7 +193,7 @@ func GetCompetency(types []data.CompetencyType, competencies data.CompetenciesMa
 		v, ok := competencies[ct]
 		if !ok {
 			// No competency, we cannot process!
-			return 0, &MissingCompetencyError{ct}
+			return 0, &data.MissingCompetencyError{ct}
 		}
 		totalCompetency += v.Efficiency
 		totalCompetencyCount++
@@ -229,7 +212,7 @@ func GetSkill(types []data.SkillType, skills map[data.SkillType]data.Skill) (flo
 		v, ok := skills[s]
 		if !ok {
 			// No skill, we cannot process!
-			return 0, &MissingSkillError{s}
+			return 0, &data.MissingSkillError{s}
 		}
 		totalSkill += math.Floor(v.Experience)
 		totalSkillCount++

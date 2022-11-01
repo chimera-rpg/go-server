@@ -67,3 +67,19 @@ func (stype SkillType) MarshalYAML() (interface{}, error) {
 	}
 	return "No Skill", nil
 }
+
+type MissingSkillError struct {
+	SkillType SkillType
+}
+
+func (e *MissingSkillError) Error() string {
+	return fmt.Sprintf("missing skill \"%s\"", SkillTypeToStringMap[e.SkillType])
+}
+
+type MissingCompetencyError struct {
+	CompetencyType CompetencyType
+}
+
+func (e *MissingCompetencyError) Error() string {
+	return fmt.Sprintf("missing competency \"%s\"", CompetencyToStringMap[e.CompetencyType])
+}
