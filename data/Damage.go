@@ -10,6 +10,9 @@ type Damage struct {
 }
 
 func (d *Damage) Add(other *Damage) {
+	if other == nil {
+		return
+	}
 	d.Value += other.Value
 	for k, v := range other.AttributeBonus {
 		if _, ok := d.AttributeBonus[k]; !ok {
