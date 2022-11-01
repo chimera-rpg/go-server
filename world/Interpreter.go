@@ -31,7 +31,7 @@ func SetupInterpreterTypes(interp *fast.Interp) {
 	interp.DeclType(interp.TypeOf(OwnerSimpleAI{}))
 
 	interp.DeclType(interp.TypeOf(Object{}))
-	interp.DeclType(interp.TypeOf(ObjectEquippable{}))
+	interp.DeclType(interp.TypeOf(ObjectEquipable{}))
 	interp.DeclType(interp.TypeOf(ObjectAudio{}))
 	interp.DeclType(interp.TypeOf(ObjectBlock{}))
 	interp.DeclType(interp.TypeOf(ObjectCharacter{}))

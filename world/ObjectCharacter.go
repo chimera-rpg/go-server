@@ -577,7 +577,7 @@ func (o *ObjectCharacter) Attack(o2 ObjectI) bool {
 }
 
 // RollAttack rolls an attack with the given weapon.
-func (o *ObjectCharacter) RollAttack(w *ObjectEquippable) (a Attacks) {
+func (o *ObjectCharacter) RollAttack(w *ObjectEquipable) (a Attacks) {
 	//
 	return a
 }
@@ -592,7 +592,7 @@ func (o *ObjectCharacter) ValidateSlots() {
 }
 
 // CanEquip returns if the object can be equipped. FIXME: Make this return an error so we can provide a message to the user saying why they couldn't equip the item.
-func (o *ObjectCharacter) CanEquip(ob *ObjectEquippable) bool {
+func (o *ObjectCharacter) CanEquip(ob *ObjectEquipable) bool {
 	// Check the object's uses against our free slots.
 	for k, v := range ob.Archetype.Slots.UsesIDs {
 		v2, ok := o.Archetype.Slots.FreeIDs[k]
@@ -635,7 +635,7 @@ func (o *ObjectCharacter) CanEquip(ob *ObjectEquippable) bool {
 }
 
 // Equip attempts to add the given object to the equipment slice from the inventory slice.
-func (o *ObjectCharacter) Equip(ob *ObjectEquippable) error {
+func (o *ObjectCharacter) Equip(ob *ObjectEquipable) error {
 	index := -1
 	for i, v := range o.inventory {
 		if v == ob {
@@ -669,7 +669,7 @@ func (o *ObjectCharacter) Equip(ob *ObjectEquippable) error {
 }
 
 // Unequip attempts to remove the given object from the equipment slice and into the inventory slice.
-func (o *ObjectCharacter) Unequip(ob *ObjectEquippable) error {
+func (o *ObjectCharacter) Unequip(ob *ObjectEquipable) error {
 	for i, v := range o.equipment {
 		if v == ob {
 			o.equipment = append(o.equipment[:i], o.equipment[i+1:]...)
@@ -818,14 +818,14 @@ func (o *ObjectCharacter) CalculateReach() int {
 }
 
 // Weapons returns the list of items useable as weapons.
-func (o *ObjectCharacter) Weapons() []*ObjectEquippable {
+func (o *ObjectCharacter) Weapons() []*ObjectEquipable {
 	// FIXME: cache this information.
-	var weapons []*ObjectEquippable
+	var weapons []*ObjectEquipable
 	for _, w := range o.equipment {
 		if a := w.GetArchetype(); a != nil {
 			for _, t := range a.TypeHints {
 				if t == "weapon" {
-					weapons = append(weapons, w.(*ObjectEquippable))
+					weapons = append(weapons, w.(*ObjectEquipable))
 				}
 			}
 		}
@@ -856,14 +856,14 @@ func (o *ObjectCharacter) CalculateDamages() []Damages {
 	return damages
 }
 
-func (o *ObjectCharacter) Armors() []*ObjectEquippable {
+func (o *ObjectCharacter) Armors() []*ObjectEquipable {
 	// FIXME: cache this information.
-	var armors []*ObjectEquippable
+	var armors []*ObjectEquipable
 	for _, w := range o.equipment {
 		if a := w.GetArchetype(); a != nil {
 			for _, t := range a.TypeHints {
 				if t == "armor" {
-					armors = append(armors, w.(*ObjectEquippable))
+					armors = append(armors, w.(*ObjectEquipable))
 				}
 			}
 		}

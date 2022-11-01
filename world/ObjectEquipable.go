@@ -8,7 +8,7 @@ import (
 	"github.com/chimera-rpg/go-server/data"
 )
 
-type ObjectEquippable struct {
+type ObjectEquipable struct {
 	Object
 	armors         Armors
 	finalArmors    Armors
@@ -18,8 +18,8 @@ type ObjectEquippable struct {
 	changedDamages bool
 }
 
-func NewObjectEquippable(a *data.Archetype) (o *ObjectEquippable) {
-	o = &ObjectEquippable{
+func NewObjectEquipable(a *data.Archetype) (o *ObjectEquipable) {
+	o = &ObjectEquipable{
 		Object:         Object{Archetype: a},
 		changedArmors:  true,
 		changedDamages: true,
@@ -28,12 +28,12 @@ func NewObjectEquippable(a *data.Archetype) (o *ObjectEquippable) {
 	return
 }
 
-func (o *ObjectEquippable) Slots() map[data.StringID]int {
+func (o *ObjectEquipable) Slots() map[data.StringID]int {
 	return o.Archetype.Slots.HasIDs
 }
 
 // CalculateDamages calculates the weapon's base damages.
-func (o *ObjectEquippable) CalculateDamages() {
+func (o *ObjectEquipable) CalculateDamages() {
 	o.damages = Damages{}
 	o.finalDamages = Damages{}
 	if o.Archetype.Damage == nil || o.Archetype.Damage.Value == 0 {
@@ -57,7 +57,7 @@ func (o *ObjectEquippable) CalculateDamages() {
 }
 
 // GetDamages returns the adjusted Damages for the given character's skills, competencies, and attributes.
-func (o *ObjectEquippable) GetDamages(c *ObjectCharacter) (damages Damages, err error) {
+func (o *ObjectEquipable) GetDamages(c *ObjectCharacter) (damages Damages, err error) {
 	if !o.changedDamages {
 		return o.finalDamages, nil
 	}
@@ -119,7 +119,7 @@ func (o *ObjectEquippable) GetDamages(c *ObjectCharacter) (damages Damages, err 
 }
 
 // CalculateArmors calculates the object's base armor values.
-func (o *ObjectEquippable) CalculateArmors() {
+func (o *ObjectEquipable) CalculateArmors() {
 	o.armors = Armors{}
 	o.finalArmors = Armors{}
 	if o.Archetype.Armor == 0 {
@@ -142,7 +142,7 @@ func (o *ObjectEquippable) CalculateArmors() {
 }
 
 // GetArmors returns the final calculated amount of armor using the given character's skills and competencies.
-func (o *ObjectEquippable) GetArmors(c *ObjectCharacter) (armors Armors, err error) {
+func (o *ObjectEquipable) GetArmors(c *ObjectCharacter) (armors Armors, err error) {
 	if !o.changedArmors {
 		return o.finalArmors, nil
 	}
@@ -239,7 +239,7 @@ func GetSkill(types []data.SkillType, skills map[data.SkillType]data.Skill) (flo
 	return totalSkill, nil
 }
 
-func GetDamages(w *ObjectEquippable, c *ObjectCharacter) (damages Damages, err error) {
+func GetDamages(w *ObjectEquipable, c *ObjectCharacter) (damages Damages, err error) {
 	base := 0
 	if w.Archetype.Damage != nil {
 		base = w.Archetype.Damage.Value
@@ -290,7 +290,7 @@ func GetDamages(w *ObjectEquippable, c *ObjectCharacter) (damages Damages, err e
 	return damages, nil
 }
 
-func GetArmors(a *ObjectEquippable, c *ObjectCharacter) (armors Armors, err error) {
+func GetArmors(a *ObjectEquipable, c *ObjectCharacter) (armors Armors, err error) {
 	base := a.Archetype.Armor
 	// Multiply by the armors's skills
 	totalSkill := 0.0
