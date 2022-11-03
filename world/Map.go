@@ -9,9 +9,8 @@ import (
 	"github.com/cosmos72/gomacro/fast"
 	log "github.com/sirupsen/logrus"
 
-	cdata "github.com/chimera-rpg/go-common/data"
-	"github.com/chimera-rpg/go-common/network"
 	"github.com/chimera-rpg/go-server/data"
+	"github.com/chimera-rpg/go-server/network"
 )
 
 // Map is a live instance of a map that contains and updates all objects
@@ -261,7 +260,7 @@ func (gmap *Map) Update(gm *World, updates Updates) error {
 				}
 			case *ActionInspect:
 				if o, ok := a.object.(*ObjectCharacter); ok {
-					var infos []cdata.ObjectInfo
+					var infos []data.ObjectInfo
 					var near bool
 					// TODO: Kick any owners who keep sending bad commands.
 					if targetObject := gmap.world.GetObject(a.Target); targetObject != nil {
@@ -707,7 +706,7 @@ func (gmap *Map) GetObjectPartTiles(o ObjectI, yDir, xDir, zDir int, force bool)
 	getTargets := force || yDir != 0 || xDir != 0 || zDir != 0
 
 	// FIXME: We're treating tile types as having their part(s) one Y step below their actual position. This is so that tile types provide collision that matches their visual position. This feels Wrong(tm).
-	if o.getType() == cdata.ArchetypeTile {
+	if o.getType() == data.ArchetypeTile {
 		oY--
 	}
 
@@ -809,7 +808,7 @@ func IsInLiquid(targetTiles []*Tile) bool {
 	liquidThreshold := len(targetTiles) - len(targetTiles)/3
 	liquidCount := 0
 	for _, tT := range targetTiles {
-		if tT.matter.Is(cdata.LiquidMatter) {
+		if tT.matter.Is(data.LiquidMatter) {
 			liquidCount++
 		}
 		if liquidCount >= liquidThreshold {

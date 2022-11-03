@@ -3,8 +3,6 @@ package data
 import (
 	"fmt"
 	"math/rand"
-
-	cdata "github.com/chimera-rpg/go-common/data"
 )
 
 // SpawnEventType represents the spawn event rule to use.
@@ -76,8 +74,8 @@ func (t IntRange) Random() int {
 }
 
 type SpawnConditions struct {
-	Matter   *cdata.MatterType `json:"Matter" yaml:"Matter,omitempty"`
-	Blocking *cdata.MatterType `json:"Blocking" yaml:"Blocking,omitempty"`
+	Matter   *MatterType `json:"Matter" yaml:"Matter,omitempty"`
+	Blocking *MatterType `json:"Blocking" yaml:"Blocking,omitempty"`
 }
 
 type SpawnPlacement struct {

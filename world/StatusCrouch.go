@@ -4,7 +4,7 @@ import (
 	"math"
 	"time"
 
-	cdata "github.com/chimera-rpg/go-common/data"
+	"github.com/chimera-rpg/go-server/data"
 )
 
 // StatusCrouch is the status for when an object is in the crouching state.
@@ -27,9 +27,9 @@ func (s *StatusCrouch) update(delta time.Duration) {
 	}
 }
 
-// StatusType returns cdata.CrouchingStatus
-func (s *StatusCrouch) StatusType() cdata.StatusType {
-	return cdata.CrouchingStatus
+// StatusType returns data.CrouchingStatus
+func (s *StatusCrouch) StatusType() data.StatusType {
+	return data.CrouchingStatus
 }
 
 // OnAdd calculates and stores our desired squeezing width and height delta from the target object's archetype.

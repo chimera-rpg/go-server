@@ -1,7 +1,6 @@
 package world
 
 import (
-	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-server/data"
 	log "github.com/sirupsen/logrus"
 )
@@ -81,7 +80,7 @@ func HandleActionSpawn(m *Map, a *ActionSpawn) error {
 			if d == 0 {
 				d = 1
 			}
-			checkMatter := func(y, x, z int, matter *cdata.MatterType, checkMatter bool) bool {
+			checkMatter := func(y, x, z int, matter *data.MatterType, checkMatter bool) bool {
 				for yi := y; yi < y+h; yi++ {
 					for xi := x; xi < x+w; xi++ {
 						for zi := z; zi < z+d; zi++ {

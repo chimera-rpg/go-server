@@ -3,13 +3,13 @@ package world
 import (
 	"fmt"
 
-	cdata "github.com/chimera-rpg/go-common/data"
+	"github.com/chimera-rpg/go-server/data"
 )
 
 // EventFell is emitted when an object has fallen a given distance.
 type EventFell struct {
 	distance int
-	matter   cdata.MatterType
+	matter   data.MatterType
 }
 
 // String returns a string representing how far the target fell in the second person.

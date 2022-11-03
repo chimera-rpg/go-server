@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-server/data"
 )
 
@@ -25,7 +24,7 @@ type Object struct {
 	inventory  []ObjectI
 	hasMoved   bool
 	updates    bool
-	blocking   cdata.MatterType
+	blocking   data.MatterType
 	actions    int // Actions are the amount of actions that a player can take within 1 second
 	maxActions int // Max actions are the amount of actions that a player can take within 1 second.
 	//
@@ -150,8 +149,8 @@ func (o *Object) GetUncompiledArchetype() *data.Archetype {
 	return o.Archetype.Uncompiled
 }
 
-func (o *Object) getType() cdata.ArchetypeType {
-	return cdata.ArchetypeUnknown
+func (o *Object) getType() data.ArchetypeType {
+	return data.ArchetypeUnknown
 }
 
 // AddStatus adds the given status to the object.
@@ -360,12 +359,12 @@ func (o *Object) GetStatus(t StatusI) StatusI {
 }
 
 // Blocks returns if the object blocks the given MatterType.
-func (o *Object) Blocks(matter cdata.MatterType) bool {
+func (o *Object) Blocks(matter data.MatterType) bool {
 	return o.blocking.Is(matter)
 }
 
 // Matter returns the object's matter, acquired from its archetype.
-func (o *Object) Matter() cdata.MatterType {
+func (o *Object) Matter() data.MatterType {
 	a := o.GetArchetype()
 	return a.Matter
 }
@@ -435,7 +434,7 @@ func (o *Object) CalculateResistances() {
 	for k, a := range o.Archetype.Resistances {
 		armor := Armor{
 			ArmorType: k,
-			Styles:    make(map[cdata.AttackStyle]float64),
+			Styles:    make(map[data.AttackStyle]float64),
 		}
 
 		for k2, s := range a {
@@ -509,8 +508,8 @@ func (o *Object) GetAttitude(o2 ObjectI) data.Attitude {
 	return attitude
 }
 
-func (o *Object) GetMundaneInfo(near bool) cdata.ObjectInfo {
-	info := cdata.ObjectInfo{
+func (o *Object) GetMundaneInfo(near bool) data.ObjectInfo {
+	info := data.ObjectInfo{
 		Name:      o.Name(),
 		TypeHints: o.Archetype.TypeHintIDs,
 	}

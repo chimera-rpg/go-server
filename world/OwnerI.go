@@ -3,8 +3,8 @@ package world
 import (
 	"time"
 
-	"github.com/chimera-rpg/go-common/network"
 	"github.com/chimera-rpg/go-server/data"
+	"github.com/chimera-rpg/go-server/network"
 )
 
 // OwnerI represents the general interface that should be used

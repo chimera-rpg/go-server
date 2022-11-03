@@ -4,7 +4,7 @@ import (
 	"math"
 	"time"
 
-	cdata "github.com/chimera-rpg/go-common/data"
+	"github.com/chimera-rpg/go-server/data"
 )
 
 // StatusSqueeze is the status for when an object is to enter the squeezing state.
@@ -27,9 +27,9 @@ func (s *StatusSqueeze) update(delta time.Duration) {
 	// I guess this can only be toggled on/off by the owner. Perhaps should just be checked for in collision checks?
 }
 
-// StatusType returns cdata.CrouchingStatus
-func (s *StatusSqueeze) StatusType() cdata.StatusType {
-	return cdata.SqueezingStatus
+// StatusType returns data.CrouchingStatus
+func (s *StatusSqueeze) StatusType() data.StatusType {
+	return data.SqueezingStatus
 }
 
 // OnAdd calculates and stores our desired squeezing width and height delta from the target object's archetype.

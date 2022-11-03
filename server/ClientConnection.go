@@ -6,9 +6,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	cdata "github.com/chimera-rpg/go-common/data"
-	"github.com/chimera-rpg/go-common/network"
 	"github.com/chimera-rpg/go-server/data"
+	"github.com/chimera-rpg/go-server/network"
 	"github.com/chimera-rpg/go-server/world"
 )
 
@@ -609,9 +608,9 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 				"cmd": t,
 			}).Print("CommandStatus")
 			switch t.Type {
-			case cdata.SqueezingStatus:
+			case data.SqueezingStatus:
 				c.Owner.GetCommandChannel() <- world.OwnerStatusCommand{Status: &world.StatusSqueeze{}}
-			case cdata.CrouchingStatus:
+			case data.CrouchingStatus:
 				c.Owner.GetCommandChannel() <- world.OwnerStatusCommand{Status: &world.StatusCrouch{}}
 			}
 		case network.CommandViewport:

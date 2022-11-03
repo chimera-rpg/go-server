@@ -1,6 +1,6 @@
 package server
 
-import "github.com/chimera-rpg/go-common/network"
+import "github.com/chimera-rpg/go-server/network"
 
 // SendChatMessageFrom sends a message for the given client.
 func (s *GameServer) SendChatMessageFrom(c *ClientConnection, original network.CommandMessage) {

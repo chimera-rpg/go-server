@@ -3,7 +3,7 @@ package world
 import (
 	"errors"
 
-	cdata "github.com/chimera-rpg/go-common/data"
+	"github.com/chimera-rpg/go-server/data"
 )
 
 type TileLight struct {
@@ -19,8 +19,8 @@ type Tile struct {
 	objectParts  []ObjectI // objectParts contains Object pointers that are used for collisions, pathing, and otherwise. This data is never sent over the network.
 	lights       []TileLight
 	r, g, b      uint8 // r, g, b are the final computed values from lights.
-	blocking     cdata.MatterType
-	matter       cdata.MatterType
+	blocking     data.MatterType
+	matter       data.MatterType
 	opaque       bool
 	modTime      uint16  // Last time this tile was updated.
 	lightModTime uint16  // Last time this tile's light was updated.
@@ -155,7 +155,7 @@ func (tile *Tile) updateStates() {
 		a := o.GetArchetype()
 		tile.blocking |= a.Blocking
 		tile.matter |= o.Matter()
-		if a.Matter.Is(cdata.OpaqueMatter) {
+		if a.Matter.Is(data.OpaqueMatter) {
 			tile.opaque = true
 		}
 		if a.Specials.Haven {

@@ -4,7 +4,6 @@ import (
 	"strconv"
 	"time"
 
-	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-server/data"
 )
 
@@ -74,8 +73,8 @@ func (o *ObjectAudio) update(delta time.Duration) {
 }
 
 // getType returns the Archetype type.
-func (o *ObjectAudio) getType() cdata.ArchetypeType {
-	return cdata.ArchetypeAudio
+func (o *ObjectAudio) getType() data.ArchetypeType {
+	return data.ArchetypeAudio
 }
 
 // Volume does an obvious thing.

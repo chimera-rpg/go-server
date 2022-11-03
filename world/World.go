@@ -10,9 +10,8 @@ import (
 
 	"errors"
 
-	cdata "github.com/chimera-rpg/go-common/data"
-	"github.com/chimera-rpg/go-common/network"
 	"github.com/chimera-rpg/go-server/data"
+	"github.com/chimera-rpg/go-server/network"
 	"github.com/jinzhu/copier"
 )
 
@@ -469,27 +468,27 @@ func (w *World) CreateObjectFromArch(arch *data.Archetype) (o ObjectI, err error
 
 	// Create our object.
 	switch arch.Type {
-	case cdata.ArchetypeTile:
+	case data.ArchetypeTile:
 		o = NewObjectTile(arch)
-	case cdata.ArchetypeBlock:
+	case data.ArchetypeBlock:
 		o = NewObjectBlock(arch)
-	case cdata.ArchetypeItem:
+	case data.ArchetypeItem:
 		o = NewObjectItem(arch)
-	case cdata.ArchetypePC:
+	case data.ArchetypePC:
 		o = NewObjectCharacter(arch)
-	case cdata.ArchetypeNPC:
+	case data.ArchetypeNPC:
 		o = NewObjectCharacter(arch)
-	case cdata.ArchetypeEquipable:
+	case data.ArchetypeEquipable:
 		o = NewObjectEquipable(arch)
-	case cdata.ArchetypeFood:
+	case data.ArchetypeFood:
 		o = NewObjectFood(arch)
-	case cdata.ArchetypeAudio:
+	case data.ArchetypeAudio:
 		o = NewObjectAudio(arch)
-	case cdata.ArchetypeSpecial:
+	case data.ArchetypeSpecial:
 		o = NewObjectSpecial(arch)
-	case cdata.ArchetypeFlora:
+	case data.ArchetypeFlora:
 		o = NewObjectFlora(arch)
-	case cdata.ArchetypeExit:
+	case data.ArchetypeExit:
 		o = NewObjectExit(arch)
 	default:
 		gameobj := ObjectGeneric{

@@ -3,7 +3,6 @@ package world
 import (
 	"time"
 
-	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-server/data"
 )
 
@@ -23,15 +22,15 @@ type ObjectI interface {
 	GetSaveableArchetype() data.Archetype
 	//
 	update(time.Duration)
-	getType() cdata.ArchetypeType
+	getType() data.ArchetypeType
 	AddStatus(StatusI)
 	RemoveStatus(StatusI) StatusI
 	HasStatus(StatusI) bool
 	SetStatus(StatusI) bool
 	GetStatus(StatusI) StatusI
 	ResolveEvent(EventI) bool
-	Blocks(cdata.MatterType) bool
-	Matter() cdata.MatterType
+	Blocks(data.MatterType) bool
+	Matter() data.MatterType
 	SetName(string)
 	Name() string
 	GetDimensions() (h, w, d int)
@@ -52,5 +51,5 @@ type ObjectI interface {
 	//
 	GetAttitude(ObjectI) data.Attitude
 	//
-	GetMundaneInfo(near bool) cdata.ObjectInfo
+	GetMundaneInfo(near bool) data.ObjectInfo
 }

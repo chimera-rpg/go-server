@@ -3,7 +3,6 @@ package world
 import (
 	"math"
 
-	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-server/data"
 )
 
@@ -41,7 +40,7 @@ func (o *ObjectEquipable) CalculateDamages() {
 	for k, a := range o.Archetype.AttackTypes {
 		damage := Damage{
 			AttackType: k,
-			Styles:     make(map[cdata.AttackStyle]float64),
+			Styles:     make(map[data.AttackStyle]float64),
 			BaseDamage: float64(o.Archetype.Damage.Value),
 		}
 
@@ -93,13 +92,13 @@ func (o *ObjectEquipable) GetDamages(c *ObjectCharacter) (damages Damages, err e
 		// Calculate bonus damage.
 		if bonus, ok := o.Archetype.Damage.AttributeBonus[damage.AttackType]; ok {
 			for attrK, attrV := range bonus {
-				if damage.AttackType == cdata.Physical {
+				if damage.AttackType == data.Physical {
 					charAttr := c.Archetype.Attributes.Physical.GetAttribute(attrK)
 					damage.AttributeDamage += float64(charAttr) * attrV
-				} else if damage.AttackType == cdata.Arcane {
+				} else if damage.AttackType == data.Arcane {
 					charAttr := c.Archetype.Attributes.Arcane.GetAttribute(attrK)
 					damage.AttributeDamage += float64(charAttr) * attrV
-				} else if damage.AttackType == cdata.Spirit {
+				} else if damage.AttackType == data.Spirit {
 					charAttr := c.Archetype.Attributes.Spirit.GetAttribute(attrK)
 					damage.AttributeDamage += float64(charAttr) * attrV
 				}
@@ -128,7 +127,7 @@ func (o *ObjectEquipable) CalculateArmors() {
 	for k, a := range o.Archetype.Resistances {
 		armor := Armor{
 			ArmorType: k,
-			Styles:    make(map[cdata.AttackStyle]float64),
+			Styles:    make(map[data.AttackStyle]float64),
 		}
 
 		for k2, s := range a {
@@ -241,20 +240,20 @@ func GetDamages(w *ObjectEquipable, c *ObjectCharacter) (damages Damages, err er
 	for k, a := range w.Archetype.AttackTypes {
 		damage := Damage{
 			AttackType: k,
-			Styles:     make(map[cdata.AttackStyle]float64),
+			Styles:     make(map[data.AttackStyle]float64),
 			BaseDamage: float64(base),
 		}
 
 		// Calculate bonus damage.
 		if bonus, ok := w.Archetype.Damage.AttributeBonus[k]; ok {
 			for attrK, attrV := range bonus {
-				if k == cdata.Physical {
+				if k == data.Physical {
 					charAttr := c.Archetype.Attributes.Physical.GetAttribute(attrK)
 					damage.AttributeDamage += float64(charAttr) * attrV
-				} else if k == cdata.Arcane {
+				} else if k == data.Arcane {
 					charAttr := c.Archetype.Attributes.Arcane.GetAttribute(attrK)
 					damage.AttributeDamage += float64(charAttr) * attrV
-				} else if k == cdata.Spirit {
+				} else if k == data.Spirit {
 					charAttr := c.Archetype.Attributes.Spirit.GetAttribute(attrK)
 					damage.AttributeDamage += float64(charAttr) * attrV
 				}
@@ -289,7 +288,7 @@ func GetArmors(a *ObjectEquipable, c *ObjectCharacter) (armors Armors, err error
 	for k, a := range a.Archetype.Resistances {
 		armor := Armor{
 			ArmorType: k,
-			Styles:    make(map[cdata.AttackStyle]float64),
+			Styles:    make(map[data.AttackStyle]float64),
 		}
 
 		for k2, s := range a {

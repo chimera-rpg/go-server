@@ -1,7 +1,6 @@
 package world
 
 import (
-	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-server/data"
 )
 
@@ -37,8 +36,8 @@ func (o *ObjectGeneric) setArchetype(targetArch *data.Archetype) {
 	}*/
 }
 
-func (o *ObjectGeneric) getType() cdata.ArchetypeType {
-	return cdata.ArchetypeGeneric
+func (o *ObjectGeneric) getType() data.ArchetypeType {
+	return data.ArchetypeGeneric
 }
 
 // SetName sets the generic object's name.
@@ -52,8 +51,8 @@ func (o *ObjectGeneric) Name() string {
 }
 
 // GetMundaneInfo returns the mundane info of the object.
-func (o *ObjectGeneric) GetMundaneInfo(near bool) cdata.ObjectInfo {
-	info := cdata.ObjectInfo{
+func (o *ObjectGeneric) GetMundaneInfo(near bool) data.ObjectInfo {
+	info := data.ObjectInfo{
 		Name: o.Name(),
 	}
 	if near {

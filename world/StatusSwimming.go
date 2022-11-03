@@ -1,7 +1,7 @@
 package world
 
 import (
-	cdata "github.com/chimera-rpg/go-common/data"
+	data "github.com/chimera-rpg/go-server/data"
 )
 
 // StatusSwimming is the status for when an object is swimming.
@@ -11,7 +11,7 @@ type StatusSwimming struct {
 
 var StatusSwimmingRef = &StatusSwimming{}
 
-// StatusType returns cdata.SwimmingStatus
-func (s *StatusSwimming) StatusType() cdata.StatusType {
-	return cdata.SwimmingStatus
+// StatusType returns data.SwimmingStatus
+func (s *StatusSwimming) StatusType() data.StatusType {
+	return data.SwimmingStatus
 }

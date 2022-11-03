@@ -8,9 +8,8 @@ import (
 	"strings"
 	"time"
 
-	cdata "github.com/chimera-rpg/go-common/data"
-	"github.com/chimera-rpg/go-common/network"
 	"github.com/chimera-rpg/go-server/data"
+	"github.com/chimera-rpg/go-server/network"
 )
 
 // ObjectCharacter represents player characters.
@@ -25,8 +24,8 @@ type ObjectCharacter struct {
 	// Fields that are pointers to the underlying archetype. In the case of NPCs, the archetypes should correspond to the instance of their on-map Archetype or the result of an archetype spawn. In the case of PCs, the archetype corresponds to the one embedded in their player data file.
 	name         *string
 	level        *int
-	resistances  *cdata.AttackTypes
-	attacktypes  *cdata.AttackTypes
+	resistances  *data.AttackTypes
+	attacktypes  *data.AttackTypes
 	attributes   *data.AttributeSets
 	competencies *data.CompetenciesMap
 	skills       []ObjectSkill
@@ -78,7 +77,7 @@ func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 	o.hasMoved = true // Set moved to true to ensure falling and any other situations are checked for on first update.
 
 	// Create a new Owner AI if it is an NPC.
-	if a.Type == cdata.ArchetypeNPC {
+	if a.Type == data.ArchetypeNPC {
 		owner := NewOwnerSimpleAI()
 		owner.SetTarget(o)
 	}
@@ -111,13 +110,13 @@ func NewObjectCharacterFromCharacter(c *data.Character, completeArchetype *data.
 	o.RecalculateSenses()
 	// TODO: Move elsewhere.
 	/*for statusID, statusMap := range c.SaveInfo.Statuses {
-		if statusID == int(cdata.CrouchingStatus) {
+		if statusID == int(data.CrouchingStatus) {
 			s := &StatusCrouch{}
 			s.Deserialize(statusMap)
-		} else if statusID == int(cdata.SqueezingStatus) {
+		} else if statusID == int(data.SqueezingStatus) {
 			s := &StatusSqueeze{}
 			s.Deserialize(statusMap)
-		} else if statusID == int(cdata.FallingStatus) {
+		} else if statusID == int(data.FallingStatus) {
 			s := &StatusFalling{}
 			s.Deserialize(statusMap)
 		}
@@ -396,7 +395,7 @@ func (o *ObjectCharacter) ResolveEvent(e EventI) bool {
 			t := o.GetTile()
 			h, w, d := o.GetDimensions()
 			var audioID, soundID uint32
-			if e.matter.Is(cdata.LiquidMatter) {
+			if e.matter.Is(data.LiquidMatter) {
 				audioID = t.GetMap().world.data.Strings.Acquire("water")
 				soundID = t.GetMap().world.data.Strings.Acquire("sploosh")
 				t.GetMap().EmitSound(audioID, soundID, t.Y+h-h/3, t.X+w/2, t.Z+d/2, 1.0)
@@ -582,8 +581,8 @@ func (o *ObjectCharacter) RollAttack(w *ObjectEquipable) (a Attacks) {
 	return a
 }
 
-func (o *ObjectCharacter) getType() cdata.ArchetypeType {
-	return cdata.ArchetypePC
+func (o *ObjectCharacter) getType() data.ArchetypeType {
+	return data.ArchetypePC
 }
 
 // ValidateSlots iterates through the character's equipment to ensure that they do not have more slots used than what is available. This is to ensure that any data updates, such as bauplans or weapons, will not leave characters equipping more than they should.

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-server/data"
 )
 
@@ -145,6 +144,6 @@ func (o *ObjectExit) IsReady() bool {
 	return o.cooldown.Duration >= o.Archetype.Exit.Cooldown.Duration
 }
 
-func (o *ObjectExit) getType() cdata.ArchetypeType {
-	return cdata.ArchetypeExit
+func (o *ObjectExit) getType() data.ArchetypeType {
+	return data.ArchetypeExit
 }

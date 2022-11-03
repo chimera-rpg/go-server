@@ -3,7 +3,7 @@ package world
 import (
 	"time"
 
-	cdata "github.com/chimera-rpg/go-common/data"
+	"github.com/chimera-rpg/go-server/data"
 )
 
 // StatusFalling is the status for when an object is falling.
@@ -37,7 +37,7 @@ func (s *StatusFalling) update(delta time.Duration) {
 				if s.fallDistance >= 4 {
 					s.target.ResolveEvent(EventFell{
 						distance: int(s.elapsed / fallRate),
-						matter:   cdata.LiquidMatter,
+						matter:   data.LiquidMatter,
 					})
 				}
 				s.shouldRemove = true
@@ -64,7 +64,7 @@ func (s *StatusFalling) update(delta time.Duration) {
 	}
 }
 
-// StatusType returns cdata.Falling
-func (s *StatusFalling) StatusType() cdata.StatusType {
-	return cdata.FallingStatus
+// StatusType returns data.Falling
+func (s *StatusFalling) StatusType() data.StatusType {
+	return data.FallingStatus
 }

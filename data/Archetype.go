@@ -3,7 +3,6 @@ package data
 import (
 	"reflect"
 
-	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/imdario/mergo"
 )
 
@@ -54,19 +53,19 @@ type Archetype struct {
 	Self         string       `json:"Self" yaml:"-"`
 	Name         *string      `json:"Name" yaml:"Name,omitempty"` //
 	//Name string
-	Description *string             `json:"Description" yaml:"Description,omitempty"`
-	Type        cdata.ArchetypeType `json:"Type" yaml:"Type,omitempty"`
-	TypeHints   []string            `json:"TypeHints" yaml:"TypeHints,omitempty"`
-	TypeHintIDs []StringID          `yaml:"-"`
-	Anim        string              `json:"Anim" yaml:"Anim,omitempty"`
-	AnimID      StringID            `yaml:"-"`
-	Face        string              `json:"Face" yaml:"Face,omitempty"`
-	FaceID      StringID            `yaml:"-"`
-	Height      uint8               `json:"Height" yaml:"Height,omitempty"`
-	Width       uint8               `json:"Width" yaml:"Width,omitempty"`
-	Depth       uint8               `json:"Depth" yaml:"Depth,omitempty"`
-	Matter      cdata.MatterType    `json:"Matter" yaml:"Matter,omitempty"`
-	Blocking    cdata.MatterType    `json:"Blocking" yaml:"Blocking,omitempty"`
+	Description *string       `json:"Description" yaml:"Description,omitempty"`
+	Type        ArchetypeType `json:"Type" yaml:"Type,omitempty"`
+	TypeHints   []string      `json:"TypeHints" yaml:"TypeHints,omitempty"`
+	TypeHintIDs []StringID    `yaml:"-"`
+	Anim        string        `json:"Anim" yaml:"Anim,omitempty"`
+	AnimID      StringID      `yaml:"-"`
+	Face        string        `json:"Face" yaml:"Face,omitempty"`
+	FaceID      StringID      `yaml:"-"`
+	Height      uint8         `json:"Height" yaml:"Height,omitempty"`
+	Width       uint8         `json:"Width" yaml:"Width,omitempty"`
+	Depth       uint8         `json:"Depth" yaml:"Depth,omitempty"`
+	Matter      MatterType    `json:"Matter" yaml:"Matter,omitempty"`
+	Blocking    MatterType    `json:"Blocking" yaml:"Blocking,omitempty"`
 	//
 	Audio      string   `json:"Audio" yaml:"Audio,omitempty"`
 	AudioID    StringID `yaml:"-"`
@@ -98,9 +97,9 @@ type Archetype struct {
 	// Competencies are the associated competencies' values that a character has.
 	Competencies CompetenciesMap `json:"Competencies" ts_type:"{[key:number]: Competency}" yaml:"Competencies,omitempty"`
 	// Resistances represents the attack type resistances of armor or a character.
-	Resistances cdata.AttackTypes `json:"Resistances" ts_type:"{[key:number]: {[key:number]: number}}" yaml:"Resistances,omitempty"`
+	Resistances AttackTypes `json:"Resistances" ts_type:"{[key:number]: {[key:number]: number}}" yaml:"Resistances,omitempty"`
 	// AttackTypes represents the attack types of a weapon or a character.
-	AttackTypes cdata.AttackTypes `json:"AttackTypes" ts_type:"{[key:number]: {[key:number]:number}}" yaml:"AttackTypes,omitempty"`
+	AttackTypes AttackTypes `json:"AttackTypes" ts_type:"{[key:number]: {[key:number]:number}}" yaml:"AttackTypes,omitempty"`
 	// Slots represents the slots information for equipment and characters.
 	Slots Slots `json:"Slots" yaml:"Slots,omitempty"`
 	// Reach represents how far this object can reach.

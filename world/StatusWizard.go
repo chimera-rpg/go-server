@@ -1,7 +1,7 @@
 package world
 
 import (
-	cdata "github.com/chimera-rpg/go-common/data"
+	"github.com/chimera-rpg/go-server/data"
 )
 
 // StatusWizard is the status for when an object is flying.
@@ -11,7 +11,7 @@ type StatusWizard struct {
 
 var StatusWizardRef = &StatusWizard{}
 
-// StatusType returns cdata.WizardStatus
-func (s *StatusWizard) StatusType() cdata.StatusType {
-	return cdata.WizardStatus
+// StatusType returns data.WizardStatus
+func (s *StatusWizard) StatusType() data.StatusType {
+	return data.WizardStatus
 }

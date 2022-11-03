@@ -4,25 +4,24 @@ import (
 	"fmt"
 	"strings"
 
-	cdata "github.com/chimera-rpg/go-common/data"
+	"github.com/chimera-rpg/go-server/data"
 )
 
 /*
-
  */
 type Armor struct {
-	ArmorType cdata.AttackType              // Physical, etc.
-	Styles    map[cdata.AttackStyle]float64 // Impact, etc.
+	ArmorType data.AttackType              // Physical, etc.
+	Styles    map[data.AttackStyle]float64 // Impact, etc.
 }
 
 type Armors []Armor
 
 func (as Armors) String() (s string) {
 	for _, a := range as {
-		s += cdata.AttackTypeToStringMap[a.ArmorType] + "("
+		s += data.AttackTypeToStringMap[a.ArmorType] + "("
 		var styleStrings []string
 		for k, st := range a.Styles {
-			styleStrings = append(styleStrings, fmt.Sprintf("%s: %1.f%%", cdata.AttackStyleToStringMap[k], st*100))
+			styleStrings = append(styleStrings, fmt.Sprintf("%s: %1.f%%", data.AttackStyleToStringMap[k], st*100))
 		}
 		s += strings.Join(styleStrings, ",") + ") "
 	}
@@ -76,7 +75,7 @@ func (as Armors) Clone() (as2 Armors) {
 	for _, a := range as {
 		a2 := Armor{
 			ArmorType: a.ArmorType,
-			Styles:    make(map[cdata.AttackStyle]float64),
+			Styles:    make(map[data.AttackStyle]float64),
 		}
 		for k, v := range a.Styles {
 			a2.Styles[k] = v

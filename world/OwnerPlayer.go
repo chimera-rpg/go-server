@@ -3,9 +3,8 @@ package world
 import (
 	"strings"
 
-	cdata "github.com/chimera-rpg/go-common/data"
-	"github.com/chimera-rpg/go-common/network"
 	"github.com/chimera-rpg/go-server/data"
+	"github.com/chimera-rpg/go-server/network"
 
 	"time"
 
@@ -404,7 +403,7 @@ func (player *OwnerPlayer) checkTile(tile *Tile) bool {
 		// Filter out things we don't want to send to the client.
 		filteredMapObjects := make([]ObjectI, 0)
 		for _, o := range tile.GetObjects() {
-			if o.getType() != cdata.ArchetypeAudio && o.getType() != cdata.ArchetypeSpecial {
+			if o.getType() != data.ArchetypeAudio && o.getType() != data.ArchetypeSpecial {
 				filteredMapObjects = append(filteredMapObjects, o)
 			}
 		}
@@ -426,7 +425,7 @@ func (player *OwnerPlayer) checkTile(tile *Tile) bool {
 							Width:       oArch.Width,
 							Depth:       oArch.Depth,
 							Reach:       oArch.Reach,
-							Opaque:      oArch.Matter.Is(cdata.OpaqueMatter),
+							Opaque:      oArch.Matter.Is(data.OpaqueMatter),
 						},
 					})
 				} else {
@@ -605,22 +604,22 @@ func (player *OwnerPlayer) handleWizardCommand(args ...string) {
 		if len(args) == 0 {
 			return
 		}
-		if status, ok := cdata.StringToStatusMap[args[0]]; ok {
+		if status, ok := data.StringToStatusMap[args[0]]; ok {
 			var s StatusI
 			switch status {
-			case cdata.FallingStatus:
+			case data.FallingStatus:
 				s = StatusFallingRef
-			case cdata.SqueezingStatus:
+			case data.SqueezingStatus:
 				s = StatusSqueezeRef
-			case cdata.CrouchingStatus:
+			case data.CrouchingStatus:
 				s = StatusCrouchRef
-			case cdata.RunningStatus:
+			case data.RunningStatus:
 				s = StatusRunningRef
-			case cdata.SwimmingStatus:
+			case data.SwimmingStatus:
 				s = StatusSwimmingRef
-			case cdata.FlyingStatus:
+			case data.FlyingStatus:
 				s = StatusFlyingRef
-			case cdata.FloatingStatus:
+			case data.FloatingStatus:
 				s = StatusFloatingRef
 			}
 			if s != nil {

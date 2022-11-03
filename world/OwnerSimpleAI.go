@@ -1,8 +1,8 @@
 package world
 
 import (
-	"github.com/chimera-rpg/go-common/network"
 	"github.com/chimera-rpg/go-server/data"
+	"github.com/chimera-rpg/go-server/network"
 
 	"time"
 

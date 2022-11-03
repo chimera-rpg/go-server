@@ -15,7 +15,6 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-server/config"
 )
 
@@ -32,7 +31,7 @@ type Manager struct {
 	//musicPath string
 	//soundPath string
 	mapsPath         string
-	AnimationsConfig cdata.AnimationsConfig
+	AnimationsConfig AnimationsConfig
 	archetypes       map[StringID]*Archetype // Full Map of archetypes.
 	//animations map[string]*Animation // Full Map of animations.
 	animations map[StringID]*Animation // ID to Animation map
@@ -303,7 +302,7 @@ func (m *Manager) CompileArchetype(archetype *Archetype) error {
 	archetype.isCompiled = true
 
 	// Delete the uncompiled version for blocks and tiles.
-	if archetype.Type == cdata.ArchetypeBlock || archetype.Type == cdata.ArchetypeTile {
+	if archetype.Type == ArchetypeBlock || archetype.Type == ArchetypeTile {
 		archetype.Uncompiled = nil
 	}
 
@@ -401,7 +400,7 @@ func (m *Manager) parseArchetypeFiles() error {
 func (m *Manager) buildPCArchetypes() int {
 	oldCount := len(m.pcArchetypes)
 	for _, v := range m.archetypes {
-		if v.Type == cdata.ArchetypePC {
+		if v.Type == ArchetypePC {
 			m.pcArchetypes = append(m.pcArchetypes, v)
 		}
 	}
@@ -411,7 +410,7 @@ func (m *Manager) buildPCArchetypes() int {
 func (m *Manager) buildGeneraArchetypes() int {
 	oldCount := len(m.generaArchetypes)
 	for _, v := range m.archetypes {
-		if v.Type == cdata.ArchetypeGenus {
+		if v.Type == ArchetypeGenus {
 			m.generaArchetypes = append(m.generaArchetypes, v)
 		}
 	}
@@ -421,7 +420,7 @@ func (m *Manager) buildGeneraArchetypes() int {
 func (m *Manager) buildSpeciesArchetypes() int {
 	oldCount := len(m.speciesArchetypes)
 	for _, v := range m.archetypes {
-		if v.Type == cdata.ArchetypeSpecies {
+		if v.Type == ArchetypeSpecies {
 			m.speciesArchetypes = append(m.speciesArchetypes, v)
 		}
 	}
@@ -431,7 +430,7 @@ func (m *Manager) buildSpeciesArchetypes() int {
 func (m *Manager) buildFactionArchetypes() int {
 	oldCount := len(m.factionArchetypes)
 	for _, v := range m.archetypes {
-		if v.Type == cdata.ArchetypeFaction {
+		if v.Type == ArchetypeFaction {
 			m.factionArchetypes = append(m.factionArchetypes, v)
 		}
 	}

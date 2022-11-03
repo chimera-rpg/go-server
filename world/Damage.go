@@ -4,21 +4,21 @@ import (
 	"fmt"
 	"strings"
 
-	cdata "github.com/chimera-rpg/go-common/data"
+	"github.com/chimera-rpg/go-server/data"
 )
 
 type Damage struct {
-	AttackType      cdata.AttackType
+	AttackType      data.AttackType
 	BaseDamage      float64
 	AttributeDamage float64
-	Styles          map[cdata.AttackStyle]float64
+	Styles          map[data.AttackStyle]float64
 	StyleTotal      float64
 }
 
 type DamageResult struct {
-	AttackType      cdata.AttackType
+	AttackType      data.AttackType
 	AttributeDamage float64
-	Styles          map[cdata.AttackStyle]float64
+	Styles          map[data.AttackStyle]float64
 }
 
 type Damages []Damage
@@ -27,7 +27,7 @@ func (ds *Damages) Result() (dr []DamageResult) {
 	for _, d := range *ds {
 		r := DamageResult{
 			AttackType: d.AttackType,
-			Styles:     make(map[cdata.AttackStyle]float64),
+			Styles:     make(map[data.AttackStyle]float64),
 		}
 		for k, s := range d.Styles {
 			r.Styles[k] = d.BaseDamage * s
@@ -60,7 +60,7 @@ func (ds Damages) String() string {
 		styleDamages := 0.0
 		attributeDamages := 0.0
 		for k, s := range d.Styles {
-			styleStrings = append(styleStrings, fmt.Sprintf("%.1f %s", d.BaseDamage*s, cdata.AttackStyleToStringMap[k]))
+			styleStrings = append(styleStrings, fmt.Sprintf("%.1f %s", d.BaseDamage*s, data.AttackStyleToStringMap[k]))
 			styleDamages += d.BaseDamage * s
 			attributeDamages += d.AttributeDamage * s / d.StyleTotal
 		}
@@ -77,7 +77,7 @@ func (ds *Damages) Clone() (ds2 Damages) {
 			AttackType:      d.AttackType,
 			BaseDamage:      d.BaseDamage,
 			AttributeDamage: d.AttributeDamage,
-			Styles:          make(map[cdata.AttackStyle]float64),
+			Styles:          make(map[data.AttackStyle]float64),
 			StyleTotal:      d.StyleTotal,
 		}
 		for k, v := range d.Styles {

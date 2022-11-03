@@ -1,7 +1,7 @@
 package world
 
 import (
-	cdata "github.com/chimera-rpg/go-common/data"
+	"github.com/chimera-rpg/go-server/data"
 )
 
 // StatusFlying is the status for when an object is flying.
@@ -11,7 +11,7 @@ type StatusFlying struct {
 
 var StatusFlyingRef = &StatusFlying{}
 
-// StatusType returns cdata.FlyingStatus
-func (s *StatusFlying) StatusType() cdata.StatusType {
-	return cdata.FlyingStatus
+// StatusType returns data.FlyingStatus
+func (s *StatusFlying) StatusType() data.StatusType {
+	return data.FlyingStatus
 }

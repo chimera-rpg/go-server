@@ -1,7 +1,6 @@
 package world
 
 import (
-	cdata "github.com/chimera-rpg/go-common/data"
 	"github.com/chimera-rpg/go-server/data"
 )
 
@@ -20,6 +19,6 @@ func NewObjectFlora(a *data.Archetype) (o *ObjectFlora) {
 	return
 }
 
-func (o *ObjectFlora) getType() cdata.ArchetypeType {
-	return cdata.ArchetypeFlora
+func (o *ObjectFlora) getType() data.ArchetypeType {
+	return data.ArchetypeFlora
 }
