@@ -524,5 +524,8 @@ func (o *Object) GetMundaneInfo(near bool) data.ObjectInfo {
 }
 
 func (o *Object) GetSaveableArchetype() data.Archetype {
+	if o.Archetype != nil && o.Archetype.Uncompiled != nil {
+		return *o.Archetype.Uncompiled
+	}
 	return data.Archetype{}
 }
