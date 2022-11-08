@@ -12,7 +12,6 @@ import (
 
 	"github.com/chimera-rpg/go-server/data"
 	"github.com/chimera-rpg/go-server/network"
-	"github.com/jinzhu/copier"
 )
 
 // FIXME: This shouldn't be here. We want to have default melee fallback, though certain genera should have alternatives that use edged or similar.
@@ -129,7 +128,9 @@ func (w *World) Update(currentTime time.Time, delta time.Duration) error {
 			// TODO: Make this influenced by map reset as well as server settings!
 			if player.disconnectedElapsed > time.Duration(5)*time.Minute {
 				// I guess it is okay to save the player.
-				w.SyncPlayerSaveInfo(player.ClientConnection)
+				if err := w.SyncPlayerSaveInfo(player.ClientConnection); err != nil {
+					log.Errorln(err)
+				}
 				//
 				player.GetMap().RemoveOwner(player)
 				w.DeleteObject(player.GetTarget(), true)
@@ -282,10 +283,6 @@ func (w *World) addPlayerByConnection(conn clientConnectionI, character *data.Ch
 	if index := w.GetExistingPlayerConnectionIndex(conn); index == -1 {
 		player := NewOwnerPlayer(conn)
 		conn.SetOwner(player)
-		// Process and compile the character's Archetype so it inherits properly.
-		var Uncompiled data.Archetype
-		copier.Copy(&Uncompiled, &character.Archetype)
-		character.Archetype.Uncompiled = &Uncompiled
 		// Create character object.
 		pc, err := w.CreateObjectFromArch(&character.Archetype)
 		if err != nil {
@@ -506,8 +503,8 @@ func (w *World) CreateObjectFromArch(arch *data.Archetype) (o ObjectI, err error
 				gameobj.count = i
 			}
 		}
-		if arch.Name != nil {
-			gameobj.name = *arch.Name
+		if arch.Name != "" {
+			gameobj.name = arch.Name
 		}
 
 		o = &gameobj

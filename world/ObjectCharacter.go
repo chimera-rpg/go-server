@@ -61,7 +61,7 @@ type ObjectCharacter struct {
 func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 	o = &ObjectCharacter{
 		Object:                  NewObject(a),
-		name:                    a.Name,
+		name:                    &a.Name,
 		level:                   &a.Level,
 		resistances:             &a.Resistances,
 		attacktypes:             &a.AttackTypes,
@@ -714,7 +714,7 @@ func (o *ObjectCharacter) CalculateSpeed() int {
 		result += int(a.Attributes.Physical.GetSpeedBonus())
 	}
 	// Add from our own archetype.
-	result += int(o.GetUncompiledArchetype().Attributes.Physical.GetSpeedBonus())
+	result += int(o.Archetype.Uncompiled().Attributes.Physical.GetSpeedBonus())
 
 	return result
 }
@@ -728,7 +728,7 @@ func (o *ObjectCharacter) CalculateInspectSpeed() int {
 		result += int(a.Attributes.Physical.GetInspectBonus())
 	}
 	// Add from our own archetype.
-	result += int(o.GetUncompiledArchetype().Attributes.Physical.GetSpeedBonus())
+	result += int(o.Archetype.Uncompiled().Attributes.Physical.GetSpeedBonus())
 
 	return result
 }
@@ -742,7 +742,7 @@ func (o *ObjectCharacter) CalculateHealth() int {
 		result += int(a.Attributes.Physical.GetHealthBonus())
 	}
 	// Add from our own archetype.
-	result += int(o.GetUncompiledArchetype().Attributes.Physical.GetHealthBonus())
+	result += int(o.Archetype.Uncompiled().Attributes.Physical.GetHealthBonus())
 
 	return result
 }
@@ -755,7 +755,7 @@ func (o *ObjectCharacter) CalculateReach() int {
 		result += int(a.Reach)
 	}
 	// Add from our own archetype.
-	result += int(o.GetUncompiledArchetype().Reach)
+	result += int(o.Archetype.Uncompiled().Reach)
 
 	// Recalculate our reach cube.
 	h, w, d := o.GetDimensions()
@@ -979,7 +979,7 @@ func (o *ObjectCharacter) Attackable() bool {
 
 // GetSaveableArchetype returns a modified version of UncompiledArchetype with any important changes applied to it.
 func (o *ObjectCharacter) GetSaveableArchetype() data.Archetype {
-	a := *o.GetUncompiledArchetype()
+	a := o.Archetype.Uncompiled()
 
 	// Copy slot information.
 	a.Slots.Free = make(map[string]int)
@@ -988,18 +988,16 @@ func (o *ObjectCharacter) GetSaveableArchetype() data.Archetype {
 	}
 
 	// Copy inventory information.
+	a.Inventory = make([]data.Archetype, 0)
 	for _, v := range o.inventory {
-		if a := v.GetUncompiledArchetype(); a != nil {
-			a.Inventory = append(a.Inventory, *a)
-		}
+		a.Inventory = append(a.Inventory, v.GetSaveableArchetype())
 	}
 
 	// Copy equipment information.
+	a.Equipment = make([]data.Archetype, 0)
 	for _, v := range o.equipment {
-		if a := v.GetUncompiledArchetype(); a != nil {
-			a.Equipment = append(a.Equipment, *a)
-		}
+		a.Equipment = append(a.Equipment, v.GetSaveableArchetype())
 	}
 
-	return a
+	return *a
 }

@@ -43,7 +43,7 @@ type ExitInfo struct {
 // Archetype represents a collection of data that should be used for the
 // creation of Objects.
 type Archetype struct {
-	Uncompiled   *Archetype   `yaml:"-"`
+	uncompiled   *Archetype   `yaml:"-"`
 	ArchID       StringID     `yaml:"-"` // Archetype ID used for generating objects and inheriting from.
 	ArchIDs      []MergeArch  `yaml:"-"`
 	Archs        []string     `json:"Archs" yaml:"Archs,omitempty"` // Archetypes to inherit from.
@@ -51,9 +51,9 @@ type Archetype struct {
 	Arch         string       `json:"Arch" yaml:"Arch,omitempty"` // Archetype to inherit from. During post-parsing this is used to acquire and set the ArchID for inventory archetypes.
 	SelfID       StringID     `yaml:"-"`                          // The Archetype's own SelfID
 	Self         string       `json:"Self" yaml:"-"`
-	Name         *string      `json:"Name" yaml:"Name,omitempty"` //
+	Name         string       `json:"Name" yaml:"Name,omitempty"` //
 	//Name string
-	Description *string       `json:"Description" yaml:"Description,omitempty"`
+	Description string        `json:"Description" yaml:"Description,omitempty"`
 	Type        ArchetypeType `json:"Type" yaml:"Type,omitempty"`
 	TypeHints   []string      `json:"TypeHints" yaml:"TypeHints,omitempty"`
 	TypeHintIDs []StringID    `yaml:"-"`
@@ -362,4 +362,8 @@ func (arch *Archetype) GetField(fieldName string) reflect.Value {
 	s := reflect.ValueOf(arch).Elem()
 	f := s.FieldByName(fieldName)
 	return f
+}
+
+func (arch *Archetype) Uncompiled() *Archetype {
+	return arch.uncompiled
 }

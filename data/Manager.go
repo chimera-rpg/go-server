@@ -86,12 +86,9 @@ func (m *Manager) parseArchetypeFile(filepath string) error {
 		return err
 	}
 	for k, archetype := range archetypesMap {
-		var original Archetype
-		copier.Copy(&original, &archetype)
 		archID := m.Strings.Acquire(k)
 		m.archetypes[archID] = archetype
 		m.archetypes[archID].SelfID = archID
-		m.archetypes[archID].Uncompiled = &original
 	}
 	return nil
 }
@@ -101,6 +98,14 @@ func (m *Manager) ProcessArchetype(archetype *Archetype) error {
 	if archetype.isProcessing {
 		return nil
 	}
+
+	// Eh... This isn't quite right, but pretty much everything we process and compile should retain an uncompiled version... TODO: Do some initial type parsing, if possible, then only copy the archetype to uncompiled if it is a type we want to keep an uncompiled version of around.
+	if archetype.uncompiled == nil && (!archetype.isCompiled && !archetype.isCompiling) {
+		var original Archetype
+		copier.Copy(&original, archetype)
+		archetype.uncompiled = &original
+	}
+
 	archetype.isProcessing = true
 	if archetype.Anim != "" {
 		archetype.AnimID = m.Strings.Acquire(archetype.Anim)
@@ -303,7 +308,7 @@ func (m *Manager) CompileArchetype(archetype *Archetype) error {
 
 	// Delete the uncompiled version for blocks and tiles.
 	if archetype.Type == ArchetypeBlock || archetype.Type == ArchetypeTile {
-		archetype.Uncompiled = nil
+		archetype.uncompiled = nil
 	}
 
 	return nil

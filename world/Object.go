@@ -143,11 +143,6 @@ func (o *Object) GetArchetype() *data.Archetype {
 	return o.Archetype
 }
 
-// GetUncompiledArchetype gets the object's underlying alt archetype. This is used for ObjectCharacters to store an uncompiled version of their archetype that can be easily saved to disk.
-func (o *Object) GetUncompiledArchetype() *data.Archetype {
-	return o.Archetype.Uncompiled
-}
-
 func (o *Object) getType() data.ArchetypeType {
 	return data.ArchetypeUnknown
 }
@@ -371,10 +366,7 @@ func (o *Object) Matter() data.MatterType {
 // Name returns the name of the object, if available.
 func (o *Object) Name() string {
 	a := o.GetArchetype()
-	if a.Name == nil {
-		return ""
-	}
-	return *a.Name
+	return a.Name
 }
 
 // SetName sets the name of the object.
@@ -524,8 +516,8 @@ func (o *Object) GetMundaneInfo(near bool) data.ObjectInfo {
 }
 
 func (o *Object) GetSaveableArchetype() data.Archetype {
-	if o.Archetype != nil && o.Archetype.Uncompiled != nil {
-		return *o.Archetype.Uncompiled
+	if o.Archetype != nil && o.Archetype.Uncompiled() != nil {
+		return *o.Archetype.Uncompiled()
 	}
 	return data.Archetype{}
 }

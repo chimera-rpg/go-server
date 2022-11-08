@@ -195,7 +195,7 @@ func (m *Manager) CreateUserCharacter(u *User, name string) (err error) {
 
 	c := &Character{
 		Archetype: Archetype{
-			Name: &name,
+			Name: name,
 		},
 		SaveInfo: SaveInfo{
 			Map: "Chamber of Origins",
