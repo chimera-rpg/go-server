@@ -1,7 +1,6 @@
 package world
 
 import (
-	"errors"
 	"fmt"
 	"math"
 	"math/rand"
@@ -15,6 +14,7 @@ import (
 // ObjectCharacter represents player characters.
 type ObjectCharacter struct {
 	Object
+	FeatureInventory
 	//
 	maxHp         int
 	race          string
@@ -30,8 +30,6 @@ type ObjectCharacter struct {
 	competencies *data.CompetenciesMap
 	skills       []ObjectSkill
 	//
-	equipment             []ObjectI // Equipment is all equipped inventory items.
-	inventory             []ObjectI // Inventory contains all non-equipped items.
 	currentActionDuration time.Duration
 	// FIXME: Temporary code for testing a stamina system.
 	stamina                int // Stamina is a pool that recharges and is consumed by actions.
@@ -60,7 +58,10 @@ type ObjectCharacter struct {
 // NewObjectCharacter creates a new ObjectCharacter from the given archetype.
 func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 	o = &ObjectCharacter{
-		Object:                  NewObject(a),
+		Object: NewObject(a),
+		FeatureInventory: FeatureInventory{
+			slots: &a.Slots,
+		},
 		name:                    &a.Name,
 		level:                   &a.Level,
 		resistances:             &a.Resistances,
@@ -77,6 +78,7 @@ func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 
 	o.Recalculate()
 	o.RecalculateSenses()
+	o.RecalculateEquipment()
 
 	// Create a new Owner AI if it is an NPC.
 	if a.Type == data.ArchetypeNPC {
@@ -98,6 +100,10 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 	if o.shouldRecalculateSenses {
 		o.RecalculateSenses()
 		o.shouldRecalculateSenses = false
+	}
+	if o.equipmentChanged {
+		o.RecalculateEquipment()
+		o.equipmentChanged = false
 	}
 
 	// Add a falling timer if we've moved and should fall.
@@ -543,109 +549,6 @@ func (o *ObjectCharacter) ValidateSlots() {
 	// TODO
 }
 
-func (o *ObjectCharacter) AddInventoryObject(o2 ObjectI) {
-	o.inventory = append(o.inventory, o2)
-}
-
-func (o *ObjectCharacter) AddEquipmentObject(o2 ObjectI) {
-	o.equipment = append(o.equipment, o2)
-}
-
-// CanEquip returns if the object can be equipped. FIXME: Make this return an error so we can provide a message to the user saying why they couldn't equip the item.
-func (o *ObjectCharacter) CanEquip(ob *ObjectEquipable) bool {
-	// Check the object's uses against our free slots.
-	for k, v := range ob.Archetype.Slots.UsesIDs {
-		v2, ok := o.Archetype.Slots.FreeIDs[k]
-		if !ok {
-			// No such slot is available.
-			return false
-		}
-		if v2 < v {
-			// We have the slot, but are missing v - v2 count.
-			return false
-		}
-	}
-
-	// Check for minimum slot requirements.
-	for k, v := range ob.Archetype.Slots.Needs.MinIDs {
-		v2, ok := o.Archetype.Slots.HasIDs[k]
-		if !ok {
-			// No such slot exists.
-			return false
-		}
-		if v2 < v {
-			// We have the slot, but are missing v - v2 count.
-			return false
-		}
-	}
-	// Check for maximum slot requirements.
-	for k, v := range ob.Archetype.Slots.Needs.MaxIDs {
-		v2, ok := o.Archetype.Slots.HasIDs[k]
-		if !ok {
-			// No such slot exists.
-			return false
-		}
-		if v2 > v {
-			// We have the slot, but are in excess by v2 - v
-			return false
-		}
-	}
-
-	return true
-}
-
-// Equip attempts to add the given object to the equipment slice from the inventory slice.
-func (o *ObjectCharacter) Equip(ob *ObjectEquipable) error {
-	index := -1
-	for i, v := range o.inventory {
-		if v == ob {
-			index = i
-			break
-		}
-	}
-	if index == -1 {
-		return errors.New("object does not exist in inventory")
-	}
-
-	if !o.CanEquip(ob) {
-		return errors.New("cannot equip object")
-	}
-
-	for k, v := range ob.Archetype.Slots.Uses {
-		o.Archetype.Slots.Free[k] -= v
-	}
-
-	o.equipment = append(o.equipment, o.inventory[index])
-	o.inventory = append(o.inventory[:index], o.inventory[index+1:]...)
-
-	ob.CalculateArmors()
-	ob.GetArmors(o)
-	ob.CalculateDamages()
-	ob.GetDamages(o)
-
-	o.shouldRecalculate = true
-
-	return nil
-}
-
-// Unequip attempts to remove the given object from the equipment slice and into the inventory slice.
-func (o *ObjectCharacter) Unequip(ob *ObjectEquipable) error {
-	for i, v := range o.equipment {
-		if v == ob {
-			o.equipment = append(o.equipment[:i], o.equipment[i+1:]...)
-			o.inventory = append(o.inventory, v)
-
-			for k, v := range ob.Archetype.Slots.Uses {
-				o.Archetype.Slots.Free[k] += v
-			}
-
-			o.shouldRecalculate = true
-			return nil
-		}
-	}
-	return errors.New("object is not equipped")
-}
-
 // Name returns the name of the character.
 func (o *ObjectCharacter) Name() string {
 	if o.name == nil {
@@ -680,6 +583,9 @@ func (o *ObjectCharacter) Recalculate() {
 	o.inspectSpeed = o.CalculateInspectSpeed() // Should this be in recalculate senses?
 	o.health = o.CalculateHealth()
 	o.reach = o.CalculateReach()
+}
+
+func (o *ObjectCharacter) RecalculateEquipment() {
 	o.damages = o.CalculateDamages()
 	o.armor = o.CalculateArmor()
 	o.dodge = o.CalculateDodge()
@@ -761,25 +667,18 @@ func (o *ObjectCharacter) CalculateReach() int {
 	return result
 }
 
-// Weapons returns the list of items useable as weapons.
-func (o *ObjectCharacter) Weapons() []*ObjectEquipable {
-	// FIXME: cache this information.
-	var weapons []*ObjectEquipable
-	for _, w := range o.equipment {
-		if a := w.GetArchetype(); a != nil {
+func (o *ObjectCharacter) CalculateDamages() []Damages {
+	// Get our current weapon(s).
+	weapons := o.FindEquipment(func(v ObjectI) bool {
+		if a := v.GetArchetype(); a != nil {
 			for _, t := range a.TypeHints {
 				if t == "weapon" {
-					weapons = append(weapons, w.(*ObjectEquipable))
+					return true
 				}
 			}
 		}
-	}
-	return weapons
-}
-
-func (o *ObjectCharacter) CalculateDamages() []Damages {
-	// Get our current weapon(s).
-	weapons := o.Weapons()
+		return false
+	})
 	// If we have no weapons, default to PUNCH.
 	if len(weapons) == 0 {
 		weapons = append(weapons, HandToHandWeapon)
@@ -807,7 +706,7 @@ func (o *ObjectCharacter) Armors() []*ObjectEquipable {
 		if a := w.GetArchetype(); a != nil {
 			for _, t := range a.TypeHints {
 				if t == "armor" {
-					armors = append(armors, w.(*ObjectEquipable))
+					armors = append(armors, w)
 				}
 			}
 		}
