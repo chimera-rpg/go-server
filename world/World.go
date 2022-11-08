@@ -555,6 +555,16 @@ func (w *World) DeleteObject(o ObjectI, shouldFree bool) (err error) {
 		delete(w.objects, o.GetID())
 	}
 
+	switch o := o.(type) {
+	case *ObjectCharacter:
+		for _, o2 := range o.inventory {
+			w.DeleteObject(o2, true) // Is it proper to free?
+		}
+		for _, o2 := range o.equipment {
+			w.DeleteObject(o2, true)
+		}
+	}
+
 	return
 }
 
