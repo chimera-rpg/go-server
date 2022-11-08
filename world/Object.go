@@ -21,7 +21,6 @@ type Object struct {
 	owner  OwnerI
 	//
 	statuses   []StatusI
-	inventory  []ObjectI
 	hasMoved   bool
 	updates    bool
 	blocking   data.MatterType
