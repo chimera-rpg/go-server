@@ -709,12 +709,8 @@ func (o *ObjectCharacter) CalculateStamina() int {
 func (o *ObjectCharacter) CalculateSpeed() int {
 	result := 10 // Baseline 10.
 
-	// Add any bonuses from our ancestry.
-	for _, a := range o.Archetype.ArchPointers {
-		result += int(a.Attributes.Physical.GetSpeedBonus())
-	}
-	// Add from our own archetype.
-	result += int(o.Archetype.Uncompiled().Attributes.Physical.GetSpeedBonus())
+	// Add our bonus.
+	result += int(o.Archetype.Attributes.Physical.GetSpeedBonus())
 
 	return result
 }
@@ -723,12 +719,8 @@ func (o *ObjectCharacter) CalculateSpeed() int {
 func (o *ObjectCharacter) CalculateInspectSpeed() int {
 	result := 10 // Baseline 10.
 
-	// Add any bonuses from our ancestry.
-	for _, a := range o.Archetype.ArchPointers {
-		result += int(a.Attributes.Physical.GetInspectBonus())
-	}
-	// Add from our own archetype.
-	result += int(o.Archetype.Uncompiled().Attributes.Physical.GetSpeedBonus())
+	// Add our bonus.
+	result += int(o.Archetype.Attributes.Physical.GetSpeedBonus())
 
 	return result
 }
@@ -737,12 +729,8 @@ func (o *ObjectCharacter) CalculateInspectSpeed() int {
 func (o *ObjectCharacter) CalculateHealth() int {
 	result := 0
 
-	// Add any bonuses from our ancestry.
-	for _, a := range o.Archetype.ArchPointers {
-		result += int(a.Attributes.Physical.GetHealthBonus())
-	}
 	// Add from our own archetype.
-	result += int(o.Archetype.Uncompiled().Attributes.Physical.GetHealthBonus())
+	result += int(o.Archetype.Attributes.Physical.GetHealthBonus())
 
 	return result
 }
@@ -750,12 +738,8 @@ func (o *ObjectCharacter) CalculateHealth() int {
 func (o *ObjectCharacter) CalculateReach() int {
 	result := 0
 
-	// Add any bonuses from our ancestry.
-	for _, a := range o.Archetype.ArchPointers {
-		result += int(a.Reach)
-	}
 	// Add from our own archetype.
-	result += int(o.Archetype.Uncompiled().Reach)
+	result += int(o.Archetype.Reach)
 
 	// Recalculate our reach cube.
 	h, w, d := o.GetDimensions()
