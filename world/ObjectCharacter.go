@@ -61,20 +61,22 @@ type ObjectCharacter struct {
 func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 	o = &ObjectCharacter{
 		Object:                  NewObject(a),
+		name:                    a.Name,
+		level:                   &a.Level,
+		resistances:             &a.Resistances,
+		attacktypes:             &a.AttackTypes,
+		attributes:              &a.Attributes,
+		competencies:            &a.Competencies,
+		reach:                   int(a.Reach),
 		speedPenaltyMultiplier:  1,
-		reach:                   1,
 		shouldRecalculate:       true,
 		shouldRecalculateSenses: true,
 	}
-	*o.name = *a.Name
-	*o.level = a.Level
-	*o.resistances = a.Resistances
-	*o.attacktypes = a.AttackTypes
-	*o.attributes = a.Attributes
-	*o.competencies = a.Competencies
-	o.reach = int(a.Reach)
 	o.maxStamina = o.CalculateStamina()
 	o.hasMoved = true // Set moved to true to ensure falling and any other situations are checked for on first update.
+
+	o.Recalculate()
+	o.RecalculateSenses()
 
 	// Create a new Owner AI if it is an NPC.
 	if a.Type == data.ArchetypeNPC {
@@ -86,55 +88,6 @@ func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 	//o.setArchetype(a)
 
 	return
-}
-
-// NewObjectCharacterFromCharacter creates a new ObjectCharacter from the given character data.
-func NewObjectCharacterFromCharacter(c *data.Character, completeArchetype *data.Archetype) (o *ObjectCharacter) {
-	o = &ObjectCharacter{
-		Object:                  NewObject(completeArchetype),
-		name:                    c.Archetype.Name,
-		level:                   &c.Archetype.Level,
-		resistances:             &c.Archetype.Resistances,
-		attacktypes:             &c.Archetype.AttackTypes,
-		attributes:              &c.Archetype.Attributes,
-		competencies:            &c.Archetype.Competencies,
-		reach:                   int(c.Archetype.Reach),
-		speedPenaltyMultiplier:  1,
-		shouldRecalculate:       true,
-		shouldRecalculateSenses: true,
-	}
-	o.hasMoved = true // Set moved to true to ensure falling and any other situations are checked for on first update.
-	//o.maxStamina = time.Duration(o.CalculateStamina())
-	o.maxStamina = o.CalculateStamina()
-	o.Recalculate()
-	o.RecalculateSenses()
-	// TODO: Move elsewhere.
-	/*for statusID, statusMap := range c.SaveInfo.Statuses {
-		if statusID == int(data.CrouchingStatus) {
-			s := &StatusCrouch{}
-			s.Deserialize(statusMap)
-		} else if statusID == int(data.SqueezingStatus) {
-			s := &StatusSqueeze{}
-			s.Deserialize(statusMap)
-		} else if statusID == int(data.FallingStatus) {
-			s := &StatusFalling{}
-			s.Deserialize(statusMap)
-		}
-	}*/
-	return
-}
-
-func (o *ObjectCharacter) setArchetype(targetArch *data.Archetype) {
-	// First inherit from another Archetype if ArchID is set.
-	/*mutatedArch := data.NewArchetype()
-	for targetArch != nil {
-		if err := mergo.Merge(&mutatedArch, targetArch); err != nil {
-			log.Fatal("o no")
-		}
-		targetArch = targetArch.InheritArch
-	}
-
-	o.name, _ = mutatedArch.Name.GetString()*/
 }
 
 func (o *ObjectCharacter) update(delta time.Duration) {
@@ -588,6 +541,14 @@ func (o *ObjectCharacter) getType() data.ArchetypeType {
 // ValidateSlots iterates through the character's equipment to ensure that they do not have more slots used than what is available. This is to ensure that any data updates, such as bauplans or weapons, will not leave characters equipping more than they should.
 func (o *ObjectCharacter) ValidateSlots() {
 	// TODO
+}
+
+func (o *ObjectCharacter) AddInventoryObject(o2 ObjectI) {
+	o.inventory = append(o.inventory, o2)
+}
+
+func (o *ObjectCharacter) AddEquipmentObject(o2 ObjectI) {
+	o.equipment = append(o.equipment, o2)
 }
 
 // CanEquip returns if the object can be equipped. FIXME: Make this return an error so we can provide a message to the user saying why they couldn't equip the item.

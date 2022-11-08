@@ -286,12 +286,11 @@ func (w *World) addPlayerByConnection(conn clientConnectionI, character *data.Ch
 		var Uncompiled data.Archetype
 		copier.Copy(&Uncompiled, &character.Archetype)
 		character.Archetype.Uncompiled = &Uncompiled
-		w.data.ProcessArchetype(&character.Archetype)
-		w.data.CompileArchetype(&character.Archetype)
 		// Create character object.
-		pc := NewObjectCharacterFromCharacter(character, &character.Archetype)
-		pc.id = w.objectIDs.acquire()
-		w.objects[pc.id] = pc
+		pc, err := w.CreateObjectFromArch(&character.Archetype)
+		if err != nil {
+			return err
+		}
 		player.SetTarget(pc)
 		// Add player to the world's record of players.
 		w.players = append(w.players, player)
@@ -310,7 +309,7 @@ func (w *World) addPlayerByConnection(conn clientConnectionI, character *data.Ch
 		}
 		log.WithFields(log.Fields{
 			"ID": conn.GetID(),
-			"PC": pc.id,
+			"PC": pc.GetID(),
 		}).Debugln("Added player to world.")
 		//
 		player.ClientConnection.Send(network.CommandMessage{
@@ -463,6 +462,8 @@ func (w *World) CreateObject(s string) (o ObjectI, err error) {
 
 // CreateObjectFromArch will attempt to create an Object by an archetype, merging the result with the archetype's target Arch if possible.
 func (w *World) CreateObjectFromArch(arch *data.Archetype) (o ObjectI, err error) {
+	// Ensure archetype is processed.
+	err = w.data.ProcessArchetype(arch)
 	// Ensure archetype is compiled.
 	err = w.data.CompileArchetype(arch)
 
@@ -514,7 +515,28 @@ func (w *World) CreateObjectFromArch(arch *data.Archetype) (o ObjectI, err error
 	o.SetID(w.objectIDs.acquire())
 	w.objects[o.GetID()] = o
 
-	// TODO: Create/Merge Archetype properties!
+	// FIXME: Should all objects implement inventory?
+	for _, invArch := range arch.Inventory {
+		invObj, err := w.CreateObjectFromArch(&invArch)
+		if err != nil {
+			return o, err
+		}
+		switch o := o.(type) {
+		case *ObjectCharacter:
+			o.AddInventoryObject(invObj)
+		}
+	}
+	for _, eqArch := range arch.Equipment {
+		eqObj, err := w.CreateObjectFromArch(&eqArch)
+		if err != nil {
+			return o, err
+		}
+		switch o := o.(type) {
+		case *ObjectCharacter:
+			o.AddEquipmentObject(eqObj)
+		}
+	}
+
 	return
 }
 
