@@ -226,6 +226,28 @@ func (arch *Archetype) Add(other *Archetype) error {
 	arch.Depth += other.Depth
 	arch.Reach += other.Reach
 
+	if arch.Genera == "" {
+		arch.Genera = other.Genera
+	}
+	if arch.Species == "" {
+		arch.Species = other.Species
+	}
+	if arch.Legacy == "" {
+		arch.Legacy = other.Legacy
+	}
+	for _, f1 := range other.Factions {
+		exists := false
+		for _, f2 := range arch.Factions {
+			if f1 == f2 {
+				exists = true
+				break
+			}
+		}
+		if !exists {
+			arch.Factions = append(arch.Factions, f1)
+		}
+	}
+
 	// Inventory
 	for _, o := range other.Inventory {
 		arch.Inventory = append(arch.Inventory, o)
