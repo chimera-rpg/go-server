@@ -221,6 +221,10 @@ func (arch *Archetype) Add(other *Archetype) error {
 	} else if other.Weight != nil {
 		*arch.Weight += *other.Weight
 	}
+	arch.Height += other.Height
+	arch.Width += other.Width
+	arch.Depth += other.Depth
+	arch.Reach += other.Reach
 
 	// Inventory
 	for _, o := range other.Inventory {
