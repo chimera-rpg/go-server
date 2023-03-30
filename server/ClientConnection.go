@@ -222,80 +222,37 @@ func (c *ClientConnection) HandleLogin(s *GameServer) {
 // HandleCharacterCreation handles the character creation/selection of a
 // connection and, potentially, sends it over to HandleGame.
 func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
-	isWaiting := true
+	/*for _, arch := range s.dataManager.GetPCArchetypes() {
+		fmt.Println("send pc", arch.Name, arch.Uncompiled().Description, arch.Uncompiled().Attributes)
+	}*/
 
-	// Await a QueryCharacters response so we know the client is ready.
+	var cmd network.Command
+	var sentGenera bool
+	// sentPCs is a map of [genera][species][pc]<sent>
+	sentPCs := make(map[string]map[string]map[string]bool)
+
+	isWaiting := true
 	for isWaiting {
-		var cmd network.Command
 		isHandled, shouldReturn := c.Receive(s, &cmd)
-		if isHandled {
-			continue
-		}
 		if shouldReturn {
 			return
+		}
+		if isHandled {
+			continue
 		}
 		switch t := cmd.(type) {
 		case network.CommandCharacter:
 			if t.Type == network.QueryCharacters {
-				isWaiting = false
-			} else {
-				c.log.Warnln("Client sent bad data, kicking.")
-				s.cleanupConnection(c)
-				c.GetSocket().Close()
-				return
-			}
-		default:
-			c.log.Warnln("Client sent bad data, kicking.")
-			s.cleanupConnection(c)
-			c.GetSocket().Close()
-			return
-		}
-	}
-
-	//isHandled, shouldReturn := c.Receive(s, &cmd)
-	// Send Genera
-	/*genera := make(map[string]string)
-	images := make([][]byte)
-	descriptions := make([]string)
-	for _, pc := range s.dataManager.GetPCArchetypes() {
-		genera[pc.Properties["Genus"]] = true
-		//images = append(images, s.dataManager.GetAnimImage(pc.Anim, "default", "south", 0))
-		descriptions[pc.Properties["Genus"]]
-	}
-	c.Send(network.Command(network.CommandCharacter{
-		Type:   network.QueryGenera,
-		Genera: genera,
-	}))
-	fmt.Printf("Sending %+v\n", pc)*/
-
-	// TODO: Send two CommandCharacter messages:
-	//		* All Species, Culture, Training, Description, AbilityScores, Skills, and Images
-	//		* All of the associated player's Characters as Image, Character, Level, and AbilityScores
-
-	// Send characters.
-	var playerCharacters []string
-	for key := range c.user.Characters {
-		playerCharacters = append(playerCharacters, key)
-	}
-	c.Send(network.Command(network.CommandCharacter{
-		Type:       network.CreateCharacter,
-		Characters: playerCharacters,
-	}))
-
-	var cmd network.Command
-
-	isWaiting = true
-	for isWaiting {
-		isHandled, shouldReturn := c.Receive(s, &cmd)
-		if shouldReturn {
-			return
-		}
-		if isHandled {
-			continue
-		}
-		switch t := cmd.(type) {
-		case network.CommandCharacter:
-			if t.Type == network.CreateCharacter {
+				// Send characters.
+				var playerCharacters []string
+				for key := range c.user.Characters {
+					playerCharacters = append(playerCharacters, key)
+				}
+				c.Send(network.Command(network.CommandCharacter{
+					Type:       network.CreateCharacter,
+					Characters: playerCharacters,
+				}))
+			} else if t.Type == network.CreateCharacter {
 				// Create a character according to species, culture, training, name
 				// TODO: Maybe the Character type should have a set/array of ArchIDs to inherit from?
 				// Attempt to create the character.
@@ -359,7 +316,28 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 				// Delete a given character by name.
 			} else if t.Type == network.RollAbilityScores {
 				// Request rolling ability scores for an in-creation character.
+			} else if t.Type == network.QueryGenera && !sentGenera {
+				for _, arch := range s.dataManager.GetGeneraArchetypes() {
+					fmt.Println("TODO: send genera", arch.Name, arch.Description, arch.Attributes)
+					// TODO: Also send image IDs.
+					sentPCs[arch.Name] = make(map[string]map[string]bool)
+				}
+				sentGenera = true
+			} else if t.Type == network.QuerySpecies && len(t.Genera) > 0 {
+				for _, genera := range t.Genera {
+					if _, ok := sentPCs[genera]; ok {
+						for _, arch := range s.dataManager.GetSpeciesArchetypes() {
+							fmt.Println("TODO: send species", arch.Name, arch.Description, arch.Uncompiled().Attributes)
+							sentPCs[genera][arch.Name] = make(map[string]bool)
+						}
+					}
+				}
 			}
+		default:
+			c.log.Warnln("Client sent bad data, kicking.")
+			s.cleanupConnection(c)
+			c.GetSocket().Close()
+			return
 		}
 	}
 	c.HandleGame(s)
