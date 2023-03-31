@@ -131,6 +131,45 @@ const (
 	RollAbilityScores        // Requests(client) or returns(server) rolls for ability scores Character->(AbilityScores)
 )
 
+// CommandGenera is a response from the server providing the list of all genera.
+type CommandGenera struct {
+	Genera []Genus
+}
+
+// Genus represents a single genus in genera.
+type Genus struct {
+	Name        string
+	Description string
+	Attributes  data.AttributeSets
+	AnimationID uint32
+	FaceID      uint32
+}
+
+// GetType returns TypeGenera
+func (c CommandGenera) GetType() uint32 {
+	return TypeGenera
+}
+
+// CommandSpecies is a response from the server providing the list of species for a given genus.
+type CommandSpecies struct {
+	Genus   string
+	Species []Species
+}
+
+// Species is a species, wow.
+type Species struct {
+	Name        string
+	Description string
+	Attributes  data.AttributeSets
+	AnimationID uint32
+	FaceID      uint32
+}
+
+// GetType returns TypeSpecies
+func (c CommandSpecies) GetType() uint32 {
+	return TypeSpecies
+}
+
 // Our basic return types
 const (
 	Nokay = iota
@@ -550,6 +589,8 @@ const (
 	TypeLogin
 	TypeRejoin
 	TypeCharacter
+	TypeGenera
+	TypeSpecies
 	TypeData
 	TypeTiles
 	TypeTileUpdate

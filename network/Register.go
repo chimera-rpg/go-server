@@ -13,6 +13,8 @@ func RegisterCommands() {
 	gob.RegisterName("L", CommandLogin{})
 	gob.RegisterName("R", CommandRejoin{})
 	gob.RegisterName("C", CommandCharacter{})
+	gob.RegisterName("Cg", CommandGenera{})
+	gob.RegisterName("Cs", CommandSpecies{})
 	gob.RegisterName("A", CommandAnimation{})
 	gob.RegisterName("G", CommandGraphics{})
 	gob.RegisterName("T", CommandTile{})

@@ -74,7 +74,7 @@ func (c *ClientConnection) Receive(s *GameServer, cmd *network.Command) (isHandl
 	}
 
 	switch t := (*cmd).(type) {
-	// Here is where we'd also handle GFX requests and otherwise
+	// Handle disconnects.
 	case network.CommandBasic:
 		if t.Type == network.Cya {
 			c.Cleanup(s)
@@ -82,9 +82,144 @@ func (c *ClientConnection) Receive(s *GameServer, cmd *network.Command) (isHandl
 			c.log.Println("Client left faithfully.")
 			isHandled = true
 			shouldReturn = true
+			break
 		}
-		isHandled = false
+	// Handle anim, graphics, music, sound, etc. requests.
+	case network.CommandAnimation:
+		// If the client has already requested this animation, boot it. NOTE: It would be better to limit requests first rather than immediately booting -- as well as to warn the player that it should stop requesting.
+		if _, alreadyRequested := c.requestedAnimationIDs[t.AnimationID]; alreadyRequested {
+			c.log.Warnln("Kicking client due to multiple animation request")
+			c.Cleanup(s)
+			c.GetSocket().Close()
+			isHandled = true
+			shouldReturn = true
+			break
+		}
+		c.requestedAnimationIDs[t.AnimationID] = struct{}{}
+		if anim, err := s.dataManager.GetAnimation(t.AnimationID); err == nil {
+			// This feels a bit heavy to convert our server animation data to our network animation data.
+			faces := make(map[uint32][]network.AnimationFrame)
+			for key, face := range anim.Faces {
+				faces[key] = make([]network.AnimationFrame, len(face))
+				for frameIndex, frame := range face {
+					faces[key][frameIndex] = network.AnimationFrame{
+						ImageID: frame.ImageID,
+						Time:    frame.Time,
+						X:       frame.X,
+						Y:       frame.Y,
+					}
+				}
+			}
+
+			c.Send(network.CommandAnimation{
+				AnimationID: t.AnimationID,
+				RandomFrame: anim.RandomFrame,
+				Faces:       faces,
+			})
+		} else {
+			// Animation does not exist. Send client bogus data.
+			c.Send(network.CommandAnimation{
+				AnimationID: t.AnimationID,
+			})
+		}
+		isHandled = true
+	case network.CommandAudio:
+		// If the client has already requested this audio, boot it. NOTE: It would be better to limit requests first rather than immediately booting -- as well as to warn the player that it should stop requesting.
+		if _, alreadyRequested := c.requestedAudioIDs[t.AudioID]; alreadyRequested {
+			c.log.Warnln("Kicking client due to multiple audio request")
+			c.Cleanup(s)
+			c.GetSocket().Close()
+			isHandled = true
+			shouldReturn = true
+			break
+		}
+		c.requestedAudioIDs[t.AudioID] = struct{}{}
+		if audio, err := s.dataManager.GetAudio(t.AudioID); err == nil {
+			// This feels a bit heavy to convert our server audio data to our network audio data.
+			sounds := make(map[uint32][]network.AudioSound)
+			for key, soundSet := range audio.SoundSets {
+				sounds[key] = make([]network.AudioSound, len(soundSet))
+				for soundIndex, sound := range soundSet {
+					sounds[key][soundIndex] = network.AudioSound{
+						SoundID: sound.SoundID,
+						Text:    sound.Text,
+					}
+				}
+			}
+
+			c.Send(network.CommandAudio{
+				AudioID: t.AudioID,
+				Sounds:  sounds,
+			})
+		} else {
+			// Animation does not exist. Send client bogus data.
+			c.Send(network.CommandAudio{
+				AudioID: t.AudioID,
+			})
+		}
+		isHandled = true
+	case network.CommandSound:
+		if _, alreadyRequested := c.requestedSoundIDs[t.SoundID]; alreadyRequested {
+			c.log.Warnln("Kicking client due to multiple sound request")
+
+			c.Cleanup(s)
+			c.GetSocket().Close()
+			isHandled = true
+			shouldReturn = true
+			break
+		}
+		c.requestedSoundIDs[t.SoundID] = struct{}{}
+		if soundData, err := s.dataManager.GetSoundData(t.SoundID); err == nil {
+			dataType := -1
+			if string(soundData[:4]) == "fLaC" {
+				dataType = network.SoundFlac
+			} else if string(soundData[:4]) == "OggS" {
+				dataType = network.SoundOgg
+			}
+			if dataType != -1 {
+				c.Send(network.CommandSound{
+					Type:     network.Set,
+					SoundID:  t.SoundID,
+					DataType: uint8(dataType),
+					Data:     soundData,
+				})
+			}
+		} else {
+			// Let client know that no such graphics exists.
+			c.Send(network.CommandSound{
+				Type:    network.Nokay,
+				SoundID: t.SoundID,
+			})
+		}
+		isHandled = true
+	case network.CommandGraphics:
+		if _, alreadyRequested := c.requestedImageIDs[t.GraphicsID]; alreadyRequested {
+			c.log.Warnln("Kicking client due to multiple graphics request")
+
+			c.Cleanup(s)
+			c.GetSocket().Close()
+			isHandled = true
+			shouldReturn = true
+			break
+		}
+		c.requestedImageIDs[t.GraphicsID] = struct{}{}
+		if imageData, err := s.dataManager.GetImageData(t.GraphicsID); err == nil {
+			c.Send(network.CommandGraphics{
+				Type:       network.Set,
+				GraphicsID: t.GraphicsID,
+				DataType:   network.GraphicsPng, // For now...
+				Data:       imageData,
+			})
+		} else {
+			// Let client know that no such graphics exists.
+			c.Send(network.CommandGraphics{
+				Type:       network.Nokay,
+				GraphicsID: t.GraphicsID,
+			})
+		}
+		isHandled = true
 	}
+
 	return
 }
 
@@ -317,18 +452,33 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 			} else if t.Type == network.RollAbilityScores {
 				// Request rolling ability scores for an in-creation character.
 			} else if t.Type == network.QueryGenera && !sentGenera {
+				cmd := network.CommandGenera{}
 				for _, arch := range s.dataManager.GetGeneraArchetypes() {
-					fmt.Println("TODO: send genera", arch.Name, arch.Description, arch.Attributes)
-					// TODO: Also send image IDs.
+					cmd.Genera = append(cmd.Genera, network.Genus{
+						Name:        arch.Name,
+						Description: arch.Description,
+						Attributes:  arch.Attributes,
+						AnimationID: arch.AnimID,
+						FaceID:      arch.FaceID,
+					})
 					sentPCs[arch.Name] = make(map[string]map[string]bool)
 				}
+				c.Send(cmd)
 				sentGenera = true
 			} else if t.Type == network.QuerySpecies && len(t.Genera) > 0 {
-				for _, genera := range t.Genera {
-					if _, ok := sentPCs[genera]; ok {
+				for _, genus := range t.Genera {
+					cmd := network.CommandSpecies{}
+					if _, ok := sentPCs[genus]; ok {
 						for _, arch := range s.dataManager.GetSpeciesArchetypes() {
-							fmt.Println("TODO: send species", arch.Name, arch.Description, arch.Uncompiled().Attributes)
-							sentPCs[genera][arch.Name] = make(map[string]bool)
+							cmd.Genus = genus
+							cmd.Species = append(cmd.Species, network.Species{
+								Name:        arch.Name,
+								Description: arch.Description,
+								Attributes:  arch.Uncompiled().Attributes,
+								AnimationID: arch.AnimID,
+								FaceID:      arch.FaceID,
+							})
+							sentPCs[genus][arch.Name] = make(map[string]bool)
 						}
 					}
 				}
@@ -357,127 +507,6 @@ func (c *ClientConnection) HandleGame(s *GameServer) {
 		}
 
 		switch t := cmd.(type) {
-		case network.CommandAnimation:
-			// If the client has already requested this animation, boot it. NOTE: It would be better to limit requests first rather than immediately booting -- as well as to warn the player that it should stop requesting.
-			if _, alreadyRequested := c.requestedAnimationIDs[t.AnimationID]; alreadyRequested {
-				c.log.Warnln("Kicking client due to multiple animation request")
-				c.Cleanup(s)
-				c.GetSocket().Close()
-				return
-			}
-			c.requestedAnimationIDs[t.AnimationID] = struct{}{}
-			if anim, err := s.dataManager.GetAnimation(t.AnimationID); err == nil {
-				// This feels a bit heavy to convert our server animation data to our network animation data.
-				faces := make(map[uint32][]network.AnimationFrame)
-				for key, face := range anim.Faces {
-					faces[key] = make([]network.AnimationFrame, len(face))
-					for frameIndex, frame := range face {
-						faces[key][frameIndex] = network.AnimationFrame{
-							ImageID: frame.ImageID,
-							Time:    frame.Time,
-							X:       frame.X,
-							Y:       frame.Y,
-						}
-					}
-				}
-
-				c.Send(network.CommandAnimation{
-					AnimationID: t.AnimationID,
-					RandomFrame: anim.RandomFrame,
-					Faces:       faces,
-				})
-			} else {
-				// Animation does not exist. Send client bogus data.
-				c.Send(network.CommandAnimation{
-					AnimationID: t.AnimationID,
-				})
-			}
-		case network.CommandAudio:
-			// If the client has already requested this audio, boot it. NOTE: It would be better to limit requests first rather than immediately booting -- as well as to warn the player that it should stop requesting.
-			if _, alreadyRequested := c.requestedAudioIDs[t.AudioID]; alreadyRequested {
-				c.log.Warnln("Kicking client due to multiple audio request")
-				c.Cleanup(s)
-				c.GetSocket().Close()
-				return
-			}
-			c.requestedAudioIDs[t.AudioID] = struct{}{}
-			if audio, err := s.dataManager.GetAudio(t.AudioID); err == nil {
-				// This feels a bit heavy to convert our server audio data to our network audio data.
-				sounds := make(map[uint32][]network.AudioSound)
-				for key, soundSet := range audio.SoundSets {
-					sounds[key] = make([]network.AudioSound, len(soundSet))
-					for soundIndex, sound := range soundSet {
-						sounds[key][soundIndex] = network.AudioSound{
-							SoundID: sound.SoundID,
-							Text:    sound.Text,
-						}
-					}
-				}
-
-				c.Send(network.CommandAudio{
-					AudioID: t.AudioID,
-					Sounds:  sounds,
-				})
-			} else {
-				// Animation does not exist. Send client bogus data.
-				c.Send(network.CommandAudio{
-					AudioID: t.AudioID,
-				})
-			}
-		case network.CommandSound:
-			if _, alreadyRequested := c.requestedSoundIDs[t.SoundID]; alreadyRequested {
-				c.log.Warnln("Kicking client due to multiple sound request")
-
-				c.Cleanup(s)
-				c.GetSocket().Close()
-				return
-			}
-			c.requestedSoundIDs[t.SoundID] = struct{}{}
-			if soundData, err := s.dataManager.GetSoundData(t.SoundID); err == nil {
-				dataType := -1
-				if string(soundData[:4]) == "fLaC" {
-					dataType = network.SoundFlac
-				} else if string(soundData[:4]) == "OggS" {
-					dataType = network.SoundOgg
-				}
-				if dataType != -1 {
-					c.Send(network.CommandSound{
-						Type:     network.Set,
-						SoundID:  t.SoundID,
-						DataType: uint8(dataType),
-						Data:     soundData,
-					})
-				}
-			} else {
-				// Let client know that no such graphics exists.
-				c.Send(network.CommandSound{
-					Type:    network.Nokay,
-					SoundID: t.SoundID,
-				})
-			}
-		case network.CommandGraphics:
-			if _, alreadyRequested := c.requestedImageIDs[t.GraphicsID]; alreadyRequested {
-				c.log.Warnln("Kicking client due to multiple graphics request")
-
-				c.Cleanup(s)
-				c.GetSocket().Close()
-				return
-			}
-			c.requestedImageIDs[t.GraphicsID] = struct{}{}
-			if imageData, err := s.dataManager.GetImageData(t.GraphicsID); err == nil {
-				c.Send(network.CommandGraphics{
-					Type:       network.Set,
-					GraphicsID: t.GraphicsID,
-					DataType:   network.GraphicsPng, // For now...
-					Data:       imageData,
-				})
-			} else {
-				// Let client know that no such graphics exists.
-				c.Send(network.CommandGraphics{
-					Type:       network.Nokay,
-					GraphicsID: t.GraphicsID,
-				})
-			}
 		case network.CommandMessage:
 			switch t.Type {
 			case network.ChatMessage: // General Chat
