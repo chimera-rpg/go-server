@@ -93,23 +93,68 @@ func (c CommandRejoin) GetType() uint32 {
 	return TypeRejoin
 }
 
-// CommandCharacter is the command involved in resolving:
-//   - Species, Culture, Training availability
-//   - Image, AbilityScores, Skills, Description
-//   - Querying, selection, creation, and deletion of Player Character(s)
-//   - Species, Culture, Training, Character, Image, Description, AbilityScores, Skills
+// CommandQueryCharacters is sent by the client to ask for their characters.
+type CommandQueryCharacters struct {
+}
+
+// GetType returns TypeCharacter
+func (c CommandQueryCharacters) GetType() uint32 {
+	return TypeQueryCharacters
+}
+
+// CommandQueryGenera is sent by the client to request genera. The server responds with the same message type populated with the genera.
+type CommandQueryGenera struct {
+	Genera []Genus
+}
+
+// GetType returns TypeQueryGenera
+func (c CommandQueryGenera) GetType() uint32 {
+	return TypeQueryGenera
+}
+
+// CommandQuerySpecies is sent by the client to request the species for a given genera. The server responds with the same message type populated with the species.
+type CommandQuerySpecies struct {
+	Genus   string
+	Species []Species
+}
+
+// GetType returns TypeQuerySpecies
+func (c CommandQuerySpecies) GetType() uint32 {
+	return TypeQuerySpecies
+}
+
+// CommandQueryCulture works like Species, wow.
+type CommandQueryCulture struct {
+	Genus   string
+	Species string
+	// Cultures []Culture
+}
+
+// GetType returns TypeQueryCulture
+func (c CommandQueryCulture) GetType() uint32 {
+	return TypeQueryCulture
+}
+
+// CommandQueryTraining works like Culture.
+type CommandQueryTraining struct {
+	Genus   string
+	Species string
+	Culture string
+	// Trainings []Training
+}
+
+// GetType returns TypeQueryTraining
+func (c CommandQueryTraining) GetType() uint32 {
+	return TypeQueryTraining
+}
+
+// CommandCharacter is sent by the server to show the characters the player has. If sent by the client with the Delete bool true, the character will be deleted.
 type CommandCharacter struct {
-	Type          uint8
-	Genera        []string // Genera used for query (humanoids, etc.)
-	Species       []string // Species used for query (dwarf, elf, etc.)
-	Cultures      []string // Cultures used for query (mountain dwarf, etc.)
-	Trainings     []string // Trainings used for query
-	Images        [][]byte // Images for Species/Culture/Training
-	Characters    []string // Name(s) to be created, loaded, or deleted.
-	Levels        []uint16 // Level of character.
-	Descriptions  []string // Description used for query
-	AbilityScores [][]string
-	Skills        [][]string
+	Name        string
+	Attributes  data.AttributeSets
+	AnimationID uint32
+	FaceID      uint32
+	Delete      bool
 }
 
 // GetType returns TypeCharacter
@@ -117,23 +162,18 @@ func (c CommandCharacter) GetType() uint32 {
 	return TypeCharacter
 }
 
-// These const values provide the sub-types for CommandCharacter
-const (
-	QueryGenera       = iota // Query of Genera, Image(?), Description. Sent when CreateCharacter.
-	QuerySpecies             // Query of Genera+Species, Image, Description, AbilityScores, Skills
-	QueryCultures            // Query of Genera+Species+Cultures, Image(?), Description, AbilityScores, Skills
-	QueryTrainings           // Query of Genera+Species+Cultures+Trainings, Image(?), Description, Skills
-	QueryCharacters          // Query of available characters. Sent when client connects.
-	CreateCharacter          // Creates a Character->(name).
-	AdjustCharacter          // Adjusts an in-progress Character Character->(Species, Culture, Training, AbilityScores)
-	ChooseCharacter          // Chooses a character Character->() and logs in.
-	DeleteCharacter          // Deletes a character Character->()
-	RollAbilityScores        // Requests(client) or returns(server) rolls for ability scores Character->(AbilityScores)
-)
+// CommandCreateCharacter creates a given character.
+type CommandCreateCharacter struct {
+	Name     string
+	Genus    string
+	Species  string
+	Culture  string
+	Training string
+}
 
-// CommandGenera is a response from the server providing the list of all genera.
-type CommandGenera struct {
-	Genera []Genus
+// GetType returns TypeCreateCharacter
+func (c CommandCreateCharacter) GetType() uint32 {
+	return TypeCreateCharacter
 }
 
 // Genus represents a single genus in genera.
@@ -145,17 +185,6 @@ type Genus struct {
 	FaceID      uint32
 }
 
-// GetType returns TypeGenera
-func (c CommandGenera) GetType() uint32 {
-	return TypeGenera
-}
-
-// CommandSpecies is a response from the server providing the list of species for a given genus.
-type CommandSpecies struct {
-	Genus   string
-	Species []Species
-}
-
 // Species is a species, wow.
 type Species struct {
 	Name        string
@@ -165,9 +194,13 @@ type Species struct {
 	FaceID      uint32
 }
 
-// GetType returns TypeSpecies
-func (c CommandSpecies) GetType() uint32 {
-	return TypeSpecies
+// CommandSelectCharacter is sent to the server to select a character for play. It is sent by the server to indicate the selection is valid and the client should transition to game state.
+type CommandSelectCharacter struct {
+	Name string
+}
+
+func (c CommandSelectCharacter) GetType() uint32 {
+	return TypeSelectCharacter
 }
 
 // Our basic return types
@@ -588,9 +621,14 @@ const (
 	TypeFeatures
 	TypeLogin
 	TypeRejoin
+	TypeQueryCharacters
+	TypeQueryGenera
+	TypeQuerySpecies
+	TypeQueryCulture
+	TypeQueryTraining
 	TypeCharacter
-	TypeGenera
-	TypeSpecies
+	TypeCreateCharacter
+	TypeSelectCharacter
 	TypeData
 	TypeTiles
 	TypeTileUpdate

@@ -376,83 +376,66 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 			continue
 		}
 		switch t := cmd.(type) {
-		case network.CommandCharacter:
-			if t.Type == network.QueryCharacters {
-				// Send characters.
-				var playerCharacters []string
-				for key := range c.user.Characters {
-					playerCharacters = append(playerCharacters, key)
-				}
+		case network.CommandQueryCharacters:
+			// Send characters.
+			for key, char := range c.user.Characters {
 				c.Send(network.Command(network.CommandCharacter{
-					Type:       network.CreateCharacter,
-					Characters: playerCharacters,
+					Name:        key,
+					AnimationID: char.Archetype.AnimID,
+					FaceID:      char.Archetype.FaceID,
+					Attributes:  char.Archetype.Attributes,
 				}))
-			} else if t.Type == network.CreateCharacter {
-				// Create a character according to species, culture, training, name
-				// TODO: Maybe the Character type should have a set/array of ArchIDs to inherit from?
-				// Attempt to create the character.
-				if createErr := s.dataManager.CreateUserCharacter(c.user, t.Characters[0]); createErr != nil {
-					c.Send(network.Command(network.CommandBasic{
-						Type:   network.Reject,
-						String: createErr.Error(),
-					}))
-					continue
-				}
-				// Let the client know the character exists.
-				c.Send(network.Command(network.CommandCharacter{
-					Type:       network.CreateCharacter,
-					Characters: []string{t.Characters[0]},
+			}
+		case network.CommandCreateCharacter:
+			// Create a character according to species, culture, training, name
+			// TODO: Maybe the Character type should have a set/array of ArchIDs to inherit from?
+			// Attempt to create the character.
+			if createErr := s.dataManager.CreateUserCharacter(c.user, t.Name); createErr != nil {
+				c.Send(network.Command(network.CommandBasic{
+					Type:   network.Reject,
+					String: createErr.Error(),
 				}))
-			} else if t.Type == network.AdjustCharacter {
-				// Changes a given character's species, culture, or training.
-			} else if t.Type == network.ChooseCharacter {
-				fmt.Printf("Received choose, %+v\n", t.Characters)
-				if len(t.Characters) != 1 {
-					// TODO: Deny request, as it is malformed.
-					c.Send(network.Command(network.CommandBasic{
-						Type:   network.Reject,
-						String: "Invalid Characters length",
-					}))
-					continue
-				}
-
-				// Get the associated character.
-				character, err := s.dataManager.GetUserCharacter(c.user, t.Characters[0])
-				if err != nil {
-					c.Send(network.Command(network.CommandBasic{
-						Type:   network.Reject,
-						String: err.Error(),
-					}))
-					continue
-				}
-
-				// Replace the client's save info with last know Haven.
-				if character.SaveInfo.HavenMap != "" {
-					character.SaveInfo.Map = character.SaveInfo.HavenMap
-					character.SaveInfo.Y = character.SaveInfo.HavenY
-					character.SaveInfo.X = character.SaveInfo.HavenX
-					character.SaveInfo.Z = character.SaveInfo.HavenZ
-				}
-
-				// Send a ChooseCharacter command to let the player know we have accepted the character.
-				c.Send(network.Command(network.CommandCharacter{
-					Type: network.ChooseCharacter,
+				continue
+			}
+			// Let the client know the character exists.
+			c.Send(network.Command(network.CommandCharacter{
+				Name: t.Name,
+			}))
+		// TODO: Adjust character logic... or some sort of middling character creation logic state.
+		case network.CommandSelectCharacter:
+			// Get the associated character.
+			character, err := s.dataManager.GetUserCharacter(c.user, t.Name)
+			if err != nil {
+				c.Send(network.Command(network.CommandBasic{
+					Type:   network.Reject,
+					String: err.Error(),
 				}))
+				continue
+			}
 
-				// Add the character to the world.
-				s.world.MessageChannel <- world.MessageAddClient{
-					Client:    c,
-					Character: character,
-				}
+			// Replace the client's save info with last know Haven.
+			if character.SaveInfo.HavenMap != "" {
+				character.SaveInfo.Map = character.SaveInfo.HavenMap
+				character.SaveInfo.Y = character.SaveInfo.HavenY
+				character.SaveInfo.X = character.SaveInfo.HavenX
+				character.SaveInfo.Z = character.SaveInfo.HavenZ
+			}
 
-				isWaiting = false
-				// Load a given character by name and spawn the character.
-			} else if t.Type == network.DeleteCharacter {
-				// Delete a given character by name.
-			} else if t.Type == network.RollAbilityScores {
-				// Request rolling ability scores for an in-creation character.
-			} else if t.Type == network.QueryGenera && !sentGenera {
-				cmd := network.CommandGenera{}
+			// Send a ChooseCharacter command to let the player know we have accepted the character.
+			c.Send(network.Command(network.CommandSelectCharacter{
+				Name: t.Name,
+			}))
+
+			// Add the character to the world.
+			s.world.MessageChannel <- world.MessageAddClient{
+				Client:    c,
+				Character: character,
+			}
+
+			isWaiting = false
+		case network.CommandQueryGenera:
+			if !sentGenera {
+				cmd := network.CommandQueryGenera{}
 				for _, arch := range s.dataManager.GetGeneraArchetypes() {
 					cmd.Genera = append(cmd.Genera, network.Genus{
 						Name:        arch.Name,
@@ -465,22 +448,20 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 				}
 				c.Send(cmd)
 				sentGenera = true
-			} else if t.Type == network.QuerySpecies && len(t.Genera) > 0 {
-				for _, genus := range t.Genera {
-					cmd := network.CommandSpecies{}
-					if _, ok := sentPCs[genus]; ok {
-						for _, arch := range s.dataManager.GetSpeciesArchetypes() {
-							cmd.Genus = genus
-							cmd.Species = append(cmd.Species, network.Species{
-								Name:        arch.Name,
-								Description: arch.Description,
-								Attributes:  arch.Uncompiled().Attributes,
-								AnimationID: arch.AnimID,
-								FaceID:      arch.FaceID,
-							})
-							sentPCs[genus][arch.Name] = make(map[string]bool)
-						}
-					}
+			}
+		case network.CommandQuerySpecies:
+			cmd := network.CommandQuerySpecies{}
+			if _, ok := sentPCs[t.Genus]; ok {
+				for _, arch := range s.dataManager.GetSpeciesArchetypes() {
+					cmd.Genus = t.Genus
+					cmd.Species = append(cmd.Species, network.Species{
+						Name:        arch.Name,
+						Description: arch.Description,
+						Attributes:  arch.Uncompiled().Attributes,
+						AnimationID: arch.AnimID,
+						FaceID:      arch.FaceID,
+					})
+					sentPCs[t.Genus][arch.Name] = make(map[string]bool)
 				}
 			}
 		default:
