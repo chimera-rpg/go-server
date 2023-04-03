@@ -444,26 +444,32 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 						AnimationID: arch.AnimID,
 						FaceID:      arch.FaceID,
 					})
-					sentPCs[arch.Name] = make(map[string]map[string]bool)
 				}
 				c.Send(cmd)
 				sentGenera = true
 			}
 		case network.CommandQuerySpecies:
 			cmd := network.CommandQuerySpecies{}
-			if _, ok := sentPCs[t.Genus]; ok {
+			cmd.Genus = t.Genus
+			if _, ok := sentPCs[t.Genus]; !ok {
 				for _, arch := range s.dataManager.GetSpeciesArchetypes() {
-					cmd.Genus = t.Genus
-					cmd.Species = append(cmd.Species, network.Species{
-						Name:        arch.Name,
-						Description: arch.Description,
-						Attributes:  arch.Uncompiled().Attributes,
-						AnimationID: arch.AnimID,
-						FaceID:      arch.FaceID,
-					})
-					sentPCs[t.Genus][arch.Name] = make(map[string]bool)
+					if arch.Genera == t.Genus {
+						cmd.Species = append(cmd.Species, network.Species{
+							Name:        arch.Name,
+							Description: arch.Description,
+							Attributes:  arch.Uncompiled().Attributes,
+							AnimationID: arch.AnimID,
+							FaceID:      arch.FaceID,
+						})
+					}
 				}
+				if len(cmd.Species) > 0 {
+					c.Send(cmd)
+				}
+				sentPCs[t.Genus] = make(map[string]map[string]bool)
 			}
+		case network.CommandQueryCulture:
+			fmt.Println("TODO: Handle culture query", t)
 		default:
 			c.log.Warnln("Client sent bad data, kicking.")
 			s.cleanupConnection(c)
