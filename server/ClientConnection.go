@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"net"
+	"sort"
 
 	log "github.com/sirupsen/logrus"
 
@@ -445,6 +446,9 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 						FaceID:      arch.FaceID,
 					})
 				}
+				sort.Slice(cmd.Genera, func(i, j int) bool {
+					return cmd.Genera[i].Name < cmd.Genera[j].Name
+				})
 				c.Send(cmd)
 				sentGenera = true
 			}
@@ -463,6 +467,9 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 						})
 					}
 				}
+				sort.Slice(cmd.Species, func(i, j int) bool {
+					return cmd.Species[i].Name < cmd.Species[j].Name
+				})
 				if len(cmd.Species) > 0 {
 					c.Send(cmd)
 				}
