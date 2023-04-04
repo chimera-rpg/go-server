@@ -123,16 +123,40 @@ func (c CommandQuerySpecies) GetType() uint32 {
 	return TypeQuerySpecies
 }
 
+// CommandQueryVariety works like Species, wow.
+type CommandQueryVariety struct {
+	Genus   string
+	Species string
+	// Variety []Variety
+}
+
+// GetType returns TypeQueryVariety
+func (c CommandQueryVariety) GetType() uint32 {
+	return TypeQueryVariety
+}
+
 // CommandQueryCulture works like Species, wow.
 type CommandQueryCulture struct {
 	Genus   string
 	Species string
+	Variety string
 	// Cultures []Culture
 }
 
 // GetType returns TypeQueryCulture
 func (c CommandQueryCulture) GetType() uint32 {
 	return TypeQueryCulture
+}
+
+// CommandQueryLegacy represents the legacy of a character in a given culture.
+type CommandQueryLegacy struct {
+	Culture string
+	// Legacies []Legacy
+}
+
+// GetType returns TypeQueryLegacy
+func (c CommandQueryLegacy) GetType() uint32 {
+	return TypeQueryLegacy
 }
 
 // CommandQueryTraining works like Culture.
@@ -624,7 +648,9 @@ const (
 	TypeQueryCharacters
 	TypeQueryGenera
 	TypeQuerySpecies
+	TypeQueryVariety
 	TypeQueryCulture
+	TypeQueryLegacy
 	TypeQueryTraining
 	TypeCharacter
 	TypeCreateCharacter
