@@ -26,7 +26,7 @@ func (c *Connection) SetConn(conn net.Conn) {
 	c.Conn = conn
 	c.Encoder = gob.NewEncoder(conn)
 	c.Decoder = gob.NewDecoder(conn)
-	c.CmdChan = make(chan Command)
+	c.CmdChan = make(chan Command, 1)
 	c.ClosedChan = make(chan struct{})
 	c.IsConnected = true
 }
@@ -39,7 +39,7 @@ func (c *Connection) ConnectTo(address string) (err error) {
 	}
 	c.Encoder = gob.NewEncoder(c.Conn)
 	c.Decoder = gob.NewDecoder(c.Conn)
-	c.CmdChan = make(chan Command)
+	c.CmdChan = make(chan Command, 1)
 	c.ClosedChan = make(chan struct{})
 	c.IsConnected = true
 	// I'm unsure if we should start our Command Loop channel coroutine here as it prevents and use of Send/Receive to the owner of the Connection. However, I suspect it is fine, as we should probably just use the LoopCmd 100% of the time when a client is connected to a server.
@@ -55,7 +55,7 @@ func (c *Connection) SecureConnectTo(address string, conf *tls.Config) (err erro
 	}
 	c.Encoder = gob.NewEncoder(c.Conn)
 	c.Decoder = gob.NewDecoder(c.Conn)
-	c.CmdChan = make(chan Command)
+	c.CmdChan = make(chan Command, 1)
 	c.ClosedChan = make(chan struct{})
 	c.IsConnected = true
 	// I'm unsure if we should start our Command Loop channel coroutine here as it prevents and use of Send/Receive to the owner of the Connection. However, I suspect it is fine, as we should probably just use the LoopCmd 100% of the time when a client is connected to a server.
