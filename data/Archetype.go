@@ -126,8 +126,11 @@ type Archetype struct {
 	Attitudes Attitudes `json:"Attitudes" yaml:"Attitudes,omitempty"`
 	Genera    string    `json:"Genera" yaml:"Genera,omitempty"`
 	Species   string    `json:"Species" yaml:"Species,omitempty"`
-	Factions  []string  `json:"Factions" yaml:"Factions,omitempty"`
+	Variety   string    `json:"Variety" yaml:"Variety,omitempty"`
+	Culture   string    `json:"Culture" yaml:"Culture,omitempty"`
 	Legacy    string    `json:"Legacy" yaml:"Legacy,omitempty"`
+	Training  string    `json:"Training" yaml:"Training,omitempty"`
+	Factions  []string  `json:"Factions" yaml:"Factions,omitempty"`
 	// Events are maps of EventIDs to EventResponses.
 	Events *Events `json:"Events" yaml:"Events,omitempty"`
 	//
@@ -232,8 +235,17 @@ func (arch *Archetype) Add(other *Archetype) error {
 	if arch.Species == "" {
 		arch.Species = other.Species
 	}
+	if arch.Variety == "" {
+		arch.Variety = other.Variety
+	}
+	if arch.Culture == "" {
+		arch.Culture = other.Culture
+	}
 	if arch.Legacy == "" {
 		arch.Legacy = other.Legacy
+	}
+	if arch.Training == "" {
+		arch.Training = other.Training
 	}
 	for _, f1 := range other.Factions {
 		exists := false
