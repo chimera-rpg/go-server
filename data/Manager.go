@@ -94,7 +94,7 @@ func (m *Manager) parseArchetypeFile(filepath string) error {
 }
 
 // ProcessArchetype converts certain fields of an Archetype into optimized versions. This converts Anim, Face, Arch, and Archs to their ID representation. This also processes any Inventory archetypes.
-func (m *Manager) ProcessArchetype(archetype *Archetype) error {
+func (m *Manager) ProcessArchetype(archetype *Archetype) (errs error) {
 	if archetype.isProcessing {
 		return nil
 	}
@@ -141,24 +141,25 @@ func (m *Manager) ProcessArchetype(archetype *Archetype) error {
 		targetID := m.Strings.Acquire(archname)
 		ancestorArchetype, err := m.GetArchetype(targetID)
 		if err != nil {
-			return fmt.Errorf("\"%s\" does not exist", archname)
+			errs = errors.Join(errs, fmt.Errorf("\"%s\" does not exist", archname))
+		} else {
+			mergeArch := MergeArch{
+				ID:   targetID,
+				Type: ArchMerge,
+			}
+			if isAdd {
+				mergeArch.Type = ArchAdd
+			}
+			archetype.ArchIDs = append(archetype.ArchIDs, mergeArch)
+			archetype.ArchPointers = append(archetype.ArchPointers, ancestorArchetype)
 		}
-		mergeArch := MergeArch{
-			ID:   targetID,
-			Type: ArchMerge,
-		}
-		if isAdd {
-			mergeArch.Type = ArchAdd
-		}
-		archetype.ArchIDs = append(archetype.ArchIDs, mergeArch)
-		archetype.ArchPointers = append(archetype.ArchPointers, ancestorArchetype)
 	}
 	//archetype.Archs = nil // Might as well keep the Archs references, I suppose
 
 	// Process Inventory.
 	for i := range archetype.Inventory {
 		if err := m.ProcessArchetype(&archetype.Inventory[i]); err != nil {
-			return err
+			errs = errors.Join(errs, err)
 		}
 	}
 
@@ -203,20 +204,21 @@ func (m *Manager) ProcessArchetype(archetype *Archetype) error {
 
 	// Process Events' archetypes.
 	processEventResponses := func(e *EventResponses) error {
+		var errs error
 		if e == nil {
 			return nil
 		}
 		if e.Spawn != nil {
 			for _, a := range e.Spawn.Items {
 				if err := m.ProcessArchetype(a.Archetype); err != nil {
-					return err
+					errs = errors.Join(errs, err)
 				}
 			}
 		}
 		if e.Replace != nil {
 			for _, a := range *e.Replace {
 				if err := m.ProcessArchetype(a.Archetype); err != nil {
-					return err
+					errs = errors.Join(errs, err)
 				}
 			}
 		}
@@ -224,24 +226,24 @@ func (m *Manager) ProcessArchetype(archetype *Archetype) error {
 	}
 	if archetype.Events != nil {
 		if err := processEventResponses(archetype.Events.Birth); err != nil {
-			return err
+			errs = errors.Join(errs, err)
 		}
 		if err := processEventResponses(archetype.Events.Death); err != nil {
-			return err
+			errs = errors.Join(errs, err)
 		}
 		if err := processEventResponses(archetype.Events.Advance); err != nil {
-			return err
+			errs = errors.Join(errs, err)
 		}
 		if err := processEventResponses(archetype.Events.Hit); err != nil {
-			return err
+			errs = errors.Join(errs, err)
 		}
 	}
 
-	return nil
+	return errs
 }
 
 // CompileArchetype compiles a given archetype if it has not been compiled yet. This handles dependency resolution and will throw if an archetype has circular dependencies.
-func (m *Manager) CompileArchetype(archetype *Archetype) error {
+func (m *Manager) CompileArchetype(archetype *Archetype) (errs error) {
 	// Bail early if already compiled or is compiling.
 	if archetype.isCompiled || archetype.isCompiling {
 		return nil
@@ -258,18 +260,18 @@ func (m *Manager) CompileArchetype(archetype *Archetype) error {
 	for _, dep := range archetype.ArchIDs {
 		depArch, err := m.GetArchetype(dep.ID)
 		if err != nil {
-			return err
+			errs = errors.Join(errs, err)
 		}
 		if err := m.CompileArchetype(depArch); err != nil {
-			return err
+			errs = errors.Join(errs, err)
 		}
 		if dep.Type == ArchMerge {
 			if err := archetype.Merge(depArch); err != nil {
-				return err
+				errs = errors.Join(errs, err)
 			}
 		} else if dep.Type == ArchAdd {
 			if err := archetype.Add(depArch); err != nil {
-				return err
+				errs = errors.Join(errs, err)
 			}
 		}
 	}
@@ -277,7 +279,7 @@ func (m *Manager) CompileArchetype(archetype *Archetype) error {
 	// Ensure inventory is compiled.
 	for i := range archetype.Inventory {
 		if err := m.CompileArchetype(&archetype.Inventory[i]); err != nil {
-			return err
+			errs = errors.Join(errs, err)
 		}
 	}
 
@@ -288,12 +290,16 @@ func (m *Manager) CompileArchetype(archetype *Archetype) error {
 		}
 		if e.Spawn != nil {
 			for _, a := range e.Spawn.Items {
-				m.CompileArchetype(a.Archetype)
+				if err := m.CompileArchetype(a.Archetype); err != nil {
+					errs = errors.Join(errs, err)
+				}
 			}
 		}
 		if e.Replace != nil {
 			for _, a := range *e.Replace {
-				m.CompileArchetype(a.Archetype)
+				if err := m.CompileArchetype(a.Archetype); err != nil {
+					errs = errors.Join(errs, err)
+				}
 			}
 		}
 	}
@@ -311,7 +317,7 @@ func (m *Manager) CompileArchetype(archetype *Archetype) error {
 		archetype.uncompiled = nil
 	}
 
-	return nil
+	return errs
 }
 
 func (m *Manager) resolveArchetype(archetype *Archetype) error {
@@ -370,19 +376,22 @@ func (m *Manager) parseArchetypeFiles() error {
 		return err
 	}
 	// Post-process our archetypes so they properly set up inheritance relationships.
-	for _, archetype := range m.archetypes {
+	for archID, archetype := range m.archetypes {
 		if err := m.ProcessArchetype(archetype); err != nil {
-			return err
+			name := m.Strings.Lookup(archID)
+			l.Errorln(fmt.Errorf("%s: %v", name, err))
 		}
 	}
-	for _, archetype := range m.archetypes {
+	for archID, archetype := range m.archetypes {
 		if err := m.resolveArchetype(archetype); err != nil {
-			return err
+			name := m.Strings.Lookup(archID)
+			l.Errorln(fmt.Errorf("%s: %v", name, err))
 		}
 	}
-	for _, archetype := range m.archetypes {
+	for archID, archetype := range m.archetypes {
 		if err := m.CompileArchetype(archetype); err != nil {
-			return err
+			name := m.Strings.Lookup(archID)
+			l.Errorln(fmt.Errorf("%s: %v", name, err))
 		}
 	}
 
