@@ -475,6 +475,34 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 				}
 				sentPCs[t.Genus] = make(map[string]map[string]bool)
 			}
+		case network.CommandQueryVariety:
+			cmd := network.CommandQueryVariety{}
+			cmd.Genus = t.Genus
+			cmd.Species = t.Species
+			if _, ok := sentPCs[t.Genus]; !ok {
+				// TODO: error
+				continue
+			}
+			if _, ok := sentPCs[t.Genus][t.Species]; !ok {
+				for _, arch := range s.dataManager.GetVarietiesArchetypes() {
+					if arch.Genera == t.Genus {
+						cmd.Variety = append(cmd.Variety, network.Variety{
+							Name:        arch.Name,
+							Description: arch.Description,
+							Attributes:  arch.Uncompiled().Attributes,
+							AnimationID: arch.AnimID,
+							FaceID:      arch.FaceID,
+						})
+					}
+				}
+				sort.Slice(cmd.Variety, func(i, j int) bool {
+					return cmd.Variety[i].Name < cmd.Variety[j].Name
+				})
+				if len(cmd.Variety) > 0 {
+					c.Send(cmd)
+				}
+				sentPCs[t.Genus][t.Species] = make(map[string]bool)
+			}
 		case network.CommandQueryCulture:
 			fmt.Println("TODO: Handle culture query", t)
 		default:

@@ -41,13 +41,14 @@ type Manager struct {
 	imageFileMap FileMap
 	soundFileMap FileMap
 	// images map[string][]bytes
-	generaArchetypes  []*Archetype     // Slice of genera archetypes.
-	speciesArchetypes []*Archetype     // Slice of species archetypes.
-	pcArchetypes      []*Archetype     // Player Character archetypes, used for creating new characters.
-	factionArchetypes []*Archetype     // Faction archetypes, used for looking up default attitudes.
-	maps              map[string]*Map  // Full map of Maps.
-	loadedUsers       map[string]*User // Map of loaded Players
-	cryptParams       cryptParams      // Cryptography parameters
+	generaArchetypes    []*Archetype     // Slice of genera archetypes.
+	speciesArchetypes   []*Archetype     // Slice of species archetypes.
+	varietiesArchetypes []*Archetype     // Slice of species archetypes.
+	pcArchetypes        []*Archetype     // Player Character archetypes, used for creating new characters.
+	factionArchetypes   []*Archetype     // Faction archetypes, used for looking up default attitudes.
+	maps                map[string]*Map  // Full map of Maps.
+	loadedUsers         map[string]*User // Map of loaded Players
+	cryptParams         cryptParams      // Cryptography parameters
 	// FIXME: Made these exported because I'm lazy.
 	TypeHints map[StringID]string
 	Slots     map[StringID]string
@@ -397,6 +398,7 @@ func (m *Manager) parseArchetypeFiles() error {
 
 	m.buildGeneraArchetypes()
 	m.buildSpeciesArchetypes()
+	m.buildVarietiesArchetypes()
 	m.buildFactionArchetypes()
 	m.buildPCArchetypes()
 
@@ -404,6 +406,7 @@ func (m *Manager) parseArchetypeFiles() error {
 		"Total":      len(m.archetypes),
 		"Genera":     len(m.generaArchetypes),
 		"Species":    len(m.speciesArchetypes),
+		"Varieties":  len(m.varietiesArchetypes),
 		"Factions":   len(m.factionArchetypes),
 		"Characters": len(m.pcArchetypes),
 	}).Println("Archetypes: Done!")
@@ -439,6 +442,16 @@ func (m *Manager) buildSpeciesArchetypes() int {
 		}
 	}
 	return len(m.speciesArchetypes) - oldCount
+}
+
+func (m *Manager) buildVarietiesArchetypes() int {
+	oldCount := len(m.varietiesArchetypes)
+	for _, v := range m.archetypes {
+		if v.Type == ArchetypeVariety {
+			m.varietiesArchetypes = append(m.varietiesArchetypes, v)
+		}
+	}
+	return len(m.varietiesArchetypes) - oldCount
 }
 
 func (m *Manager) buildFactionArchetypes() int {
@@ -923,6 +936,11 @@ func (m *Manager) GetGeneraArchetypes() []*Archetype {
 // GetSpeciesArchetypes returns the underlying *Archetype slice for species archetypes.
 func (m *Manager) GetSpeciesArchetypes() []*Archetype {
 	return m.speciesArchetypes
+}
+
+// GetVarietiesArchetypes returns the underlying *Archetype slice for varieties archetypes.
+func (m *Manager) GetVarietiesArchetypes() []*Archetype {
+	return m.varietiesArchetypes
 }
 
 // GetFactionArchetypes returns the underlying *Archetype slice for faction archetypes.

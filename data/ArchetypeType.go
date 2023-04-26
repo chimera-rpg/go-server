@@ -12,6 +12,8 @@ const (
 	ArchetypeGenus
 	// ArchetypeSpecies represents a species archetype.
 	ArchetypeSpecies
+	// ArchetypeVariety represents a varieties archetype.
+	ArchetypeVariety
 	// ArchetypeFaction represents a faction archetype.
 	ArchetypeFaction
 	// ArchetypePC represents a PC archetype.
@@ -49,6 +51,7 @@ var ArchetypeToStringMap = map[ArchetypeType]string{
 	ArchetypeUnknown:   "Unknown",
 	ArchetypeGenus:     "Genus",
 	ArchetypeSpecies:   "Species",
+	ArchetypeVariety:   "Variety",
 	ArchetypeFaction:   "Faction",
 	ArchetypePC:        "PC",
 	ArchetypeNPC:       "NPC",
@@ -71,6 +74,7 @@ var StringToArchetypeMap = map[string]ArchetypeType{
 	"Unknown":   ArchetypeUnknown,
 	"Genus":     ArchetypeGenus,
 	"Species":   ArchetypeSpecies,
+	"Variety":   ArchetypeVariety,
 	"Faction":   ArchetypeFaction,
 	"PC":        ArchetypePC,
 	"NPC":       ArchetypeNPC,

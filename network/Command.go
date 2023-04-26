@@ -127,7 +127,7 @@ func (c CommandQuerySpecies) GetType() uint32 {
 type CommandQueryVariety struct {
 	Genus   string
 	Species string
-	// Variety []Variety
+	Variety []Variety
 }
 
 // GetType returns TypeQueryVariety
@@ -211,6 +211,15 @@ type Genus struct {
 
 // Species is a species, wow.
 type Species struct {
+	Name        string
+	Description string
+	Attributes  data.AttributeSets
+	AnimationID uint32
+	FaceID      uint32
+}
+
+// Variety is a deeper category than species.
+type Variety struct {
 	Name        string
 	Description string
 	Attributes  data.AttributeSets
