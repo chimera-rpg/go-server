@@ -18,6 +18,13 @@ type AttributeSets struct {
 	Spirit   Attributes `json:"Spirit" yaml:"Spirit,omitempty"`
 }
 
+// Add adds the physical, arcane, and spirits attributes to this attribute set.
+func (as *AttributeSets) Add(o AttributeSets) {
+	as.Physical.Add(o.Physical)
+	as.Arcane.Add(o.Arcane)
+	as.Spirit.Add(o.Spirit)
+}
+
 // AttributeValue is a numeric value that represents a character's base ability.
 type AttributeValue int
 
@@ -83,7 +90,7 @@ func (a *Attributes) Add(o Attributes) {
 
 // GetSpeedBonus gets the speed bonus for these attributes.
 func (a *Attributes) GetSpeedBonus() AttributeValue {
-	return a.Haste*5 + a.Reaction/4*5
+	return a.Haste*5 + a.Reaction/4*5 + a.Might*2
 }
 
 // GetHealthBonus gets the health bonus for these attributes.
