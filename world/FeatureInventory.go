@@ -14,6 +14,13 @@ type FeatureInventory struct {
 	equipmentChanged bool
 }
 
+// Errors
+var (
+	ErrObjectMissingInInventory = errors.New("object does not exist in inventory")
+	ErrObjectCannotEquip        = errors.New("cannot equip object")
+	ErrObjectNotEquipped        = errors.New("object is not equipped")
+)
+
 // AddInventoryObject directly adds the given object to the inventory.
 func (f *FeatureInventory) AddInventoryObject(o ObjectI) bool {
 	f.inventory = append(f.inventory, o)
@@ -82,11 +89,11 @@ func (f *FeatureInventory) Equip(ob *ObjectEquipable) error {
 		}
 	}
 	if index == -1 {
-		return errors.New("object does not exist in inventory")
+		return ErrObjectMissingInInventory
 	}
 
 	if !f.CanEquip(ob) {
-		return errors.New("cannot equip object")
+		return ErrObjectCannotEquip
 	}
 
 	for k, v := range ob.Archetype.Slots.Uses {
@@ -117,7 +124,7 @@ func (f *FeatureInventory) Unequip(ob *ObjectEquipable) error {
 			return nil
 		}
 	}
-	return errors.New("object is not equipped")
+	return ErrObjectNotEquipped
 }
 
 // FindEquipment finds the given equipment that matches the cb.
