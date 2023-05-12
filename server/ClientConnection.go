@@ -485,7 +485,7 @@ func (c *ClientConnection) HandleCharacterCreation(s *GameServer) {
 			}
 			if _, ok := sentPCs[t.Genus][t.Species]; !ok {
 				for _, arch := range s.dataManager.GetVarietiesArchetypes() {
-					if arch.Genera == t.Genus {
+					if arch.Genera == t.Genus && arch.Species == t.Species {
 						cmd.Variety = append(cmd.Variety, network.Variety{
 							Name:        arch.Name,
 							Description: arch.Description,
