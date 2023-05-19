@@ -144,99 +144,26 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 
 	// Find a new action if we have any pending commands.
 	if o.currentAction == nil {
-		calcDuration := func(base time.Duration, min time.Duration, reduction time.Duration) time.Duration {
-			d := base - reduction
-			if d < min {
-				d = min
-			}
-			return d
-		}
-		// FIXME: MOVE THIS
-		buildAttackAction := func(c OwnerAttackCommand) *ActionAttack {
-			// TODO: Use current equipped weapons and calc base time from RecoveryTime divided by all current weapons. Alternatively, we need to calc RecoveryTime per weapon... this might make more sense, but it does increase computational costs.
-			base := 500 * time.Millisecond
-			duration := calcDuration(base, 20*time.Millisecond, time.Duration(o.speed)*time.Millisecond)
-			var y, x, z int
-			if c.Y != 0 || c.X != 0 || c.Z != 0 {
-				y = c.Y
-				x = c.X
-				z = c.Z
-			} else if c.Target == 0 {
-				h, w, d := o.GetDimensions()
-				if c.Direction == network.North {
-					z = -o.reach
-				} else if c.Direction == network.South {
-					z = o.reach + d
-				} else if c.Direction == network.East {
-					x = o.reach + w
-				} else if c.Direction == network.West {
-					x = -o.reach
-				} else if c.Direction == network.Up {
-					y = o.reach + h
-				} else if c.Direction == network.Down {
-					y = -o.reach
-				}
-				y = o.tile.Y + y
-				x = o.tile.X + x
-				z = o.tile.Z + z
-			}
-			return NewActionAttack(y, x, z, c.Target, duration)
-		}
-
 		// Always prioritize repeat commands.
 		if cmd := o.GetOwner().RepeatCommand(); cmd != nil {
 			cmd := cmd.(OwnerRepeatCommand)
 			switch c := cmd.Command.(type) {
 			case OwnerMoveCommand:
-				base := 100 * time.Millisecond
-				// If we're swimming, double the movement time.
-				if o.HasStatus(StatusSwimmingRef) {
-					// TODO: Adjust via a swimming speed.
-					base *= 2
-				} else if o.HasStatus(StatusFlyingRef) {
-					// TODO: Adjust via a flying speed.
-				} else if o.HasStatus(StatusFloatingRef) {
-					// TODO: Also adjust via a floating speed.
-					base *= 4 // For now, quadruple if we're floating.
-				}
-				// Cap movement duration cost to a minimum of 20 millisecond
-				duration := calcDuration(base, 20*time.Millisecond, time.Duration(o.speed)*time.Millisecond)
-				o.currentAction = NewActionMove(c.Y, c.X, c.Z, duration, true)
-				o.currentActionDuration = 0 // TODO: Add remainder from last operation if possible.
+				o.currentAction, o.currentActionDuration = o.handleMoveCommand(c)
 			case OwnerAttackCommand:
-				o.currentAction = buildAttackAction(c)
-				o.currentActionDuration = 0 // TODO: Add remainder from last operation if possible.
+				o.currentAction, o.currentActionDuration = o.handleAttackCommand(c)
 			}
 		} else if o.GetOwner() != nil && o.GetOwner().HasCommands() {
 			cmd := o.GetOwner().ShiftCommand()
 			switch c := cmd.(type) {
 			case OwnerMoveCommand:
-				base := 100 * time.Millisecond
-				// If we're swimming, double the movement time.
-				if o.HasStatus(StatusSwimmingRef) {
-					// TODO: Adjust via a swimming speed.
-					base *= 2
-				} else if o.HasStatus(StatusFlyingRef) {
-					// TODO: Adjust via a flying speed.
-				} else if o.HasStatus(StatusFloatingRef) {
-					// TODO: Also adjust via a floating speed.
-					base *= 4 // For now, quadruple if we're floating.
-				}
-				// Cap movement duration cost to a minimum of 20 millisecond
-				duration := calcDuration(base, 20*time.Millisecond, time.Duration(o.speed)*time.Millisecond)
-				o.currentAction = NewActionMove(c.Y, c.X, c.Z, duration, false)
-				o.currentActionDuration = 0 // TODO: Add remainder from last operation if possible.
+				o.currentAction, o.currentActionDuration = o.handleMoveCommand(c)
 			case OwnerAttackCommand:
-				o.currentAction = buildAttackAction(c)
-				o.currentActionDuration = 0 // TODO: Add remainder from last operation if possible.
+				o.currentAction, o.currentActionDuration = o.handleAttackCommand(c)
 			case OwnerStatusCommand:
-				duration := calcDuration(200*time.Millisecond, 50*time.Millisecond, time.Duration(o.speed)*time.Millisecond)
-				o.currentAction = NewActionStatus(c.Status, duration)
-				o.currentActionDuration = 0 // TODO: Add remainder from last operation if possible.
+				o.currentAction, o.currentActionDuration = o.handleStatusCommand(c)
 			case OwnerInspectCommand:
-				duration := calcDuration(200*time.Millisecond, 50*time.Millisecond, time.Duration(o.inspectSpeed)*time.Millisecond)
-				o.currentAction = NewActionInspect(c.Target, duration)
-				o.currentActionDuration = 0 // TODO: Add remainder from last operation if possible.
+				o.currentAction, o.currentActionDuration = o.handleInspectCommand(c)
 			}
 		}
 	}
@@ -854,11 +781,86 @@ func (o *ObjectCharacter) HandleObjectSound(audioID, soundID ID, o2 ObjectI, vol
 	}
 }
 
+// ======== Command Handling
+func (o *ObjectCharacter) handleMoveCommand(c OwnerMoveCommand) (ActionI, time.Duration) {
+	base := 100 * time.Millisecond
+	// If we're swimming, double the movement time.
+	if o.HasStatus(StatusSwimmingRef) {
+		// TODO: Adjust via a swimming speed.
+		base *= 2
+	} else if o.HasStatus(StatusFlyingRef) {
+		// TODO: Adjust via a flying speed.
+	} else if o.HasStatus(StatusFloatingRef) {
+		// TODO: Also adjust via a floating speed.
+		base *= 4 // For now, quadruple if we're floating.
+	}
+	// Cap movement duration cost to a minimum of 20 millisecond
+	duration := o.calcDuration(base, 20*time.Millisecond, time.Duration(o.speed)*time.Millisecond)
+	return NewActionMove(c.Y, c.X, c.Z, duration, true), 0 // TODO: Add remainder from last action if possible.
+}
+
+func (o *ObjectCharacter) handleAttackCommand(c OwnerAttackCommand) (ActionI, time.Duration) {
+	return o.buildAttackAction(c), 0 // TODO: Add remainder from last operation if possible.
+}
+
+func (o *ObjectCharacter) handleStatusCommand(c OwnerStatusCommand) (ActionI, time.Duration) {
+	duration := o.calcDuration(200*time.Millisecond, 50*time.Millisecond, time.Duration(o.speed)*time.Millisecond)
+	return NewActionStatus(c.Status, duration), 0 // TODO: Add remainder from last operation if possible.
+}
+
+func (o *ObjectCharacter) handleInspectCommand(c OwnerInspectCommand) (ActionI, time.Duration) {
+	duration := o.calcDuration(200*time.Millisecond, 50*time.Millisecond, time.Duration(o.inspectSpeed)*time.Millisecond)
+	return NewActionInspect(c.Target, duration), 0 // TODO: Add remainder from last operation if possible.
+}
+
+// ======== Action and combat-related
+// calcDuration calculations the duration an action should take.
+func (o *ObjectCharacter) calcDuration(base, min, reduction time.Duration) time.Duration {
+	d := base - reduction
+	if d < min {
+		d = min
+	}
+	return d
+}
+
+// Attackable returns if the given character can be attacked. This will return false if health is less than or equal to 0.
 func (o *ObjectCharacter) Attackable() bool {
-	if o.health >= 0 {
+	if o.health > 0 {
 		return true
 	}
 	return false
+}
+
+func (o *ObjectCharacter) buildAttackAction(c OwnerAttackCommand) *ActionAttack {
+	// TODO: Use current equipped weapons and calc base time from RecoveryTime divided by all current weapons. Alternatively, we need to calc RecoveryTime per weapon... this might make more sense, but it does increase computational costs.
+	base := 500 * time.Millisecond
+	duration := o.calcDuration(base, 20*time.Millisecond, time.Duration(o.speed)*time.Millisecond)
+	var y, x, z int
+	if c.Y != 0 || c.X != 0 || c.Z != 0 {
+		y = c.Y
+		x = c.X
+		z = c.Z
+	} else if c.Target == 0 {
+		h, w, d := o.GetDimensions()
+		if c.Direction == network.North {
+			z = -o.reach
+		} else if c.Direction == network.South {
+			z = o.reach + d
+		} else if c.Direction == network.East {
+			x = o.reach + w
+		} else if c.Direction == network.West {
+			x = -o.reach
+		} else if c.Direction == network.Up {
+			y = o.reach + h
+		} else if c.Direction == network.Down {
+			y = -o.reach
+		}
+		y = o.tile.Y + y
+		x = o.tile.X + x
+		z = o.tile.Z + z
+	}
+	return NewActionAttack(y, x, z, c.Target, duration)
+
 }
 
 // GetSaveableArchetype returns a modified version of UncompiledArchetype with any important changes applied to it.
