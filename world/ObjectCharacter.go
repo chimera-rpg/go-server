@@ -153,6 +153,7 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 		}
 		// FIXME: MOVE THIS
 		buildAttackAction := func(c OwnerAttackCommand) *ActionAttack {
+			// TODO: Use current equipped weapons and calc base time from RecoveryTime divided by all current weapons. Alternatively, we need to calc RecoveryTime per weapon... this might make more sense, but it does increase computational costs.
 			base := 500 * time.Millisecond
 			duration := calcDuration(base, 20*time.Millisecond, time.Duration(o.speed)*time.Millisecond)
 			var y, x, z int
