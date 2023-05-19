@@ -25,6 +25,7 @@ const (
 	SwordsCompetency
 	FlailsCompetency
 	PolearmsCompetency
+	WhipsCompetency
 	// Fighting styles
 	OneHandedCompetency
 	TwoHandedCompetency
@@ -69,6 +70,7 @@ var StringToCompetencyMap = map[string]CompetencyType{
 	"Swords":       SwordsCompetency,
 	"Flails":       FlailsCompetency,
 	"Polearms":     PolearmsCompetency,
+	"Whips":        WhipsCompetency,
 	//
 	"One Handed":  OneHandedCompetency,
 	"Two Handed":  TwoHandedCompetency,
@@ -114,6 +116,7 @@ var CompetencyToStringMap = map[CompetencyType]string{
 	SwordsCompetency:   "Swords",
 	FlailsCompetency:   "Flails",
 	PolearmsCompetency: "Polearms",
+	WhipsCompetency:    "Whips",
 	//
 	OneHandedCompetency:  "One Handed",
 	TwoHandedCompetency:  "Two Handed",
