@@ -80,6 +80,7 @@ func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 	o.Recalculate()
 	o.RecalculateSenses()
 	o.RecalculateEquipment()
+	o.RecalculateInventory()
 
 	// Create a new Owner AI if it is an NPC.
 	if a.Type == data.ArchetypeNPC {
@@ -526,7 +527,21 @@ func (o *ObjectCharacter) RecalculateEquipment() {
 }
 
 func (o *ObjectCharacter) RecalculateInventory() {
-	// TODO: Update inventory to match the carry capacity. If carry capacity exceeds by up to 20%, set the overencumbered status. If it exceeds beyond that, automatically drop the heaviest to smallest items until carry capacity reaches 100%.
+	// Calculate dimensions.
+	h, w, d := o.GetDimensions()
+	v := (h * w * d) / 3 // Using a third of the character's volume as an inventory volume seems reasonable enough.
+	if err := o.FeatureInventory.SetVolume(v); err != nil {
+		if err == ErrObjectOverVolume {
+			// TODO: Dump contents on next update?
+		}
+	}
+	// Calculate capacity.
+	capacity := float64(o.attributes.Physical.Might) * 10 // Each point of might grants the ability to carry 10 more kg.
+	if err := o.FeatureInventory.SetCapacity(capacity); err != nil {
+		if err == ErrObjectOverCapacity {
+			// TODO: Dump contents on next update?
+		}
+	}
 }
 
 func (o *ObjectCharacter) RecalculateSenses() {

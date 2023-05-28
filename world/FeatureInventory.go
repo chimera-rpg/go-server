@@ -8,8 +8,8 @@ import (
 type FeatureInventory struct {
 	inventory   []ObjectI
 	changed     bool
-	maxCapacity float64 // The max capacity that can be carried.
-	capacity    float64 // The current capacity that is available.
+	maxCapacity float64 // The max capacity in kg that can be carried.
+	capacity    float64 // The current capacity in kg that is available.
 	maxVolume   int     // Maximum volume that can be stored. This is maxWidth*maxHeight*maxDepth
 	volume      int     // The current volume available to objects.
 }
@@ -20,12 +20,32 @@ var (
 	ErrObjectAlreadyInInventory = errors.New("object already exists in inventory")
 	ErrObjectTooHeavy           = errors.New("object is too heavy")
 	ErrObjectTooLarge           = errors.New("object is too large")
+	ErrObjectOverVolume         = errors.New("inventory is over volume")
+	ErrObjectOverCapacity       = errors.New("inventory is over capacity")
 )
 
-// SetDimensions sets the maximum and current container volume.
-func (f *FeatureInventory) SetDimensions(h, w, d int) {
-	f.maxVolume = h * w * d
-	f.volume = f.maxVolume
+// SetVolume sets the maximum and current container volume.
+func (f *FeatureInventory) SetVolume(v int) (err error) {
+	if v > f.maxVolume {
+		f.volume += v - f.maxVolume
+	} else if v < f.maxVolume {
+		err = ErrObjectOverVolume
+		// TODO: Flag the inventory to dump enough of its contents to not be over volume.
+	}
+	f.maxVolume = v
+	return
+}
+
+// SetCapacity sets the maximum capacity and adjusts the current.
+func (f *FeatureInventory) SetCapacity(v float64) (err error) {
+	if v > f.maxCapacity {
+		f.capacity += v - f.maxCapacity
+	} else {
+		// TODO: Flag the inventory to dump enough of its contents to not be over capacity.
+		err = ErrObjectOverCapacity
+	}
+	f.maxCapacity = v
+	return
 }
 
 // AddInventoryObject directly adds the given object to the inventory.
