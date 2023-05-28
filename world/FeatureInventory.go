@@ -40,7 +40,7 @@ func (f *FeatureInventory) SetVolume(v int) (err error) {
 func (f *FeatureInventory) SetCapacity(v float64) (err error) {
 	if v > f.maxCapacity {
 		f.capacity += v - f.maxCapacity
-	} else {
+	} else if v < f.maxCapacity {
 		// TODO: Flag the inventory to dump enough of its contents to not be over capacity.
 		err = ErrObjectOverCapacity
 	}
