@@ -4,7 +4,7 @@ import (
 	"errors"
 )
 
-// FeatureInventory provides the ability to store objects. It is used for the player's basic inventory system as well as any storage, such as bags, beltpouches, etc., that the character may have. The capacity and space are defined on owning object creation. In general capacity/maxCapacity is only ever updated when an owning character increase their physical attributes.
+// FeatureInventory provides the ability to store objects. It is used for the player's basic inventory system as well as any storage, such as bags, beltpouches, etc., that the character may have. The capacity and space are defined on owning object creation. In general capacity/maxCapacity is only ever updated when an owning character increase their physical attributes. Maximum volume should remain the same from the object's creation, with the possible exception of if the owning object is a character that grows in size.
 type FeatureInventory struct {
 	inventory   []ObjectI
 	changed     bool
