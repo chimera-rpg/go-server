@@ -15,6 +15,7 @@ import (
 type ObjectCharacter struct {
 	Object
 	FeatureInventory
+	FeatureEquipment
 	//
 	maxHp         int
 	race          string
@@ -59,7 +60,7 @@ type ObjectCharacter struct {
 func NewObjectCharacter(a *data.Archetype) (o *ObjectCharacter) {
 	o = &ObjectCharacter{
 		Object: NewObject(a),
-		FeatureInventory: FeatureInventory{
+		FeatureEquipment: FeatureEquipment{
 			slots: &a.Slots,
 		},
 		name:                    &a.Name,
@@ -101,9 +102,13 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 		o.RecalculateSenses()
 		o.shouldRecalculateSenses = false
 	}
-	if o.equipmentChanged {
+	if o.FeatureEquipment.changed {
 		o.RecalculateEquipment()
-		o.equipmentChanged = false
+		o.FeatureEquipment.changed = false
+	}
+	if o.FeatureInventory.changed {
+		o.RecalculateInventory()
+		o.FeatureInventory.changed = false
 	}
 
 	// Add a falling timer if we've moved and should fall.
@@ -511,12 +516,17 @@ func (o *ObjectCharacter) Recalculate() {
 	o.inspectSpeed = o.CalculateInspectSpeed() // Should this be in recalculate senses?
 	o.health = o.CalculateHealth()
 	o.reach = o.CalculateReach()
+	// TODO: If anything strength-related changes, call RecalculateInventory.
 }
 
 func (o *ObjectCharacter) RecalculateEquipment() {
 	o.damages = o.CalculateDamages()
 	o.armor = o.CalculateArmor()
 	o.dodge = o.CalculateDodge()
+}
+
+func (o *ObjectCharacter) RecalculateInventory() {
+	// TODO: Update inventory to match the carry capacity. If carry capacity exceeds by up to 20%, set the overencumbered status. If it exceeds beyond that, automatically drop the heaviest to smallest items until carry capacity reaches 100%.
 }
 
 func (o *ObjectCharacter) RecalculateSenses() {
