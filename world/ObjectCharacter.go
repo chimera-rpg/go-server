@@ -529,7 +529,7 @@ func (o *ObjectCharacter) RecalculateEquipment() {
 func (o *ObjectCharacter) RecalculateInventory() {
 	// Calculate dimensions.
 	h, w, d := o.GetDimensions()
-	v := (h * w * d) / 3 // Using a third of the character's volume as an inventory volume seems reasonable enough.
+	v := (h * w * d) / 2 // Using half of the character's volume as an inventory volume seems reasonable enough.
 	if err := o.FeatureInventory.SetVolume(v); err != nil {
 		if err == ErrObjectOverVolume {
 			// TODO: Dump contents on next update?
