@@ -291,6 +291,72 @@ func (gmap *Map) Update(gm *World, updates Updates) error {
 						}
 					}
 				}
+			case *ActionEquip:
+				if o, ok := a.object.(*ObjectCharacter); ok {
+					// FIXME: Allow non ObjectCharacters to be containers.
+					if targetContainer := gmap.world.GetObject(a.Container); targetContainer != nil {
+						if targetContainer, ok := targetContainer.(*ObjectCharacter); ok {
+							targetObject, err := targetContainer.FeatureInventory.GetObjectByID(a.Target)
+							if err != nil {
+								log.Warn(err)
+								continue
+							}
+							// Attempt to equip it.
+							if err := o.Equip(targetObject); err != nil {
+								log.Warn(err)
+								continue
+							}
+							// Remove it from the inventory.
+							if err := o.RemoveInventoryObject(targetObject); err != nil {
+								log.Warn(err)
+								continue
+							}
+						}
+					}
+					// TODO: Send message that it was equipped!
+				}
+			case *ActionUnequip:
+				if o, ok := a.object.(*ObjectCharacter); ok {
+					// The inventory to place the target in.
+					var targetInventory *FeatureInventory
+					// Find the given container to add the equipment to.
+					if a.Container != 0 {
+						container := gmap.world.GetObject(a.Container)
+						if container != nil {
+							// TODO: Do a bounds check to ensure the given container is in reach of the player and isn't locked/otherwise.
+							// FIXME: Allow non ObjectCharacters to have containers.
+							if container, ok := container.(*ObjectCharacter); ok {
+								targetInventory = &container.FeatureInventory
+							}
+						}
+					}
+					// Default to character's own inventory as the target container if one is not set.
+					if targetInventory == nil {
+						targetInventory = &o.FeatureInventory
+					}
+					// Get the equipment to remove.
+					targetObject, err := o.FeatureEquipment.GetObjectByID(a.Target)
+					if err != nil {
+						log.Warn(err)
+						continue
+					}
+					// Remove the object from the equipment.
+					if err := o.FeatureEquipment.Unequip(targetObject); err != nil {
+						log.Warn(err)
+						continue
+					}
+					// Attempt to add the object to the inventory.
+					if err := targetInventory.AddInventoryObject(targetObject); err != nil {
+						log.Warn(err)
+						// Drop item on the tile that the player is on if an error happens when adding to the given inventory.
+						if err := gmap.PlaceObject(targetObject, o.tile.Y, o.tile.X, o.tile.Z); err != nil {
+							log.Error(err, "item is lost!", targetObject)
+							continue
+						}
+						continue
+					}
+					// TODO: Send update that it was unequipped!
+				}
 			case *ActionStatus:
 				a.object.SetStatus(a.status)
 			case *ActionSpawn:

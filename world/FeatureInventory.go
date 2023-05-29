@@ -91,3 +91,12 @@ func (f *FeatureInventory) FindInventory(cb func(v ObjectI) bool) (matches []Obj
 	}
 	return
 }
+
+func (f *FeatureInventory) GetObjectByID(id ID) (ObjectI, error) {
+	for _, o := range f.inventory {
+		if o.GetID() == id {
+			return o, nil
+		}
+	}
+	return nil, ErrObjectMissingInInventory
+}

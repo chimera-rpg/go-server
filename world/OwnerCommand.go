@@ -34,6 +34,14 @@ type OwnerInspectCommand struct {
 	Target ID
 }
 
+// OwnerEquipCommand represents an equip request for the given target.
+type OwnerEquipCommand struct {
+	Container ID   // The container to use. If none is specified, it is presumed the container is the character's default inventory.
+	Y, X, Z   int  // The Y, X, Z location to look at for a container, if a container ID is specified.
+	Target    ID   // The target item to equip.
+	Equip     bool // Whether or not the target should be equipped or unequipped. If false, then it is assumed the item is in the player's equipment list and will be removed + placed into the player's container.
+}
+
 // OwnerClearCommand clears the owner's commands.
 type OwnerClearCommand struct{}
 

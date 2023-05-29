@@ -9,6 +9,7 @@ import (
 
 	"github.com/chimera-rpg/go-server/data"
 	"github.com/chimera-rpg/go-server/network"
+	log "github.com/sirupsen/logrus"
 )
 
 // ObjectCharacter represents player characters.
@@ -170,6 +171,8 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 				o.currentAction, o.currentActionDuration = o.handleStatusCommand(c)
 			case OwnerInspectCommand:
 				o.currentAction, o.currentActionDuration = o.handleInspectCommand(c)
+			case OwnerEquipCommand:
+				o.currentAction, o.currentActionDuration = o.handleEquipCommand(c)
 			}
 		}
 	}
@@ -652,9 +655,9 @@ func (o *ObjectCharacter) CalculateDamages() []Damages {
 	return damages
 }
 
-func (o *ObjectCharacter) Armors() []*ObjectEquipable {
+func (o *ObjectCharacter) Armors() []ObjectI {
 	// FIXME: cache this information.
-	var armors []*ObjectEquipable
+	var armors []ObjectI
 	for _, w := range o.equipment {
 		if a := w.GetArchetype(); a != nil {
 			for _, t := range a.TypeHints {
@@ -697,7 +700,7 @@ func (o *ObjectCharacter) CalculateDodge() (dodge float64) {
 	// FIXME: Figure out how multiple armor stacks with itself, in terms of % reduction...
 	armorTotal := 0.0
 	for _, e := range o.Armors() {
-		armorTotal += e.Archetype.Armor
+		armorTotal += e.GetArchetype().Armor
 	}
 
 	// Reduce dodge based upon our armor if worn, or gain a 20% dodge bonus if the character is not wearing armor.
@@ -836,6 +839,67 @@ func (o *ObjectCharacter) handleStatusCommand(c OwnerStatusCommand) (ActionI, ti
 func (o *ObjectCharacter) handleInspectCommand(c OwnerInspectCommand) (ActionI, time.Duration) {
 	duration := o.calcDuration(200*time.Millisecond, 50*time.Millisecond, time.Duration(o.inspectSpeed)*time.Millisecond)
 	return NewActionInspect(c.Target, duration), 0 // TODO: Add remainder from last operation if possible.
+}
+
+func (o *ObjectCharacter) handleEquipCommand(c OwnerEquipCommand) (action ActionI, duration time.Duration) {
+	duration = o.calcDuration(200*time.Millisecond, 50*time.Millisecond, time.Duration(o.inspectSpeed)*time.Millisecond)
+
+	if c.Equip {
+		if c.Container == 0 {
+			// No container defined, presume the player's default inventory.
+			_, err := o.FeatureInventory.GetObjectByID(c.Target)
+			if err != nil {
+				log.Warn(err)
+				// TODO: Send err back to client
+				return
+			}
+			action = NewActionEquip(o.GetID(), c.Target, duration)
+			duration = 0
+		} else {
+			// TODO: We need to add ObjectContainer
+			// Container defined, first check if its one of our own containers.
+			/*container, err := o.FeatureInventory.GetObjectByID(c.Container)
+			if err == nil {
+				target, err := o.FeatureInventory.GetObjectByID(c.Target)
+				if err != nil {
+					// TODO: Send err back to client
+					return
+				}
+				action = NewActionEquip(c.Container, c.Target, duration)
+				duration = 0
+			} else {
+				// Second check for one at the given Y, X, Z coordinate.
+				tile := o.tile.gameMap.GetTile(c.Y, c.X, c.Z)
+				if tile != nil {
+					for _, o := range tile.objectParts {
+						if o.GetID() == c.Container {
+							// Found the container!
+							// TODO: Check against ObjectContainer or whatever objects can have inventories, then handle as we do the rest.
+								target, err := o.FeatureInventory.GetObjectByID(c.Target)
+								if err != nil {
+									// TODO: Send err back to client
+									return
+								}
+								action = NewActionEquip(container, c.Target, duration)
+								duration = 0
+							break
+						}
+					}
+				}
+			}*/
+		}
+	} else if !c.Equip {
+		// Unequipping, which will always be the player's own equipment list.
+		_, err := o.FeatureEquipment.GetObjectByID(c.Target)
+		if err != nil {
+			// TODO: Send err back to client
+			return
+		}
+		action = NewActionUnequip(c.Container, c.Target, duration)
+		duration = 0
+	}
+
+	return
 }
 
 // ======== Action and combat-related
