@@ -173,6 +173,10 @@ func (o *ObjectCharacter) update(delta time.Duration) {
 				o.currentAction, o.currentActionDuration = o.handleInspectCommand(c)
 			case OwnerEquipCommand:
 				o.currentAction, o.currentActionDuration = o.handleEquipCommand(c)
+			case OwnerGrabCommand:
+				o.currentAction, o.currentActionDuration = o.handleGrabCommand(c)
+			case OwnerDropCommand:
+				o.currentAction, o.currentActionDuration = o.handleDropCommand(c)
 			}
 		}
 	}
@@ -905,6 +909,123 @@ func (o *ObjectCharacter) handleEquipCommand(c OwnerEquipCommand) (action Action
 		action = NewActionUnequip(c.Container, c.Target, duration)
 		duration = 0
 	}
+
+	return
+}
+
+func (o *ObjectCharacter) handleGrabCommand(c OwnerGrabCommand) (action ActionI, duration time.Duration) {
+	duration = o.calcDuration(200*time.Millisecond, 50*time.Millisecond, time.Duration(o.inspectSpeed)*time.Millisecond)
+
+	// Ensure the target item is within range and accessible.
+	if c.FromContainer == 0 {
+		// It's an item nearby. Check for range.
+		target := o.tile.gameMap.world.GetObject(c.Target)
+		if target == nil {
+			log.Warn("object does not exist")
+			return
+		}
+		if math.Abs(o.GetDistance(target.GetTile().Y, target.GetTile().X, target.GetTile().Z)) <= float64(o.reach) {
+			// It's in range!
+		}
+	} else {
+		// Is it a container we hold?
+		if container, err := o.FeatureInventory.GetObjectByID(c.FromContainer); err == nil {
+			// It's our own container!
+			if container, ok := container.(FeatureInventoryI); ok {
+				if _, err := container.GetObjectByID(c.Target); err != nil {
+					log.Warn("object does not exist in container")
+					return
+				}
+			} else {
+				log.Warn("target is not a container")
+				return
+			}
+		} else {
+			// It's not our own container. Look for containers in range.
+			if container := o.tile.gameMap.world.GetObject(c.FromContainer); container != nil {
+				// FIXME: Distance should be from center or closest edge!!!
+				if math.Abs(o.GetDistance(container.GetTile().Y, container.GetTile().X, container.GetTile().Z)) <= float64(o.reach) {
+					// It's in range!
+					if container, ok := container.(FeatureInventoryI); ok {
+						if _, err := container.GetObjectByID(c.Target); err != nil {
+							log.Warn("object does not exist in container")
+							return
+						}
+					} else {
+						log.Warn("target is not a container")
+						return
+					}
+				} else {
+					// Out of range.
+					// TODO: Send out of range message.
+					log.Warn("container is out of range")
+					return
+				}
+			} else {
+				log.Warn("target container does not exist")
+				return
+			}
+		}
+	}
+
+	// If we got this far, then it is valid to grab.
+	action = NewActionGrab(c.FromContainer, c.ToContainer, c.Target, duration)
+	duration = 0
+	return
+}
+
+func (o *ObjectCharacter) handleDropCommand(c OwnerDropCommand) (action ActionI, duration time.Duration) {
+	duration = o.calcDuration(200*time.Millisecond, 50*time.Millisecond, time.Duration(o.inspectSpeed)*time.Millisecond)
+
+	if c.FromContainer == 0 {
+		// Base inventory
+		if _, err := o.FeatureInventory.GetObjectByID(c.Target); err != nil {
+			log.Warn("target not in inventory", err)
+			return
+		}
+	} else {
+		// It's either in a container we own or in a nearby container.
+		container, err := o.FeatureInventory.GetObjectByID(c.FromContainer)
+		if err == nil {
+			// It's our own container.
+			if container, ok := container.(FeatureInventoryI); ok {
+				if _, err := container.GetObjectByID(c.Target); err != nil {
+					log.Warn("target not in container")
+					return
+				}
+			} else {
+				log.Warn("target container is not a container")
+				return
+			}
+		} else {
+			// Check if it's in the world.
+			container := o.tile.gameMap.world.GetObject(c.FromContainer)
+			if container != nil {
+				// FIXME: Distance should be from center or closest edge!!!
+				if math.Abs(o.GetDistance(container.GetTile().Y, container.GetTile().X, container.GetTile().Z)) <= float64(o.reach) {
+					// It's in range!
+					if container, ok := container.(FeatureInventoryI); ok {
+						if _, err := container.GetObjectByID(c.Target); err != nil {
+							log.Warn("object does not exist in container")
+							return
+						}
+					} else {
+						log.Warn("target is not a container")
+						return
+					}
+				} else {
+					// It's out of range.
+					// TODO: Send out of range message.
+					log.Warn("container is out of range")
+					return
+				}
+			}
+		}
+	}
+
+	// If we got to here, then it is valid and in range.
+	action = NewActionDrop(c.FromContainer, c.Y, c.X, c.Z, c.Target, duration)
+	duration = 0
 
 	return
 }
