@@ -295,8 +295,8 @@ func (gmap *Map) Update(gm *World, updates Updates) error {
 				if o, ok := a.object.(*ObjectCharacter); ok {
 					// FIXME: Allow non ObjectCharacters to be containers.
 					if targetContainer := gmap.world.GetObject(a.Container); targetContainer != nil {
-						if targetContainer, ok := targetContainer.(*ObjectCharacter); ok {
-							targetObject, err := targetContainer.FeatureInventory.GetObjectByID(a.Target)
+						if targetContainer, ok := targetContainer.(FeatureInventoryI); ok {
+							targetObject, err := targetContainer.GetObjectByID(a.Target)
 							if err != nil {
 								log.Warn(err)
 								continue
@@ -318,15 +318,14 @@ func (gmap *Map) Update(gm *World, updates Updates) error {
 			case *ActionUnequip:
 				if o, ok := a.object.(*ObjectCharacter); ok {
 					// The inventory to place the target in.
-					var targetInventory *FeatureInventory
+					var targetInventory FeatureInventoryI
 					// Find the given container to add the equipment to.
 					if a.Container != 0 {
 						container := gmap.world.GetObject(a.Container)
 						if container != nil {
 							// TODO: Do a bounds check to ensure the given container is in reach of the player and isn't locked/otherwise.
-							// FIXME: Allow non ObjectCharacters to have containers.
-							if container, ok := container.(*ObjectCharacter); ok {
-								targetInventory = &container.FeatureInventory
+							if container, ok := container.(FeatureInventoryI); ok {
+								targetInventory = container
 							}
 						}
 					}

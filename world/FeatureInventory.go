@@ -100,3 +100,9 @@ func (f *FeatureInventory) GetObjectByID(id ID) (ObjectI, error) {
 	}
 	return nil, ErrObjectMissingInInventory
 }
+
+type FeatureInventoryI interface {
+	GetObjectByID(ID) (ObjectI, error)
+	AddInventoryObject(ObjectI) error
+	RemoveInventoryObject(ObjectI) error
+}

@@ -856,17 +856,19 @@ func (o *ObjectCharacter) handleEquipCommand(c OwnerEquipCommand) (action Action
 			action = NewActionEquip(o.GetID(), c.Target, duration)
 			duration = 0
 		} else {
-			// TODO: We need to add ObjectContainer
 			// Container defined, first check if its one of our own containers.
-			/*container, err := o.FeatureInventory.GetObjectByID(c.Container)
+			container, err := o.FeatureInventory.GetObjectByID(c.Container)
 			if err == nil {
-				target, err := o.FeatureInventory.GetObjectByID(c.Target)
-				if err != nil {
-					// TODO: Send err back to client
-					return
+				// It is, let's ensure it implements the inventory feature interface.
+				if container, ok := container.(FeatureInventoryI); ok {
+					_, err := container.GetObjectByID(c.Target)
+					if err != nil {
+						// TODO: Send err back to client
+						return
+					}
+					action = NewActionEquip(c.Container, c.Target, duration)
+					duration = 0
 				}
-				action = NewActionEquip(c.Container, c.Target, duration)
-				duration = 0
 			} else {
 				// Second check for one at the given Y, X, Z coordinate.
 				tile := o.tile.gameMap.GetTile(c.Y, c.X, c.Z)
@@ -874,19 +876,24 @@ func (o *ObjectCharacter) handleEquipCommand(c OwnerEquipCommand) (action Action
 					for _, o := range tile.objectParts {
 						if o.GetID() == c.Container {
 							// Found the container!
-							// TODO: Check against ObjectContainer or whatever objects can have inventories, then handle as we do the rest.
-								target, err := o.FeatureInventory.GetObjectByID(c.Target)
+							// Make sure it implements an inventory.
+							if container, ok := container.(FeatureInventoryI); ok {
+								_, err := container.GetObjectByID(c.Target)
 								if err != nil {
 									// TODO: Send err back to client
 									return
 								}
-								action = NewActionEquip(container, c.Target, duration)
+								action = NewActionEquip(o.GetID(), c.Target, duration)
 								duration = 0
+							} else {
+								// TODO: Send err back to client
+								return
+							}
 							break
 						}
 					}
 				}
-			}*/
+			}
 		}
 	} else if !c.Equip {
 		// Unequipping, which will always be the player's own equipment list.
