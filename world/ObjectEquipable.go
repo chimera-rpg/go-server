@@ -221,23 +221,23 @@ func GetSkill(types []data.SkillType, skills map[data.SkillType]data.Skill) (flo
 	return totalSkill, nil
 }
 
-func GetDamages(w *ObjectEquipable, c *ObjectCharacter) (damages Damages, err error) {
+func GetDamages(w ObjectI, c *ObjectCharacter) (damages Damages, err error) {
 	base := 0
-	if w.Archetype.Damage != nil {
-		base = w.Archetype.Damage.Value
+	if w.GetArchetype().Damage != nil {
+		base = w.GetArchetype().Damage.Value
 	}
 
-	totalSkill, err := GetSkill(w.Archetype.SkillTypes, c.Archetype.Skills)
+	totalSkill, err := GetSkill(w.GetArchetype().SkillTypes, c.Archetype.Skills)
 	if err != nil {
 		return nil, err
 	}
 
-	totalCompetency, err := GetCompetency(w.Archetype.CompetencyTypes, c.Archetype.Competencies)
+	totalCompetency, err := GetCompetency(w.GetArchetype().CompetencyTypes, c.Archetype.Competencies)
 	if err != nil {
 		return nil, err
 	}
 
-	for k, a := range w.Archetype.AttackTypes {
+	for k, a := range w.GetArchetype().AttackTypes {
 		damage := Damage{
 			AttackType: k,
 			Styles:     make(map[data.AttackStyle]float64),
@@ -245,7 +245,7 @@ func GetDamages(w *ObjectEquipable, c *ObjectCharacter) (damages Damages, err er
 		}
 
 		// Calculate bonus damage.
-		if bonus, ok := w.Archetype.Damage.AttributeBonus[k]; ok {
+		if bonus, ok := w.GetArchetype().Damage.AttributeBonus[k]; ok {
 			for attrK, attrV := range bonus {
 				if k == data.Physical {
 					charAttr := c.Archetype.Attributes.Physical.GetAttribute(attrK)
@@ -272,20 +272,20 @@ func GetDamages(w *ObjectEquipable, c *ObjectCharacter) (damages Damages, err er
 	return damages, nil
 }
 
-func GetArmors(a *ObjectEquipable, c *ObjectCharacter) (armors Armors, err error) {
-	base := a.Archetype.Armor
+func GetArmors(a ObjectI, c *ObjectCharacter) (armors Armors, err error) {
+	base := a.GetArchetype().Armor
 
-	totalSkill, err := GetSkill(a.Archetype.SkillTypes, c.Archetype.Skills)
+	totalSkill, err := GetSkill(a.GetArchetype().SkillTypes, c.Archetype.Skills)
 	if err != nil {
 		return nil, err
 	}
 
-	totalCompetency, err := GetCompetency(a.Archetype.CompetencyTypes, c.Archetype.Competencies)
+	totalCompetency, err := GetCompetency(a.GetArchetype().CompetencyTypes, c.Archetype.Competencies)
 	if err != nil {
 		return nil, err
 	}
 
-	for k, a := range a.Archetype.Resistances {
+	for k, a := range a.GetArchetype().Resistances {
 		armor := Armor{
 			ArmorType: k,
 			Styles:    make(map[data.AttackStyle]float64),
