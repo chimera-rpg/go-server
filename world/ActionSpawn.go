@@ -14,8 +14,8 @@ type ActionSpawn struct {
 }
 
 // HandleActionSpawn handles the spawning action.
-func HandleActionSpawn(m *Map, a *ActionSpawn) error {
-	if m == nil || a == nil {
+func (m *Map) HandleActionSpawn(a *ActionSpawn) error {
+	if a == nil {
 		return nil
 	}
 	spawnItem := a.Spawn

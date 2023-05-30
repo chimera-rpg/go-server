@@ -20,6 +20,9 @@ type ObjectI interface {
 	ReplaceArchetype(a *data.Archetype)
 	GetSaveableArchetype() data.Archetype
 	//
+	SetContainer(ObjectI)
+	GetContainer() ObjectI
+	//
 	update(time.Duration)
 	getType() data.ArchetypeType
 	AddStatus(StatusI)
@@ -35,6 +38,9 @@ type ObjectI interface {
 	GetDimensions() (h, w, d int)
 	GetDistance(y, x, z int) float64
 	ShootRay(y, x, z float64, f func(tile *Tile) bool) (tiles []*Tile)
+	//
+	GetMapID() ID
+	InSameMap(ObjectI) bool
 	//
 	Stamina() int
 	MaxStamina() int

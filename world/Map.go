@@ -213,153 +213,41 @@ func (gmap *Map) Update(gm *World, updates Updates) error {
 		if action.Ready() {
 			switch a := action.(type) {
 			case *ActionMove:
-				if _, err := a.object.GetTile().GetMap().MoveObject(a.object, a.y, a.x, a.z, false); err != nil {
+				if err := gmap.HandleActionMove(a); err != nil {
 					log.Warn(err)
 				}
 			case *ActionAttack:
-				if a.Target != 0 {
-					o2 := gmap.world.GetObject(a.Target)
-					if o2 == nil {
-						log.Errorln("Attack request for missing object")
-						continue
-					}
-					if o2.GetTile().GetMap() != gmap {
-						log.Errorln("Attack request for object in different map")
-						continue
-					}
-					if o2.Attackable() {
-						switch attacker := a.object.(type) {
-						case *ObjectCharacter:
-							if attacker.Attack(o2) {
-								break
-							}
-						}
-					}
-				} else if a.Y != 0 || a.X != 0 || a.Z != 0 {
-					h, w, d := a.object.GetDimensions()
-					t := a.object.GetTile()
-					tiles := gmap.ShootRay(float64(t.Y)+float64(h)/2, float64(t.X)+float64(w)/2, float64(t.Z)+float64(d)/2, float64(a.Y), float64(a.X), float64(a.Z), func(t *Tile) bool {
-						return true
-					})
-					objs := getUniqueObjectsInTiles(tiles)
-					// Ignore our own tile.
-					for _, o := range objs {
-						// Ignore ourself.
-						if o == a.object {
-							continue
-						}
-						if o.Attackable() {
-							switch attacker := a.object.(type) {
-							case *ObjectCharacter:
-								if attacker.Attack(o) {
-									break
-								}
-							}
-						}
-					}
+				if err := gmap.HandleActionAttack(a); err != nil {
+					log.Warn(err)
 				}
 			case *ActionInspect:
-				if o, ok := a.object.(*ObjectCharacter); ok {
-					var infos []data.ObjectInfo
-					var near bool
-					// TODO: Kick any owners who keep sending bad commands.
-					if targetObject := gmap.world.GetObject(a.Target); targetObject != nil {
-						t := targetObject.GetTile()
-						if t.GetMap() == o.tile.gameMap {
-							if o.InReachRange(t.Y, t.X, t.Z) {
-								// TODO: Do a line of sight check from the character's intersection cube.
-								near = true
-								// Send detailed info?
-							}
-							// Always get the mundane info.
-							mundaneInfo := targetObject.GetMundaneInfo(near)
-							mundaneInfo.Near = near
-							infos = append(infos, mundaneInfo)
-
-							// Send any information if we have it.
-							if len(infos) > 0 {
-								// Only send to non-AI players.
-								if p, ok := o.GetOwner().(*OwnerPlayer); ok {
-									p.ClientConnection.Send(network.CommandObject{
-										ObjectID: a.Target,
-										Payload: network.CommandObjectPayloadInfo{
-											Info: infos,
-										},
-									})
-								}
-							}
-						}
-					}
+				if err := gmap.HandleActionInspect(a); err != nil {
+					log.Warn(err)
 				}
 			case *ActionEquip:
-				if o, ok := a.object.(*ObjectCharacter); ok {
-					// FIXME: Allow non ObjectCharacters to be containers.
-					if targetContainer := gmap.world.GetObject(a.Container); targetContainer != nil {
-						if targetContainer, ok := targetContainer.(FeatureInventoryI); ok {
-							targetObject, err := targetContainer.GetObjectByID(a.Target)
-							if err != nil {
-								log.Warn(err)
-								continue
-							}
-							// Attempt to equip it.
-							if err := o.Equip(targetObject); err != nil {
-								log.Warn(err)
-								continue
-							}
-							// Remove it from the inventory.
-							if err := o.RemoveInventoryObject(targetObject); err != nil {
-								log.Warn(err)
-								continue
-							}
-						}
-					}
-					// TODO: Send message that it was equipped!
+				if err := gmap.HandleActionEquip(a); err != nil {
+					log.Warn(err)
 				}
 			case *ActionUnequip:
-				if o, ok := a.object.(*ObjectCharacter); ok {
-					// The inventory to place the target in.
-					var targetInventory FeatureInventoryI
-					// Find the given container to add the equipment to.
-					if a.Container != 0 {
-						container := gmap.world.GetObject(a.Container)
-						if container != nil {
-							// TODO: Do a bounds check to ensure the given container is in reach of the player and isn't locked/otherwise.
-							if container, ok := container.(FeatureInventoryI); ok {
-								targetInventory = container
-							}
-						}
-					}
-					// Default to character's own inventory as the target container if one is not set.
-					if targetInventory == nil {
-						targetInventory = &o.FeatureInventory
-					}
-					// Get the equipment to remove.
-					targetObject, err := o.FeatureEquipment.GetObjectByID(a.Target)
-					if err != nil {
-						log.Warn(err)
-						continue
-					}
-					// Remove the object from the equipment.
-					if err := o.FeatureEquipment.Unequip(targetObject); err != nil {
-						log.Warn(err)
-						continue
-					}
-					// Attempt to add the object to the inventory.
-					if err := targetInventory.AddInventoryObject(targetObject); err != nil {
-						log.Warn(err)
-						// Drop item on the tile that the player is on if an error happens when adding to the given inventory.
-						if err := gmap.PlaceObject(targetObject, o.tile.Y, o.tile.X, o.tile.Z); err != nil {
-							log.Error(err, "item is lost!", targetObject)
-							continue
-						}
-						continue
-					}
-					// TODO: Send update that it was unequipped!
+				if err := gmap.HandleActionUnequip(a); err != nil {
+					log.Warn(err)
+				}
+			case *ActionGrab:
+				if err := gmap.HandleActionGrab(a); err != nil {
+					log.Warn(err)
+				}
+			case *ActionDrop:
+				if err := gmap.HandleActionDrop(a); err != nil {
+					log.Warn(err)
 				}
 			case *ActionStatus:
-				a.object.SetStatus(a.status)
+				if err := gmap.HandleActionStatus(a); err != nil {
+					log.Warn(err)
+				}
 			case *ActionSpawn:
-				HandleActionSpawn(gmap, a)
+				if err := gmap.HandleActionSpawn(a); err != nil {
+					log.Warn(err)
+				}
 			}
 		}
 	}
@@ -533,6 +421,8 @@ func (gmap *Map) RemoveObject(o ObjectI) (err error) {
 		owner.OnObjectDelete(o.GetID())
 	}
 
+	o.SetTile(nil)
+
 	delete(gmap.activeObjects, o.GetID())
 
 	//gmap.updateTime++
@@ -572,6 +462,20 @@ func (gmap *Map) TeleportObject(o ObjectI, y, x, z int, force bool) error {
 	}
 
 	return nil
+}
+
+func (gmap *Map) IsPositionOpen(o ObjectI, y, x, z int) (bool, error) {
+	if o == nil {
+		return false, errors.New("attempted to move a nil object")
+	}
+	_, targetTiles, err := gmap.GetObjectPartTiles(o, y, x, z, true)
+	if err != nil {
+		return false, err
+	}
+	if DoTilesBlock(o, targetTiles) {
+		return false, nil
+	}
+	return true, nil
 }
 
 // MoveObject attempts to move the given object from its current position by a relative coordinate adjustment.

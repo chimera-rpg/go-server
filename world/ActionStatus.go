@@ -17,3 +17,8 @@ func NewActionStatus(status StatusI, duration time.Duration) *ActionStatus {
 		status: status,
 	}
 }
+
+func (m *Map) HandleActionStatus(a *ActionStatus) error {
+	a.object.SetStatus(a.status)
+	return nil
+}

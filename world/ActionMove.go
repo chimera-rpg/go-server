@@ -22,3 +22,8 @@ func NewActionMove(y, x, z int, cost time.Duration, running bool) *ActionMove {
 		running: running,
 	}
 }
+
+func (m *Map) HandleActionMove(a *ActionMove) error {
+	_, err := a.object.GetTile().GetMap().MoveObject(a.object, a.y, a.x, a.z, false)
+	return err
+}

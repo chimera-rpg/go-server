@@ -16,9 +16,10 @@ type Object struct {
 	Archetype *data.Archetype
 	id        ID
 	// Relationships
-	tile   *Tile
-	parent ObjectI
-	owner  OwnerI
+	tile *Tile
+	//parent ObjectI
+	container ObjectI
+	owner     OwnerI
 	//
 	statuses   []StatusI
 	hasMoved   bool
@@ -437,6 +438,32 @@ func (o *Object) CalculateResistances() {
 
 func (o *Object) Resistances() Armors {
 	return o.resistances
+}
+
+// SetContainer sets the container of the object. This should only be called _after_ an item has been added to or removed from an owning inventory object.
+func (o *Object) SetContainer(o2 ObjectI) {
+	o.container = o2
+}
+
+// GetContainer returns the container for the object, if one exists.
+func (o *Object) GetContainer() ObjectI {
+	return o.container
+}
+
+// GetMapID gets the map id of the object. This will recurse up containers if the object has no owning tile.
+func (o *Object) GetMapID() ID {
+	if o.tile == nil {
+		if o.container == nil {
+			return 0
+		}
+		return o.container.GetMapID()
+	}
+	return o.tile.gameMap.mapID
+}
+
+// InSameMap returns if the given object is in the same map as this one.
+func (o *Object) InSameMap(o2 ObjectI) bool {
+	return o.GetMapID() == o2.GetMapID()
 }
 
 // ShootRay shoots out a ray and returns all tiles from the center of the object to the ending coordinate.

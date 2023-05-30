@@ -1,6 +1,7 @@
 package world
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"math/rand"
@@ -913,62 +914,92 @@ func (o *ObjectCharacter) handleEquipCommand(c OwnerEquipCommand) (action Action
 	return
 }
 
+// getContainerOf gets the container for a given object. If both ObjectI and error are nil, then the object exists in the world and is not in a container.
+func (o *ObjectCharacter) getContainerOf(container ID, target ID) (ObjectI, error) {
+	if container == 0 {
+		// Do we have the item?
+		if _, err := o.FeatureInventory.GetObjectByID(target); err == nil {
+			return o, nil
+		}
+		// Is it near us in the world?
+		o2 := o.tile.gameMap.world.GetObject(target)
+		if o2 == nil {
+			return nil, errors.New("target does not exist")
+		}
+		if !o.InSameMap(o2) {
+			return nil, errors.New("target is not in the same map")
+		}
+
+		return nil, nil
+	}
+	// Do we have the container?
+	if o2, err := o.FeatureInventory.GetObjectByID(container); err == nil {
+		if o3, ok := o2.(FeatureInventoryI); ok {
+			if _, err := o3.GetObjectByID(target); err == nil {
+				return o2, nil
+			}
+			return nil, errors.New("target does not exist in held target container")
+		}
+		return nil, errors.New("container is not a container type")
+	}
+	// Is the container near us in the world?
+	o2 := o.tile.gameMap.world.GetObject(container)
+	if o2 == nil {
+		return nil, errors.New("container does not exist")
+	}
+	if !o.InSameMap(o2) {
+		return nil, errors.New("external container is not in the same map")
+	}
+	if o3, ok := o2.(FeatureInventoryI); ok {
+		if _, err := o3.GetObjectByID(target); err == nil {
+			return o2, nil
+		}
+		return nil, errors.New("target does not exist in external target container")
+	}
+	return nil, errors.New("external container is not a container type")
+}
+
+// getContainer gets the container object, either stored in character inventory or nearby.
+func (o *ObjectCharacter) getContainer(container ID) (ObjectI, error) {
+	if container == 0 {
+		return o, nil
+	}
+	// Do we have the container?
+	if o2, err := o.FeatureInventory.GetObjectByID(container); err != nil {
+		if _, ok := o2.(FeatureInventoryI); ok {
+			return o2, nil
+		}
+		return nil, errors.New("container is not a container type")
+	}
+	// Is the container near us?
+	o2 := o.tile.gameMap.world.GetObject(container)
+	if o2 == nil {
+		return nil, errors.New("container does not exist")
+	}
+	if !o.InSameMap(o2) {
+		return nil, errors.New("external container is not in the same map")
+	}
+	if _, ok := o2.(FeatureInventoryI); ok {
+		return o2, nil
+	}
+	return nil, errors.New("external container is not a container type")
+}
+
 func (o *ObjectCharacter) handleGrabCommand(c OwnerGrabCommand) (action ActionI, duration time.Duration) {
 	duration = o.calcDuration(200*time.Millisecond, 50*time.Millisecond, time.Duration(o.inspectSpeed)*time.Millisecond)
 
-	// Ensure the target item is within range and accessible.
-	if c.FromContainer == 0 {
-		// It's an item nearby. Check for range.
-		target := o.tile.gameMap.world.GetObject(c.Target)
-		if target == nil {
-			log.Warn("object does not exist")
-			return
-		}
-		if math.Abs(o.GetDistance(target.GetTile().Y, target.GetTile().X, target.GetTile().Z)) <= float64(o.reach) {
-			// It's in range!
-		}
-	} else {
-		// Is it a container we hold?
-		if container, err := o.FeatureInventory.GetObjectByID(c.FromContainer); err == nil {
-			// It's our own container!
-			if container, ok := container.(FeatureInventoryI); ok {
-				if _, err := container.GetObjectByID(c.Target); err != nil {
-					log.Warn("object does not exist in container")
-					return
-				}
-			} else {
-				log.Warn("target is not a container")
-				return
-			}
-		} else {
-			// It's not our own container. Look for containers in range.
-			if container := o.tile.gameMap.world.GetObject(c.FromContainer); container != nil {
-				// FIXME: Distance should be from center or closest edge!!!
-				if math.Abs(o.GetDistance(container.GetTile().Y, container.GetTile().X, container.GetTile().Z)) <= float64(o.reach) {
-					// It's in range!
-					if container, ok := container.(FeatureInventoryI); ok {
-						if _, err := container.GetObjectByID(c.Target); err != nil {
-							log.Warn("object does not exist in container")
-							return
-						}
-					} else {
-						log.Warn("target is not a container")
-						return
-					}
-				} else {
-					// Out of range.
-					// TODO: Send out of range message.
-					log.Warn("container is out of range")
-					return
-				}
-			} else {
-				log.Warn("target container does not exist")
-				return
-			}
-		}
+	// Ensure the target item is within range and accessible, whether in the world or in a container.
+	_, err := o.getContainerOf(c.Target, c.FromContainer)
+	if err != nil {
+		log.Warn(err)
+		return
 	}
-
-	// If we got this far, then it is valid to grab.
+	// Ensure the to container exists in the player inventory or in the world.
+	_, err = o.getContainer(c.ToContainer)
+	if err != nil {
+		log.Warn(err)
+		return
+	}
 	action = NewActionGrab(c.FromContainer, c.ToContainer, c.Target, duration)
 	duration = 0
 	return
@@ -977,50 +1008,16 @@ func (o *ObjectCharacter) handleGrabCommand(c OwnerGrabCommand) (action ActionI,
 func (o *ObjectCharacter) handleDropCommand(c OwnerDropCommand) (action ActionI, duration time.Duration) {
 	duration = o.calcDuration(200*time.Millisecond, 50*time.Millisecond, time.Duration(o.inspectSpeed)*time.Millisecond)
 
-	if c.FromContainer == 0 {
-		// Base inventory
-		if _, err := o.FeatureInventory.GetObjectByID(c.Target); err != nil {
-			log.Warn("target not in inventory", err)
-			return
-		}
-	} else {
-		// It's either in a container we own or in a nearby container.
-		container, err := o.FeatureInventory.GetObjectByID(c.FromContainer)
-		if err == nil {
-			// It's our own container.
-			if container, ok := container.(FeatureInventoryI); ok {
-				if _, err := container.GetObjectByID(c.Target); err != nil {
-					log.Warn("target not in container")
-					return
-				}
-			} else {
-				log.Warn("target container is not a container")
-				return
-			}
-		} else {
-			// Check if it's in the world.
-			container := o.tile.gameMap.world.GetObject(c.FromContainer)
-			if container != nil {
-				// FIXME: Distance should be from center or closest edge!!!
-				if math.Abs(o.GetDistance(container.GetTile().Y, container.GetTile().X, container.GetTile().Z)) <= float64(o.reach) {
-					// It's in range!
-					if container, ok := container.(FeatureInventoryI); ok {
-						if _, err := container.GetObjectByID(c.Target); err != nil {
-							log.Warn("object does not exist in container")
-							return
-						}
-					} else {
-						log.Warn("target is not a container")
-						return
-					}
-				} else {
-					// It's out of range.
-					// TODO: Send out of range message.
-					log.Warn("container is out of range")
-					return
-				}
-			}
-		}
+	// Ensure that the target item is in an appropriate container.
+	_, err := o.getContainerOf(c.FromContainer, c.Target)
+	if err != nil {
+		log.Warn(err)
+		return
+	}
+
+	if o.GetDistance(c.Y, c.X, c.Z) >= float64(o.reach) {
+		log.Warn("distance to drop item too far")
+		return
 	}
 
 	// If we got to here, then it is valid and in range.
