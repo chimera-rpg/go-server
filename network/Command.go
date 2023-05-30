@@ -430,6 +430,11 @@ type CommandObjectPayloadInfo struct {
 	Info []data.ObjectInfo
 }
 
+// CommandObjectPayloadContainer is the type used for updating a container's information.
+type CommandObjectPayloadContainer struct {
+	Objects []uint32
+}
+
 // CommandObjectPayloadViewTarget is the type used for marking a given object as the client's view target. It additionally sends the view range and reach of the given object.
 type CommandObjectPayloadViewTarget struct {
 	Height, Width, Depth uint8

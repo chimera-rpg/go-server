@@ -308,6 +308,16 @@ func (w *World) addPlayerByConnection(conn clientConnectionI, character *data.Ch
 			"ID": conn.GetID(),
 			"PC": pc.GetID(),
 		}).Debugln("Added player to world.")
+		// Send player's basic inventory.
+		payload := pc.(*ObjectCharacter).FeatureInventory.ToPayloadContainer()
+		player.ClientConnection.Send(network.CommandObject{
+			ObjectID: 0, // Object ID zero always refers to the player's basic inventory.
+			Payload:  payload,
+		})
+		// Send inventory objects as well.
+		for _, o := range pc.(*ObjectCharacter).FeatureInventory.inventory {
+			player.sendObject(o)
+		}
 		//
 		player.ClientConnection.Send(network.CommandMessage{
 			Type: network.ServerMessage,
@@ -384,6 +394,10 @@ func (w *World) SavePlayerByUsername(username string) error {
 
 // ReplacePlayerConnection replaces the connection for the given player.
 func (w *World) ReplacePlayerConnection(player *OwnerPlayer, conn clientConnectionI) {
+	// Reset view and known ids
+	player.CreateView()
+	player.knownIDs = make(map[uint32]struct{})
+	// Update network stuff
 	player.disconnected = false
 	player.disconnectedElapsed = 0
 	player.ClientConnection = conn
@@ -397,6 +411,16 @@ func (w *World) ReplacePlayerConnection(player *OwnerPlayer, conn clientConnecti
 			Depth:  uint8(player.viewDepth),
 		},
 	})
+
+	// Send character's base inventory.
+	player.ClientConnection.Send(network.CommandObject{
+		ObjectID: 0, // Object ID zero always refers to the player's basic inventory.
+		Payload:  player.GetTarget().(*ObjectCharacter).FeatureInventory.ToPayloadContainer(),
+	})
+	// Send inventory objects as well.
+	for _, o := range player.GetTarget().(*ObjectCharacter).FeatureInventory.inventory {
+		player.sendObject(o)
+	}
 
 	// SetMap causes the initial map command to be sent, as well as resetting known IDs and view.
 	player.SetMap(player.currentMap)
@@ -523,6 +547,7 @@ func (w *World) CreateObjectFromArch(arch *data.Archetype) (o ObjectI, err error
 		switch o := o.(type) {
 		case *ObjectCharacter:
 			o.AddInventoryObject(invObj)
+			invObj.SetContainer(o)
 		}
 	}
 	for _, eqArch := range arch.Equipment {

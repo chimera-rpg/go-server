@@ -396,6 +396,35 @@ func (player *OwnerPlayer) checkVisionRing() error {
 	return nil
 }
 
+func (player *OwnerPlayer) sendObject(o ObjectI) {
+	oID := o.GetID()
+	if _, isObjectKnown := player.knownIDs[oID]; !isObjectKnown {
+		// Let the client know of the object(s). NOTE: We could send a collection of object creation commands so as to reduce TCP overhead for bulk updates.
+		oArch := o.GetArchetype()
+		if oArch != nil {
+			player.ClientConnection.Send(network.CommandObject{
+				ObjectID: o.GetID(),
+				Payload: network.CommandObjectPayloadCreate{
+					TypeID:      o.getType().AsUint8(),
+					AnimationID: oArch.AnimID,
+					FaceID:      oArch.FaceID,
+					Height:      oArch.Height,
+					Width:       oArch.Width,
+					Depth:       oArch.Depth,
+					Reach:       oArch.Reach,
+					Opaque:      oArch.Matter.Is(data.OpaqueMatter),
+				},
+			})
+		} else {
+			player.ClientConnection.Send(network.CommandObject{
+				ObjectID: o.GetID(),
+				Payload:  network.CommandObjectPayloadCreate{},
+			})
+		}
+		player.knownIDs[oID] = struct{}{}
+	}
+}
+
 func (player *OwnerPlayer) checkTile(tile *Tile) bool {
 	if tile.modTime != player.view[tile.Y][tile.X][tile.Z].modTime {
 		player.view[tile.Y][tile.X][tile.Z].modTime = tile.modTime
@@ -410,33 +439,8 @@ func (player *OwnerPlayer) checkTile(tile *Tile) bool {
 		tileObjectIDs := make([]ID, len(filteredMapObjects))
 		// Send any objects unknown to the client (and collect their IDs).
 		for i, o := range filteredMapObjects {
-			oID := o.GetID()
-			if _, isObjectKnown := player.knownIDs[oID]; !isObjectKnown {
-				// Let the client know of the object(s). NOTE: We could send a collection of object creation commands so as to reduce TCP overhead for bulk updates.
-				oArch := o.GetArchetype()
-				if oArch != nil {
-					player.ClientConnection.Send(network.CommandObject{
-						ObjectID: o.GetID(),
-						Payload: network.CommandObjectPayloadCreate{
-							TypeID:      o.getType().AsUint8(),
-							AnimationID: oArch.AnimID,
-							FaceID:      oArch.FaceID,
-							Height:      oArch.Height,
-							Width:       oArch.Width,
-							Depth:       oArch.Depth,
-							Reach:       oArch.Reach,
-							Opaque:      oArch.Matter.Is(data.OpaqueMatter),
-						},
-					})
-				} else {
-					player.ClientConnection.Send(network.CommandObject{
-						ObjectID: o.GetID(),
-						Payload:  network.CommandObjectPayloadCreate{},
-					})
-				}
-				player.knownIDs[oID] = struct{}{}
-			}
-			tileObjectIDs[i] = oID
+			player.sendObject(o)
+			tileObjectIDs[i] = o.GetID()
 		}
 
 		// Check the given previous knownIDs and see if any were deleted. FIXME: This is kind of inefficient and should probably be handled by the Map.
